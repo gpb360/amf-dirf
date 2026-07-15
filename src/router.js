@@ -27,7 +27,10 @@ export function recommend(task, facts) {
   const ranked = [];
   let index = 0;
   for (const [name, pb] of Object.entries(playbooks)) {
-    const [score, count] = name === "security-review" && isImplementation && !isExplicitSecurityAudit
+    const reviewConflictsWithImplementation = isImplementation && (
+      name === "pr-review" || (name === "security-review" && !isExplicitSecurityAudit)
+    );
+    const [score, count] = reviewConflictsWithImplementation
       ? [0, 0]
       : scorePlaybook(haystack, pb);
     ranked.push({ score, count, index: -index, name, pb });

@@ -31,6 +31,13 @@ test("implementation intent outranks incidental auth terminology", () => {
   assert.equal(recommend("Implement a security audit of auth").playbook, "security-review");
 });
 
+test("implementation intent outranks domain review terminology", () => {
+  assert.equal(
+    recommend("Add paid-save entitlement checks and creator execution review access with Supabase persistence and tests").playbook,
+    "fullstack-feature",
+  );
+});
+
 test("falls back to triage when nothing matches", () => {
   const r = recommend("xyzzy qwerty nothing matches here");
   assert.equal(r.playbook, "triage");

@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "name": "challenge-builder-kit-test",
+  "task": "Add paid-save entitlement checks and creator execution review access with Supabase persistence and tests",
+  "path": "E:\\Challenge-builder",
+  "playbook": "fullstack-feature",
+  "playbook_description": "Build a user-facing feature across UI, API, data, and tests.",
+  "score": 3,
+  "matched_keywords": [
+    "feature"
+  ],
+  "alternates": [],
+  "workflow": {
+    "phases": [
+      "define user outcome",
+      "reuse existing patterns",
+      "implement vertical slice",
+      "verify"
+    ],
+    "output": "small working feature slice",
+    "validation": "run focused tests or build for touched surface",
+    "recovery": "if contracts are unclear, stop after documenting the needed API/data decision"
+  },
+  "agents": [
+    {
+      "name": "rapid-prototyper",
+      "file": "agents/rapid-prototyper.md",
+      "tags": [
+        "prototype",
+        "mvp"
+      ],
+      "skills": [
+        "ponytail",
+        "impeccable"
+      ]
+    },
+    {
+      "name": "ux-researcher",
+      "file": "agents/ux-researcher.md",
+      "tags": [
+        "ux",
+        "research"
+      ],
+      "skills": [
+        "ponytail"
+      ]
+    },
+    {
+      "name": "ui-designer",
+      "file": "agents/ui-designer.md",
+      "tags": [
+        "design",
+        "ui",
+        "ux"
+      ],
+      "skills": [
+        "ponytail",
+        "impeccable",
+        "ui-ux-pro-max",
+        "frontend-design",
+        "accessibility",
+        "web-quality-audit",
+        "web-design-guidelines"
+      ]
+    },
+    {
+      "name": "frontend-developer",
+      "file": "agents/frontend-developer.md",
+      "tags": [
+        "frontend",
+        "react",
+        "ui"
+      ],
+      "skills": [
+        "ponytail",
+        "impeccable",
+        "ui-ux-pro-max",
+        "frontend-design",
+        "react-best-practices",
+        "accessibility",
+        "systematic-debugging",
+        "tanstack-query",
+        "vercel-react-best-practices",
+        "web-design-guidelines"
+      ]
+    },
+    {
+      "name": "backend-architect",
+      "file": "agents/backend-architect.md",
+      "tags": [
+        "backend",
+        "api",
+        "database"
+      ],
+      "skills": [
+        "ponytail",
+        "impeccable",
+        "security-review",
+        "tdd",
+        "systematic-debugging",
+        "supabase-postgres-best-practices",
+        "scan-analyze"
+      ]
+    },
+    {
+      "name": "test-writer-fixer",
+      "file": "agents/test-writer-fixer.md",
+      "tags": [
+        "tests",
+        "quality"
+      ],
+      "skills": [
+        "ponytail",
+        "tdd"
+      ]
+    }
+  ],
+  "baseline_skills": [
+    "ponytail",
+    "impeccable"
+  ],
+  "questions": [
+    "What is the user-visible success criteria?",
+    "What existing APIs, routes, or data models should be reused?"
+  ],
+  "policy": "policies/workflow-policy.md",
+  "state": {
+    "status": "created",
+    "starts": 0
+  },
+  "created_at": "2026-07-15T16:11:09.204Z",
+  "source_hashes": {
+    "agents_registry": "0fe796f6c67a22c8",
+    "skills": "201b7fd2101007b8",
+    "playbooks": "e37240ca49f9557a",
+    "policy": "34880a707afb63ac"
+  }
+}
