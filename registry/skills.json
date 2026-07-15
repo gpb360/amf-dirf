@@ -1,0 +1,106 @@
+{
+  "skills": [
+    {
+      "name": "ponytail",
+      "category": "minimalism",
+      "applies_to": ["*"],
+      "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)"
+    },
+    {
+      "name": "impeccable",
+      "category": "quality",
+      "applies_to": ["frontend-developer", "ui-designer", "backend-architect", "rapid-prototyper"],
+      "summary": "quality gate against AI slop; clean reusable components; YAGNI/DRY/KISS"
+    },
+    {
+      "name": "ui-ux-pro-max",
+      "category": "design",
+      "applies_to": ["ui-designer", "frontend-developer"],
+      "summary": "visual polish, layout quality, typography, interaction design"
+    },
+    {
+      "name": "frontend-design",
+      "category": "design",
+      "applies_to": ["frontend-developer", "ui-designer"],
+      "summary": "frontend layout, component composition, responsive design"
+    },
+    {
+      "name": "react-best-practices",
+      "category": "frontend",
+      "applies_to": ["frontend-developer"],
+      "summary": "React component patterns, hooks, state management conventions"
+    },
+    {
+      "name": "tdd",
+      "category": "testing",
+      "applies_to": ["test-writer-fixer", "backend-architect"],
+      "summary": "test-driven development; red-green-refactor"
+    },
+    {
+      "name": "accessibility",
+      "category": "quality",
+      "applies_to": ["frontend-developer", "ui-designer"],
+      "summary": "a11y audits, semantic HTML, contrast, keyboard/screen-reader support"
+    },
+    {
+      "name": "security-review",
+      "category": "security",
+      "applies_to": ["security-auditor", "backend-architect"],
+      "summary": "threat modeling, vulnerability review, trust boundaries"
+    },
+    {
+      "name": "systematic-debugging",
+      "category": "process",
+      "applies_to": ["frontend-developer", "backend-architect", "error-coordinator"],
+      "summary": "root-cause debugging discipline; hypotheses before fixes"
+    },
+    {
+      "name": "web-quality-audit",
+      "category": "quality",
+      "applies_to": ["performance-benchmarker", "ui-designer"],
+      "summary": "runtime web quality, performance, Core Web Vitals"
+    },
+    {
+      "name": "tanstack-query",
+      "category": "frontend",
+      "applies_to": ["frontend-developer"],
+      "summary": "TanStack Query server-state conventions: hooks, cache invalidation, mutations"
+    },
+    {
+      "name": "supabase-postgres-best-practices",
+      "category": "backend",
+      "applies_to": ["backend-architect"],
+      "summary": "Supabase/Postgres patterns, RLS, table constants, withTimeout wrapper"
+    },
+    {
+      "name": "scan-analyze",
+      "category": "audit",
+      "applies_to": ["research-analyst", "backend-architect"],
+      "summary": "Turn a StructureSnapshot into structured findings: deterministic rules then LLM-enrichment"
+    },
+    {
+      "name": "compose-recommendations",
+      "category": "audit",
+      "applies_to": ["research-analyst"],
+      "summary": "Merge findings + researcher report into one normalized, de-duplicated, ranked recommendation bundle"
+    },
+    {
+      "name": "cost-savings",
+      "category": "audit",
+      "applies_to": ["research-analyst"],
+      "summary": "Derive cost-savings estimates from detected tools + spend + pricing (current/recommended/savings USD/mo)"
+    },
+    {
+      "name": "vercel-react-best-practices",
+      "category": "frontend",
+      "applies_to": ["frontend-developer"],
+      "summary": "React/Next.js performance optimization guidelines from Vercel Engineering"
+    },
+    {
+      "name": "web-design-guidelines",
+      "category": "design",
+      "applies_to": ["ui-designer", "frontend-developer"],
+      "summary": "Review UI code for Web Interface Guidelines: accessibility, UX, design compliance"
+    }
+  ]
+}

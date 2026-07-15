@@ -1,0 +1,25 @@
+{
+  "agents": [
+    {"name": "agent-organizer", "file": "agents/agent-organizer.md", "tags": ["orchestration", "routing", "teams"], "skills": ["ponytail"]},
+    {"name": "api-tester", "file": "agents/api-tester.md", "tags": ["api", "testing"], "skills": ["ponytail", "tdd"]},
+    {"name": "backend-architect", "file": "agents/backend-architect.md", "tags": ["backend", "api", "database"], "skills": ["ponytail", "impeccable", "security-review", "tdd", "systematic-debugging", "supabase-postgres-best-practices", "scan-analyze"]},
+    {"name": "brand-guardian", "file": "agents/brand-guardian.md", "tags": ["brand", "design"], "skills": ["ponytail"]},
+    {"name": "cli-developer", "file": "agents/cli-developer.md", "tags": ["cli", "developer-experience"], "skills": ["ponytail"]},
+    {"name": "competitive-analyst", "file": "agents/competitive-analyst.md", "tags": ["research", "market"], "skills": ["ponytail"]},
+    {"name": "content-marketer", "file": "agents/content-marketer.md", "tags": ["copy", "marketing", "seo"], "skills": ["ponytail"]},
+    {"name": "devops-automator", "file": "agents/devops-automator.md", "tags": ["devops", "ci", "deploy"], "skills": ["ponytail"]},
+    {"name": "documentation-engineer", "file": "agents/documentation-engineer.md", "tags": ["docs", "developer-experience"], "skills": ["ponytail"]},
+    {"name": "dx-optimizer", "file": "agents/dx-optimizer.md", "tags": ["developer-experience", "workflow"], "skills": ["ponytail"]},
+    {"name": "error-coordinator", "file": "agents/error-coordinator.md", "tags": ["resilience", "errors"], "skills": ["ponytail", "systematic-debugging"]},
+    {"name": "frontend-developer", "file": "agents/frontend-developer.md", "tags": ["frontend", "react", "ui"], "skills": ["ponytail", "impeccable", "ui-ux-pro-max", "frontend-design", "react-best-practices", "accessibility", "systematic-debugging", "tanstack-query", "vercel-react-best-practices", "web-design-guidelines"]},
+    {"name": "knowledge-synthesizer", "file": "agents/knowledge-synthesizer.md", "tags": ["research", "synthesis"], "skills": ["ponytail"]},
+    {"name": "performance-benchmarker", "file": "agents/performance-benchmarker.md", "tags": ["performance", "testing"], "skills": ["ponytail", "web-quality-audit", "tdd"]},
+    {"name": "rapid-prototyper", "file": "agents/rapid-prototyper.md", "tags": ["prototype", "mvp"], "skills": ["ponytail", "impeccable"]},
+    {"name": "research-analyst", "file": "agents/research-analyst.md", "tags": ["research", "analysis"], "skills": ["ponytail", "scan-analyze", "compose-recommendations", "cost-savings"]},
+    {"name": "security-auditor", "file": "agents/security-auditor.md", "tags": ["security", "audit"], "skills": ["ponytail", "security-review"]},
+    {"name": "test-writer-fixer", "file": "agents/test-writer-fixer.md", "tags": ["tests", "quality"], "skills": ["ponytail", "tdd"]},
+    {"name": "ui-designer", "file": "agents/ui-designer.md", "tags": ["design", "ui", "ux"], "skills": ["ponytail", "impeccable", "ui-ux-pro-max", "frontend-design", "accessibility", "web-quality-audit", "web-design-guidelines"]},
+    {"name": "ux-researcher", "file": "agents/ux-researcher.md", "tags": ["ux", "research"], "skills": ["ponytail"]},
+    {"name": "workflow-orchestrator", "file": "agents/workflow-orchestrator.md", "tags": ["workflow", "orchestration"], "skills": ["ponytail"]}
+  ]
+}

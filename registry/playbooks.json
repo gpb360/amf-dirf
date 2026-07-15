@@ -1,0 +1,259 @@
+{
+  "landing-page": {
+    "description": "Plan, design, build, and verify a landing page.",
+    "keywords": ["landing", "homepage", "marketing page", "sales page", "hero", "cta", "website"],
+    "agents": ["ui-designer", "frontend-developer", "content-marketer", "brand-guardian", "performance-benchmarker", "test-writer-fixer"],
+    "baseline_skills": ["ponytail", "impeccable"],
+    "workflow": {
+      "phases": ["clarify offer", "design page", "implement", "verify performance and tests"],
+      "output": "working page plus verification notes",
+      "validation": "run the project's narrowest build/test or page check",
+      "recovery": "if scope is unclear, emit the agent list and ask the missing context questions before edits"
+    },
+    "questions": [
+      "What framework is the project using?",
+      "What is the offer, audience, and primary CTA?",
+      "Is this a new page or an edit to an existing page?"
+    ]
+  },
+  "pr-review": {
+    "description": "Review a pull request for bugs, regressions, security, and missing tests.",
+    "keywords": ["pr", "pull request", "review", "diff", "merge", "code review"],
+    "agents": ["agent-organizer", "test-writer-fixer", "security-auditor", "performance-benchmarker"],
+    "baseline_skills": ["ponytail"],
+    "workflow": {
+      "phases": ["inspect diff", "check behavior risk", "check security/test gaps", "report findings"],
+      "output": "findings ordered by severity with file references",
+      "validation": "use git diff, tests, or static checks as available",
+      "recovery": "if no PR is available, ask for branch, diff, or PR URL"
+    },
+    "questions": [
+      "What branch or PR should be reviewed?",
+      "Should the review include security and performance checks?"
+    ]
+  },
+  "bug-fix": {
+    "description": "Reproduce, isolate, fix, and verify a bug.",
+    "keywords": ["bug", "fix", "broken", "error", "failing", "regression", "debug"],
+    "agents": ["agent-organizer", "frontend-developer", "backend-architect", "error-coordinator", "test-writer-fixer"],
+    "baseline_skills": ["ponytail", "systematic-debugging"],
+    "workflow": {
+      "phases": ["reproduce", "isolate cause", "patch smallest source", "verify"],
+      "output": "fix with reproduction and verification evidence",
+      "validation": "run the failing command or narrow regression test",
+      "recovery": "if reproduction is missing, gather exact error and command first"
+    },
+    "questions": [
+      "What is the exact failure or error?",
+      "What command or user path reproduces it?"
+    ]
+  },
+  "fullstack-feature": {
+    "description": "Build a user-facing feature across UI, API, data, and tests.",
+    "keywords": ["feature", "fullstack", "full-stack", "api", "database", "login"],
+    "agents": ["rapid-prototyper", "ux-researcher", "ui-designer", "frontend-developer", "backend-architect", "test-writer-fixer"],
+    "baseline_skills": ["ponytail", "impeccable"],
+    "workflow": {
+      "phases": ["define user outcome", "reuse existing patterns", "implement vertical slice", "verify"],
+      "output": "small working feature slice",
+      "validation": "run focused tests or build for touched surface",
+      "recovery": "if contracts are unclear, stop after documenting the needed API/data decision"
+    },
+    "questions": [
+      "What is the user-visible success criteria?",
+      "What existing APIs, routes, or data models should be reused?"
+    ]
+  },
+  "research": {
+    "description": "Research a topic, competitor, technology, or market and synthesize recommendations.",
+    "keywords": ["research", "competitor", "market", "compare", "evaluate", "trend"],
+    "agents": ["research-analyst", "competitive-analyst", "content-marketer", "knowledge-synthesizer"],
+    "baseline_skills": ["ponytail"],
+    "workflow": {
+      "phases": ["define decision", "collect sources", "compare", "synthesize"],
+      "output": "evidence-backed recommendation",
+      "validation": "cite concrete sources or repo evidence",
+      "recovery": "if sources are unavailable, mark claims as unverified"
+    },
+    "questions": [
+      "What decision should the research support?",
+      "Are web sources required or should this be repo-only?"
+    ]
+  },
+  "performance-pass": {
+    "description": "Find and improve performance bottlenecks.",
+    "keywords": ["performance", "slow", "speed", "lighthouse", "core web vitals", "bundle"],
+    "agents": ["performance-benchmarker", "frontend-developer", "backend-architect", "test-writer-fixer"],
+    "baseline_skills": ["ponytail", "web-quality-audit"],
+    "workflow": {
+      "phases": ["measure", "identify bottleneck", "patch smallest cause", "remeasure"],
+      "output": "before/after evidence",
+      "validation": "rerun the same benchmark or focused timing check",
+      "recovery": "if no metric exists, establish baseline before changing code"
+    },
+    "questions": [
+      "What metric is too slow?",
+      "What command, page, or endpoint should be measured?"
+    ]
+  },
+  "security-review": {
+    "description": "Review code or architecture for security risk.",
+    "keywords": ["security", "audit", "vulnerability", "auth", "permission", "secrets", "compliance"],
+    "agents": ["security-auditor", "backend-architect", "test-writer-fixer", "documentation-engineer"],
+    "baseline_skills": ["ponytail", "security-review"],
+    "workflow": {
+      "phases": ["map trust boundary", "inspect controls", "rank risks", "recommend fixes"],
+      "output": "security findings with impact and remediation",
+      "validation": "prove findings with code references or commands",
+      "recovery": "if boundary is unclear, ask for the asset and attacker model"
+    },
+    "questions": [
+      "What trust boundary or asset matters most?",
+      "Should this be a review only or include fixes?"
+    ]
+  },
+  "agent-cleanup": {
+    "description": "Clean, rename, validate, and reorganize an agent collection.",
+    "keywords": ["agent", "agents", "workflow", "orchestrator", "subagent", "cleanup", "rename"],
+    "agents": ["agent-organizer", "workflow-orchestrator", "documentation-engineer", "cli-developer", "dx-optimizer"],
+    "baseline_skills": ["ponytail"],
+    "workflow": {
+      "phases": ["inventory", "dedupe", "normalize", "validate"],
+      "output": "curated agent/workflow surface",
+      "validation": "run validate and smoke tests",
+      "recovery": "preserve raw source files unless deletion is explicit"
+    },
+    "questions": [
+      "What agents should be public versus archived?",
+      "What host tool should the agents target first?"
+    ]
+  },
+  "api-test": {
+    "description": "Validate API contracts, behavior, security, and failure handling.",
+    "keywords": ["api contract", "api test", "api testing", "endpoint", "contract", "openapi", "swagger", "webhook"],
+    "agents": ["api-tester", "backend-architect", "security-auditor", "test-writer-fixer"],
+    "baseline_skills": ["ponytail", "tdd"],
+    "workflow": {
+      "phases": ["identify contract", "test happy/error paths", "check security", "report gaps"],
+      "output": "API test plan or fixes with evidence",
+      "validation": "run focused API tests or documented request checks",
+      "recovery": "if no contract exists, derive expected behavior from routes and docs"
+    },
+    "questions": [
+      "Which endpoint, contract, or webhook should be tested?",
+      "Should this create tests or only review behavior?"
+    ]
+  },
+  "documentation": {
+    "description": "Write or improve developer-facing documentation.",
+    "keywords": ["docs", "documentation", "readme", "guide", "sdk", "tutorial"],
+    "agents": ["documentation-engineer", "dx-optimizer", "knowledge-synthesizer"],
+    "baseline_skills": ["ponytail"],
+    "workflow": {
+      "phases": ["identify audience", "inspect source truth", "write", "verify commands"],
+      "output": "clear docs grounded in current repo behavior",
+      "validation": "run or verify every documented command where practical",
+      "recovery": "if behavior cannot be verified, mark it explicitly"
+    },
+    "questions": [
+      "Who is the doc for?",
+      "Should commands be verified or documented from source only?"
+    ]
+  },
+  "deployment": {
+    "description": "Prepare, debug, or review deployment and release flow.",
+    "keywords": ["deploy", "deployment", "release", "ci", "cd", "pipeline", "hosting"],
+    "agents": ["devops-automator", "backend-architect", "test-writer-fixer", "documentation-engineer"],
+    "baseline_skills": ["ponytail"],
+    "workflow": {
+      "phases": ["inspect current deploy path", "identify blocker", "patch config or docs", "verify"],
+      "output": "deployment-ready change or blocker report",
+      "validation": "run the narrowest build, CI, or deploy dry-run command",
+      "recovery": "if credentials are missing, stop at config validation and document the blocker"
+    },
+    "questions": [
+      "What host or CI system is used?",
+      "Is this a deploy fix, release checklist, or environment setup?"
+    ]
+  },
+  "triage": {
+    "description": "Classify an unknown task and choose the smallest useful agent set.",
+    "keywords": ["help", "start", "what should", "not sure", "triage"],
+    "agents": ["agent-organizer", "documentation-engineer", "dx-optimizer"],
+    "baseline_skills": ["ponytail"],
+    "workflow": {
+      "phases": ["classify task", "select closest playbook", "ask missing context", "stop before edits"],
+      "output": "recommended workflow and next command",
+      "validation": "no code changes; recommendation only",
+      "recovery": "if confidence is low, show alternates instead of pretending certainty"
+    },
+    "questions": [
+      "What are you trying to produce or fix?",
+      "What project path should be inspected?"
+    ]
+  },
+  "improve-plan": {
+    "description": "Create a cost-aware execution plan before implementation.",
+    "keywords": ["improve", "cost", "cheap", "credits", "model", "models", "agent routing", "execution plan"],
+    "agents": ["agent-organizer", "dx-optimizer", "documentation-engineer"],
+    "baseline_skills": ["ponytail"],
+    "workflow": {
+      "phases": ["inspect local context", "partition work", "assign agents and ownership", "define verification gates"],
+      "output": "short execution plan with agent/model routing and credit controls",
+      "validation": "plan names concrete files/modules, commands, and what not to spawn",
+      "recovery": "if scope is unclear, stop at questions and do not implement"
+    },
+    "questions": [
+      "What outcome should the plan optimize for?",
+      "What files, modules, or repo path should be inspected before planning?"
+    ]
+  },
+  "ui-ux-review": {
+    "description": "Review or plan UI/UX with design-system, accessibility, responsive layout, and polish checks.",
+    "keywords": ["ui ux", "ui/ux", "design system", "accessibility", "responsive", "layout", "visual polish", "interface"],
+    "agents": ["ui-designer", "ux-researcher", "brand-guardian", "performance-benchmarker", "test-writer-fixer"],
+    "baseline_skills": ["ponytail", "impeccable", "ui-ux-pro-max", "accessibility"],
+    "workflow": {
+      "phases": ["identify product type and audience", "select design-system constraints", "check accessibility and interaction quality", "verify responsive behavior"],
+      "output": "UI/UX plan or review with concrete fixes and verification checks",
+      "validation": "inspect small and large viewports, keyboard/touch states, contrast, reduced motion, and layout stability",
+      "recovery": "if the target UI is unclear, ask for page/component path and screenshots before edits"
+    },
+    "questions": [
+      "What page, component, or flow should be reviewed?",
+      "Is this a design plan, implementation, or polish pass?"
+    ]
+  },
+  "impeccable-polish": {
+    "description": "Final product-quality pass for professional fit, finish, consistency, and obvious rough edges.",
+    "keywords": ["impeccable", "polish", "fit and finish", "make it better", "professional", "quality pass"],
+    "agents": ["ui-designer", "brand-guardian", "performance-benchmarker", "test-writer-fixer", "documentation-engineer"],
+    "baseline_skills": ["ponytail", "impeccable", "ui-ux-pro-max"],
+    "workflow": {
+      "phases": ["scan current experience", "identify rough edges", "apply smallest polish fixes", "verify user-facing quality"],
+      "output": "polish findings or fixes with proof",
+      "validation": "run focused UI/runtime checks and document before/after evidence",
+      "recovery": "if no target is provided, produce a prioritized polish checklist instead of editing"
+    },
+    "questions": [
+      "What screen, workflow, or artifact needs the polish pass?",
+      "Should this only review, or also apply fixes?"
+    ]
+  },
+  "governance-gateway": {
+    "description": "Design or review an execution governance gateway for agent actions.",
+    "keywords": ["governance", "gateway", "approval", "mandate", "authority", "audit control", "control plane", "human approval", "enforcement"],
+    "agents": ["security-auditor", "agent-organizer", "documentation-engineer", "error-coordinator", "test-writer-fixer"],
+    "baseline_skills": ["ponytail", "security-review"],
+    "workflow": {
+      "phases": ["classify action risk", "define mandate and authority", "check evidence requirements", "emit allow/deny/approval decision contract"],
+      "output": "governance contract or review with decision evidence",
+      "validation": "prove state-changing actions are blocked without mandate, evidence, scope, and named authority",
+      "recovery": "if authority, scope, or evidence is missing, deny or require named human approval"
+    },
+    "questions": [
+      "What actions need gateway enforcement?",
+      "Which tools, credentials, or resources must be withheld from agents?"
+    ]
+  }
+}

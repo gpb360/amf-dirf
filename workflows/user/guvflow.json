@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "name": "guvflow",
+  "task": "review security vulnerabilities in the audit intake api and auth",
+  "path": "E:/FlowStack",
+  "playbook": "security-review",
+  "playbook_description": "Review code or architecture for security risk.",
+  "score": 9,
+  "matched_keywords": [
+    "security",
+    "audit",
+    "auth"
+  ],
+  "alternates": [
+    {
+      "playbook": "pr-review",
+      "score": 3,
+      "description": "Review a pull request for bugs, regressions, security, and missing tests."
+    },
+    {
+      "playbook": "fullstack-feature",
+      "score": 3,
+      "description": "Build a user-facing feature across UI, API, data, and tests."
+    }
+  ],
+  "workflow": {
+    "phases": [
+      "map trust boundary",
+      "inspect controls",
+      "rank risks",
+      "recommend fixes"
+    ],
+    "output": "security findings with impact and remediation",
+    "validation": "prove findings with code references or commands",
+    "recovery": "if boundary is unclear, ask for the asset and attacker model"
+  },
+  "agents": [
+    {
+      "name": "security-auditor",
+      "file": "agents/security-auditor.md",
+      "tags": [
+        "security",
+        "audit"
+      ],
+      "skills": [
+        "ponytail",
+        "security-review"
+      ]
+    },
+    {
+      "name": "backend-architect",
+      "file": "agents/backend-architect.md",
+      "tags": [
+        "backend",
+        "api",
+        "database"
+      ],
+      "skills": [
+        "ponytail",
+        "impeccable",
+        "security-review",
+        "tdd",
+        "systematic-debugging",
+        "supabase-postgres-best-practices",
+        "scan-analyze"
+      ]
+    },
+    {
+      "name": "test-writer-fixer",
+      "file": "agents/test-writer-fixer.md",
+      "tags": [
+        "tests",
+        "quality"
+      ],
+      "skills": [
+        "ponytail",
+        "tdd"
+      ]
+    },
+    {
+      "name": "documentation-engineer",
+      "file": "agents/documentation-engineer.md",
+      "tags": [
+        "docs",
+        "developer-experience"
+      ],
+      "skills": [
+        "ponytail"
+      ]
+    }
+  ],
+  "baseline_skills": [
+    "ponytail",
+    "security-review"
+  ],
+  "questions": [
+    "What trust boundary or asset matters most?",
+    "Should this be a review only or include fixes?"
+  ],
+  "policy": "policies/workflow-policy.md",
+  "state": {
+    "status": "created",
+    "starts": 0
+  },
+  "created_at": "2026-07-14T19:29:09.815Z",
+  "source_hashes": {
+    "agents_registry": "f146ae69d11030e9",
+    "skills": "76c78b6b6ec156d2",
+    "playbooks": "e37240ca49f9557a",
+    "policy": "34880a707afb63ac"
+  }
+}

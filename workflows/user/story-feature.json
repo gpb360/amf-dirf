@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "name": "story-feature",
+  "task": "build a fullstack feature for character profiles with api and database",
+  "path": "E:/s7s-projects/storytellers",
+  "playbook": "fullstack-feature",
+  "playbook_description": "Build a user-facing feature across UI, API, data, and tests.",
+  "score": 12,
+  "matched_keywords": [
+    "feature",
+    "fullstack",
+    "api",
+    "database"
+  ],
+  "alternates": [
+    {
+      "playbook": "pr-review",
+      "score": 3,
+      "description": "Review a pull request for bugs, regressions, security, and missing tests."
+    }
+  ],
+  "workflow": {
+    "phases": [
+      "define user outcome",
+      "reuse existing patterns",
+      "implement vertical slice",
+      "verify"
+    ],
+    "output": "small working feature slice",
+    "validation": "run focused tests or build for touched surface",
+    "recovery": "if contracts are unclear, stop after documenting the needed API/data decision"
+  },
+  "agents": [
+    {
+      "name": "rapid-prototyper",
+      "file": "agents/rapid-prototyper.md",
+      "tags": [
+        "prototype",
+        "mvp"
+      ],
+      "skills": [
+        "ponytail",
+        "impeccable"
+      ]
+    },
+    {
+      "name": "ux-researcher",
+      "file": "agents/ux-researcher.md",
+      "tags": [
+        "ux",
+        "research"
+      ],
+      "skills": [
+        "ponytail"
+      ]
+    },
+    {
+      "name": "ui-designer",
+      "file": "agents/ui-designer.md",
+      "tags": [
+        "design",
+        "ui",
+        "ux"
+      ],
+      "skills": [
+        "ponytail",
+        "impeccable",
+        "ui-ux-pro-max",
+        "frontend-design",
+        "accessibility",
+        "web-quality-audit"
+      ]
+    },
+    {
+      "name": "frontend-developer",
+      "file": "agents/frontend-developer.md",
+      "tags": [
+        "frontend",
+        "react",
+        "ui"
+      ],
+      "skills": [
+        "ponytail",
+        "impeccable",
+        "ui-ux-pro-max",
+        "frontend-design",
+        "react-best-practices",
+        "accessibility",
+        "systematic-debugging",
+        "tanstack-query"
+      ]
+    },
+    {
+      "name": "backend-architect",
+      "file": "agents/backend-architect.md",
+      "tags": [
+        "backend",
+        "api",
+        "database"
+      ],
+      "skills": [
+        "ponytail",
+        "impeccable",
+        "security-review",
+        "tdd",
+        "systematic-debugging",
+        "supabase-postgres-best-practices"
+      ]
+    },
+    {
+      "name": "test-writer-fixer",
+      "file": "agents/test-writer-fixer.md",
+      "tags": [
+        "tests",
+        "quality"
+      ],
+      "skills": [
+        "ponytail",
+        "tdd"
+      ]
+    }
+  ],
+  "baseline_skills": [
+    "ponytail",
+    "impeccable"
+  ],
+  "questions": [
+    "What is the user-visible success criteria?",
+    "What existing APIs, routes, or data models should be reused?"
+  ],
+  "policy": "policies/workflow-policy.md",
+  "state": {
+    "status": "created",
+    "starts": 0
+  },
+  "created_at": "2026-07-14T19:01:22.949Z",
+  "source_hashes": {
+    "agents_registry": "67d64482424b6b29",
+    "skills": "611c05fd9379b3bc",
+    "playbooks": "e37240ca49f9557a",
+    "policy": "34880a707afb63ac"
+  }
+}

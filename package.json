@@ -1,0 +1,22 @@
+{
+  "name": "amf-dirf",
+  "version": "1.0.0",
+  "description": "Agent Spec Kit — maps a host repo's installed skills to agents/playbooks and emits a lean, token-cheap instruction set. AMF = Agent Marketing Factory, DIRF = Do It Right First.",
+  "type": "module",
+  "bin": {
+    "dirf": "./src/cli.js"
+  },
+  "scripts": {
+    "test": "node --test tests/test-router.js tests/test-skills.js tests/test-renderer.js",
+    "test:router": "node --test tests/test-router.js",
+    "test:skills": "node --test tests/test-skills.js",
+    "test:renderer": "node --test tests/test-renderer.js",
+    "smoke": "node scripts/smoke-test.js",
+    "validate": "node src/cli.js validate",
+    "scan": "node src/cli.js skills scan"
+  },
+  "engines": {
+    "node": ">=18.17"
+  },
+  "license": "MIT"
+}

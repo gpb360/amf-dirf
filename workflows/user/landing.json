@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "name": "landing",
+  "task": "build a landing page for a SaaS product",
+  "path": null,
+  "playbook": "landing-page",
+  "playbook_description": "Plan, design, build, and verify a landing page.",
+  "score": 3,
+  "matched_keywords": [
+    "landing"
+  ],
+  "alternates": [
+    {
+      "playbook": "pr-review",
+      "score": 3,
+      "description": "Review a pull request for bugs, regressions, security, and missing tests."
+    }
+  ],
+  "workflow": {
+    "phases": [
+      "clarify offer",
+      "design page",
+      "implement",
+      "verify performance and tests"
+    ],
+    "output": "working page plus verification notes",
+    "validation": "run the project's narrowest build/test or page check",
+    "recovery": "if scope is unclear, emit the agent list and ask the missing context questions before edits"
+  },
+  "agents": [
+    {
+      "name": "ui-designer",
+      "file": "agents/ui-designer.md",
+      "tags": [
+        "design",
+        "ui",
+        "ux"
+      ],
+      "skills": [
+        "ponytail",
+        "impeccable",
+        "ui-ux-pro-max",
+        "frontend-design",
+        "accessibility",
+        "web-quality-audit"
+      ]
+    },
+    {
+      "name": "frontend-developer",
+      "file": "agents/frontend-developer.md",
+      "tags": [
+        "frontend",
+        "react",
+        "ui"
+      ],
+      "skills": [
+        "ponytail",
+        "impeccable",
+        "ui-ux-pro-max",
+        "frontend-design",
+        "react-best-practices",
+        "accessibility",
+        "systematic-debugging"
+      ]
+    },
+    {
+      "name": "content-marketer",
+      "file": "agents/content-marketer.md",
+      "tags": [
+        "copy",
+        "marketing",
+        "seo"
+      ],
+      "skills": [
+        "ponytail"
+      ]
+    },
+    {
+      "name": "brand-guardian",
+      "file": "agents/brand-guardian.md",
+      "tags": [
+        "brand",
+        "design"
+      ],
+      "skills": [
+        "ponytail"
+      ]
+    },
+    {
+      "name": "performance-benchmarker",
+      "file": "agents/performance-benchmarker.md",
+      "tags": [
+        "performance",
+        "testing"
+      ],
+      "skills": [
+        "ponytail",
+        "web-quality-audit",
+        "tdd"
+      ]
+    },
+    {
+      "name": "test-writer-fixer",
+      "file": "agents/test-writer-fixer.md",
+      "tags": [
+        "tests",
+        "quality"
+      ],
+      "skills": [
+        "ponytail",
+        "tdd"
+      ]
+    }
+  ],
+  "baseline_skills": [
+    "ponytail",
+    "impeccable"
+  ],
+  "questions": [
+    "What framework is the project using?",
+    "What is the offer, audience, and primary CTA?",
+    "Is this a new page or an edit to an existing page?"
+  ],
+  "policy": "policies/workflow-policy.md",
+  "state": {
+    "status": "created",
+    "starts": 0
+  },
+  "created_at": "2026-07-14T16:35:51.158200+00:00",
+  "source_hashes": {
+    "agents_registry": "f9e4e00ea871790c",
+    "skills": "653e00a493944219",
+    "playbooks": "e37240ca49f9557a",
+    "policy": "34880a707afb63ac"
+  }
+}

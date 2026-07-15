@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "name": "guvflow-research",
+  "task": "research and analyze the audit findings and compose recommendations",
+  "path": "E:/FlowStack",
+  "playbook": "research",
+  "playbook_description": "Research a topic, competitor, technology, or market and synthesize recommendations.",
+  "score": 3,
+  "matched_keywords": [
+    "research"
+  ],
+  "alternates": [
+    {
+      "playbook": "security-review",
+      "score": 3,
+      "description": "Review code or architecture for security risk."
+    }
+  ],
+  "workflow": {
+    "phases": [
+      "define decision",
+      "collect sources",
+      "compare",
+      "synthesize"
+    ],
+    "output": "evidence-backed recommendation",
+    "validation": "cite concrete sources or repo evidence",
+    "recovery": "if sources are unavailable, mark claims as unverified"
+  },
+  "agents": [
+    {
+      "name": "research-analyst",
+      "file": "agents/research-analyst.md",
+      "tags": [
+        "research",
+        "analysis"
+      ],
+      "skills": [
+        "ponytail",
+        "scan-analyze",
+        "compose-recommendations",
+        "cost-savings"
+      ]
+    },
+    {
+      "name": "competitive-analyst",
+      "file": "agents/competitive-analyst.md",
+      "tags": [
+        "research",
+        "market"
+      ],
+      "skills": [
+        "ponytail"
+      ]
+    },
+    {
+      "name": "content-marketer",
+      "file": "agents/content-marketer.md",
+      "tags": [
+        "copy",
+        "marketing",
+        "seo"
+      ],
+      "skills": [
+        "ponytail"
+      ]
+    },
+    {
+      "name": "knowledge-synthesizer",
+      "file": "agents/knowledge-synthesizer.md",
+      "tags": [
+        "research",
+        "synthesis"
+      ],
+      "skills": [
+        "ponytail"
+      ]
+    }
+  ],
+  "baseline_skills": [
+    "ponytail"
+  ],
+  "questions": [
+    "What decision should the research support?",
+    "Are web sources required or should this be repo-only?"
+  ],
+  "policy": "policies/workflow-policy.md",
+  "state": {
+    "status": "created",
+    "starts": 0
+  },
+  "created_at": "2026-07-14T19:29:10.568Z",
+  "source_hashes": {
+    "agents_registry": "f146ae69d11030e9",
+    "skills": "76c78b6b6ec156d2",
+    "playbooks": "e37240ca49f9557a",
+    "policy": "34880a707afb63ac"
+  }
+}

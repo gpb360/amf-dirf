@@ -1,0 +1,13 @@
+# Node
+node_modules/
+
+# Generated renders (regenerable from the workflow JSON + registries)
+workflows/user/instructions/
+*.html
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
