@@ -7,6 +7,8 @@ import { loadJson, PLAYBOOKS } from "./paths.js";
 
 export const FALLBACK_PLAYBOOK = "triage";
 export const KEYWORD_WEIGHT = 3;
+const IMPLEMENTATION_INTENT = /\b(add|build|create|fix|implement)\b/;
+const EXPLICIT_SECURITY_AUDIT = /\bsecurity audit\b/;
 
 function scorePlaybook(haystack, playbook) {
   const matched = (playbook.keywords || []).filter((kw) => haystack.includes(kw.toLowerCase()));
@@ -18,11 +20,16 @@ export function recommend(task, facts) {
   const playbooks = loadJson(PLAYBOOKS);
   let haystack = (task || "").toLowerCase();
   if (facts && facts.length) haystack += " " + facts.join(" ").toLowerCase();
+  const isImplementation = IMPLEMENTATION_INTENT.test(haystack);
+  const isExplicitSecurityAudit = EXPLICIT_SECURITY_AUDIT.test(haystack);
+  if (isImplementation) haystack += " feature";
 
   const ranked = [];
   let index = 0;
   for (const [name, pb] of Object.entries(playbooks)) {
-    const [score, count] = scorePlaybook(haystack, pb);
+    const [score, count] = name === "security-review" && isImplementation && !isExplicitSecurityAudit
+      ? [0, 0]
+      : scorePlaybook(haystack, pb);
     ranked.push({ score, count, index: -index, name, pb });
     index += 1;
   }

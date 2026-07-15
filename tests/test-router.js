@@ -18,6 +18,19 @@ test("security review match", () => {
   assert.equal(recommend("audit security vulnerabilities in auth").playbook, "security-review");
 });
 
+test("implementation intent outranks incidental auth terminology", () => {
+  assert.equal(
+    recommend("Add GitHub repository sync to governance intake with auth, persistence, and tests").playbook,
+    "fullstack-feature",
+  );
+  assert.equal(recommend("Add account settings with auth and permissions").playbook, "fullstack-feature");
+  assert.equal(recommend("Create a security feature with auth").playbook, "fullstack-feature");
+  assert.equal(recommend("Implement auth vulnerability remediation").playbook, "fullstack-feature");
+  assert.equal(recommend("Fix auth vulnerability").playbook, "bug-fix");
+  assert.equal(recommend("Create a security audit of auth").playbook, "security-review");
+  assert.equal(recommend("Implement a security audit of auth").playbook, "security-review");
+});
+
 test("falls back to triage when nothing matches", () => {
   const r = recommend("xyzzy qwerty nothing matches here");
   assert.equal(r.playbook, "triage");

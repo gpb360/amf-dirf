@@ -202,7 +202,7 @@ function generateSuggestions(findings) {
   const out = [];
 
   // Memory gaps
-  if (!hasCat("memory") && !has("task-tracking", "KNOWLEDGE")) {
+  if (!hasCat("memory") && !hasCat("knowledge-graph") && !has("task-tracking", "KNOWLEDGE")) {
     out.push({
       gap: "No memory / context-persistence layer detected",
       suggestion: "Add a memory system so agents retain decisions across sessions. Options: graphify (code knowledge graph), a memory-bank, or claude-mem. This prevents repeated re-discovery of the same codebase facts.",
