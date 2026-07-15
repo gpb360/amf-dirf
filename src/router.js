@@ -15,9 +15,8 @@ function scorePlaybook(haystack, playbook) {
   return [matched.length * KEYWORD_WEIGHT, matched.length];
 }
 
-export function recommend(task, facts) {
+export function recommend(task, facts, playbooks = loadJson(PLAYBOOKS)) {
   // Pick the best playbook for a task. Returns a recommendation object.
-  const playbooks = loadJson(PLAYBOOKS);
   let haystack = (task || "").toLowerCase();
   if (facts && facts.length) haystack += " " + facts.join(" ").toLowerCase();
   const isImplementation = IMPLEMENTATION_INTENT.test(haystack);
@@ -27,6 +26,7 @@ export function recommend(task, facts) {
   const ranked = [];
   let index = 0;
   for (const [name, pb] of Object.entries(playbooks)) {
+    if (name === FALLBACK_PLAYBOOK) continue;
     const reviewConflictsWithImplementation = isImplementation && (
       name === "pr-review" || (name === "security-review" && !isExplicitSecurityAudit)
     );
@@ -51,7 +51,7 @@ export function recommend(task, facts) {
     score = ranked[0].score;
   }
 
-  const matched = (pb.keywords || []).filter((kw) => haystack.includes(kw.toLowerCase()));
+  const matched = score === 0 ? [] : (pb.keywords || []).filter((kw) => haystack.includes(kw.toLowerCase()));
   const alternates = ranked.slice(1, 3)
     .filter((r) => r.score > 0)
     .map((r) => ({ playbook: r.name, score: r.score, description: (r.pb.description || "") }));
@@ -63,6 +63,7 @@ export function recommend(task, facts) {
     matched_keywords: matched,
     alternates,
     workflow: pb.workflow || {},
+    skill_flow: pb.skill_flow,
     agents: pb.agents || [],
     questions: pb.questions || [],
     baseline_skills: pb.baseline_skills || [],

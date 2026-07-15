@@ -46,17 +46,20 @@ test("renderMarkdownLite strips html comments", () => {
 test("buildInstructions writes router + per-agent detail", () => {
   const outDir = mkdtempSync(join(tmpdir(), "dirf-instr-"));
   const workflow = {
-    name: "demo", task: "build a landing page", playbook: "landing-page",
+    name: "demo", task: "review a pull request", playbook: "landing-page",
     workflow: { phases: ["a", "b"], output: "a page", validation: "v", recovery: "r" },
-    agents: [{ name: "frontend-developer", file: "agents/frontend-developer.md", tags: ["frontend"], skills: ["ponytail"] }],
-    baseline_skills: ["ponytail"], policy: "policies/workflow-policy.md", schema_version: 1,
+    agents: [{ name: "frontend-developer", file: "agents/frontend-developer.md", tags: ["frontend"], skills: [{ name: "ponytail", status: "recommended" }] }],
+    baseline_skills: [{ name: "ponytail", status: "recommended" }],
+    skill_flow: { label: "persisted", branches: [], steps: [{ stage: "build", skill: "persisted-only", reason: "Use the snapshot", status: "recommended" }] },
+    policy: "policies/workflow-policy.md", schema_version: 2,
   };
   const written = buildInstructions(workflow, outDir);
   const names = written.map((p) => p.split(/[\\/]/).pop());
   assert.ok(names.includes("README.md"));
   assert.ok(names.includes("policy.md"));
   const readme = readFileSync(join(outDir, "README.md"), "utf-8");
-  assert.ok(readme.includes("build a landing page"));
+  assert.ok(readme.includes("review a pull request"));
+  assert.ok(readme.includes("persisted-only"));
   assert.ok(readme.includes("Definition of Done"));
   assert.ok(readme.includes("agents/frontend-developer.md"));
   const detail = readFileSync(join(outDir, "agents", "frontend-developer.md"), "utf-8");
@@ -69,14 +72,17 @@ test("buildHtml is self-contained and collapsible", () => {
   const workflow = {
     name: "demo", task: "build a landing page",
     workflow: { phases: ["a"], output: "a page", validation: "v", recovery: "r" },
-    agents: [{ name: "frontend-developer", file: "agents/frontend-developer.md", tags: ["frontend"], skills: ["ponytail"] }],
-    baseline_skills: ["ponytail"], schema_version: 1,
+    agents: [{ name: "frontend-developer", file: "agents/frontend-developer.md", tags: ["frontend"], skills: [{ name: "ponytail", status: "recommended" }] }],
+    baseline_skills: [{ name: "ponytail", status: "recommended" }],
+    skill_flow: { label: "persisted", branches: [], steps: [{ stage: "verify", skill: "persisted-only", reason: "Use the snapshot", status: "recommended" }] },
+    schema_version: 2,
   };
   const html = buildHtml(workflow);
   assert.ok(html.startsWith("<!doctype html>"));
   assert.ok(html.includes("<style>")); // inline CSS
   assert.ok(html.includes("<details>") && html.includes("<summary>")); // collapsible
   assert.ok(html.includes("frontend-developer"));
+  assert.ok(html.includes("persisted-only"));
   assert.ok(html.includes("Definition of Done"));
   assert.ok(!html.includes("src=") && !html.includes('href="')); // no external assets
 });

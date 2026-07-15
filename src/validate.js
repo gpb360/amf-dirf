@@ -2,13 +2,71 @@
 import { readdirSync, readFileSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { AGENTS_DIR, REGISTRY, SKILLS, PLAYBOOKS, POLICY, WORKFLOW_DIR, loadJson } from "./paths.js";
+import { reconcile } from "./flow.js";
 
 const FM_RE = /^([A-Za-z0-9_-]+):\s*(.*)$/;
 
 const REQUIRED_PLAN_KEYS = {
+  schema_version: "number",
   name: "string", task: "string", playbook: "string", playbook_description: "string",
-  agents: "object", baseline_skills: "object", questions: "object", policy: "string",
+  agents: "array", baseline_skills: "array", questions: "array", skill_flow: "object", policy: "string",
 };
+
+function hasType(value, type) {
+  if (type === "array") return Array.isArray(value);
+  if (type === "object") return value !== null && typeof value === "object" && !Array.isArray(value);
+  return typeof value === type;
+}
+
+export function validateSnapshot(data, label = "workflow") {
+  const errors = [];
+  for (const [key, type] of Object.entries(REQUIRED_PLAN_KEYS)) {
+    if (!(key in data)) errors.push(`${label}: missing required key ${key}`);
+    else if (!hasType(data[key], type)) errors.push(`${label}: key ${key} must be ${type}`);
+  }
+  if (data.schema_version !== 2) errors.push(`${label}: schema_version must be 2`);
+
+  const resolvedSkillError = (skill, where, nameKey = "name") => {
+    if (!skill || typeof skill !== "object" || typeof skill[nameKey] !== "string" || !skill[nameKey]) {
+      errors.push(`${label}: ${where} must be a resolved skill object`);
+      return;
+    }
+    if (!new Set(["installed", "recommended"]).has(skill.status)) {
+      errors.push(`${label}: ${where} status must be installed or recommended`);
+    } else if (skill.status === "installed" && typeof skill.path !== "string") {
+      errors.push(`${label}: ${where} installed skill must include path`);
+    }
+  };
+
+  for (const [index, skill] of (Array.isArray(data.baseline_skills) ? data.baseline_skills : []).entries()) {
+    resolvedSkillError(skill, `baseline skill ${index + 1}`);
+  }
+  for (const [agentIndex, agent] of (Array.isArray(data.agents) ? data.agents : []).entries()) {
+    if (!Array.isArray(agent?.skills)) {
+      errors.push(`${label}: agent ${agentIndex + 1} skills must be an array`);
+      continue;
+    }
+    for (const [skillIndex, skill] of agent.skills.entries()) {
+      resolvedSkillError(skill, `agent ${agentIndex + 1} skill ${skillIndex + 1}`);
+    }
+  }
+  if (typeof data.skill_flow?.label !== "string" || !data.skill_flow.label) {
+    errors.push(`${label}: skill_flow.label must be a non-empty string`);
+  }
+  if (!Array.isArray(data.skill_flow?.steps) || data.skill_flow.steps.length === 0) {
+    errors.push(`${label}: skill_flow.steps must be a non-empty array`);
+  } else {
+    for (const [index, step] of data.skill_flow.steps.entries()) {
+      resolvedSkillError(step, `skill_flow step ${index + 1}`, "skill");
+      for (const field of ["stage", "reason"]) {
+        if (typeof step?.[field] !== "string" || !step[field]) {
+          errors.push(`${label}: skill_flow step ${index + 1} ${field} must be a non-empty string`);
+        }
+      }
+    }
+  }
+  return errors;
+}
 
 function parseFrontmatter(path) {
   const text = readFileSync(path, "utf-8");
@@ -78,19 +136,15 @@ export function main() {
       if (!skillNames.has(sn)) warnings.push(`playbook ${name}: baseline skill ${sn} not in registry`);
     }
   }
+  errors.push(...reconcile(playbooks));
 
   // --- workflow JSONs ---
   let wfFiles = [];
   try { wfFiles = readdirSync(WORKFLOW_DIR).filter((f) => f.endsWith(".json")).sort(); } catch { /* none */ }
   for (const wp of wfFiles) {
     const data = loadJson(join(WORKFLOW_DIR, wp));
-    for (const [key, typ] of Object.entries(REQUIRED_PLAN_KEYS)) {
-      if (!(key in data)) errors.push(`${wp}: missing required key ${key}`);
-      else if (typeof data[key] !== typ || (typ === "object" && !Array.isArray(data[key]))) {
-        errors.push(`${wp}: key ${key} must be ${typ}`);
-      }
-    }
-    for (const a of (data.agents || [])) {
+    errors.push(...validateSnapshot(data, wp));
+    for (const a of (Array.isArray(data.agents) ? data.agents : [])) {
       if (typeof a !== "object" || typeof a.name !== "string") errors.push(`${wp}: agent entry malformed`);
       else if (!registryNames.has(a.name) && !a.missing) errors.push(`${wp}: references unknown agent ${a.name}`);
     }

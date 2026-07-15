@@ -44,6 +44,13 @@ test("falls back to triage when nothing matches", () => {
   assert.equal(r.score, 0);
 });
 
+test("triage cues still use the unclassified fallback", () => {
+  const r = recommend("help me triage where to start");
+  assert.equal(r.playbook, "triage");
+  assert.equal(r.score, 0);
+  assert.deepEqual(r.matched_keywords, []);
+});
+
 test("alternates present on multi-match", () => {
   // "review a pr for security bugs" matches pr-review, security-review, bug-fix
   const r = recommend("review a pr for security bugs");

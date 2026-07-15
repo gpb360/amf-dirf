@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "name": "guvflow",
   "task": "review security vulnerabilities in the audit intake api and auth",
   "path": "E:/FlowStack",
@@ -34,6 +34,34 @@
     "validation": "prove findings with code references or commands",
     "recovery": "if boundary is unclear, ask for the asset and attacker model"
   },
+  "skill_flow": {
+    "playbook": "security-review",
+    "label": "security review",
+    "steps": [
+      {
+        "stage": "map",
+        "skill": "security-review",
+        "reason": "Map the trust boundary and attacker model.",
+        "status": "installed",
+        "path": "C:/Users/garyp/.agents/skills/security-review"
+      },
+      {
+        "stage": "inspect",
+        "skill": "systematic-debugging",
+        "reason": "Trace the control flow methodically.",
+        "status": "installed",
+        "path": "C:/Users/garyp/.claude/skills/systematic-debugging"
+      },
+      {
+        "stage": "verify",
+        "skill": "tdd",
+        "reason": "Prove findings through code references or a focused test.",
+        "status": "installed",
+        "path": "C:/Users/garyp/.codex/skills/tdd"
+      }
+    ],
+    "branches": []
+  },
   "agents": [
     {
       "name": "security-auditor",
@@ -43,8 +71,20 @@
         "audit"
       ],
       "skills": [
-        "ponytail",
-        "security-review"
+        {
+          "name": "ponytail",
+          "status": "installed",
+          "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
+          "category": "minimalism",
+          "path": "C:/Users/garyp/.claude/skills/ponytail"
+        },
+        {
+          "name": "security-review",
+          "status": "installed",
+          "summary": "threat modeling, vulnerability review, trust boundaries",
+          "category": "security",
+          "path": "C:/Users/garyp/.agents/skills/security-review"
+        }
       ]
     },
     {
@@ -56,13 +96,54 @@
         "database"
       ],
       "skills": [
-        "ponytail",
-        "impeccable",
-        "security-review",
-        "tdd",
-        "systematic-debugging",
-        "supabase-postgres-best-practices",
-        "scan-analyze"
+        {
+          "name": "ponytail",
+          "status": "installed",
+          "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
+          "category": "minimalism",
+          "path": "C:/Users/garyp/.claude/skills/ponytail"
+        },
+        {
+          "name": "impeccable",
+          "status": "installed",
+          "summary": "quality gate against AI slop; clean reusable components; YAGNI/DRY/KISS",
+          "category": "quality",
+          "path": "C:/Users/garyp/.claude/skills/impeccable"
+        },
+        {
+          "name": "security-review",
+          "status": "installed",
+          "summary": "threat modeling, vulnerability review, trust boundaries",
+          "category": "security",
+          "path": "C:/Users/garyp/.agents/skills/security-review"
+        },
+        {
+          "name": "tdd",
+          "status": "installed",
+          "summary": "test-driven development; red-green-refactor",
+          "category": "testing",
+          "path": "C:/Users/garyp/.codex/skills/tdd"
+        },
+        {
+          "name": "systematic-debugging",
+          "status": "installed",
+          "summary": "root-cause debugging discipline; hypotheses before fixes",
+          "category": "process",
+          "path": "C:/Users/garyp/.claude/skills/systematic-debugging"
+        },
+        {
+          "name": "supabase-postgres-best-practices",
+          "status": "recommended",
+          "summary": "Supabase/Postgres patterns, RLS, table constants, withTimeout wrapper",
+          "category": "backend"
+        },
+        {
+          "name": "scan-analyze",
+          "status": "installed",
+          "summary": "Turn a StructureSnapshot into structured findings: deterministic rules then LLM-enrichment",
+          "category": "audit",
+          "path": "E:/FlowStack/audit-runtime/skills/scan-analyze"
+        }
       ]
     },
     {
@@ -73,8 +154,27 @@
         "quality"
       ],
       "skills": [
-        "ponytail",
-        "tdd"
+        {
+          "name": "ponytail",
+          "status": "installed",
+          "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
+          "category": "minimalism",
+          "path": "C:/Users/garyp/.claude/skills/ponytail"
+        },
+        {
+          "name": "tdd",
+          "status": "installed",
+          "summary": "test-driven development; red-green-refactor",
+          "category": "testing",
+          "path": "C:/Users/garyp/.codex/skills/tdd"
+        },
+        {
+          "name": "security-review",
+          "status": "installed",
+          "summary": "threat modeling, vulnerability review, trust boundaries",
+          "category": "security",
+          "path": "C:/Users/garyp/.agents/skills/security-review"
+        }
       ]
     },
     {
@@ -85,13 +185,38 @@
         "developer-experience"
       ],
       "skills": [
-        "ponytail"
+        {
+          "name": "ponytail",
+          "status": "installed",
+          "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
+          "category": "minimalism",
+          "path": "C:/Users/garyp/.claude/skills/ponytail"
+        },
+        {
+          "name": "security-review",
+          "status": "installed",
+          "summary": "threat modeling, vulnerability review, trust boundaries",
+          "category": "security",
+          "path": "C:/Users/garyp/.agents/skills/security-review"
+        }
       ]
     }
   ],
   "baseline_skills": [
-    "ponytail",
-    "security-review"
+    {
+      "name": "ponytail",
+      "status": "installed",
+      "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
+      "category": "minimalism",
+      "path": "C:/Users/garyp/.claude/skills/ponytail"
+    },
+    {
+      "name": "security-review",
+      "status": "installed",
+      "summary": "threat modeling, vulnerability review, trust boundaries",
+      "category": "security",
+      "path": "C:/Users/garyp/.agents/skills/security-review"
+    }
   ],
   "questions": [
     "What trust boundary or asset matters most?",
@@ -102,11 +227,11 @@
     "status": "created",
     "starts": 0
   },
-  "created_at": "2026-07-14T19:29:09.815Z",
+  "created_at": "2026-07-15T17:05:57.141Z",
   "source_hashes": {
-    "agents_registry": "f146ae69d11030e9",
-    "skills": "76c78b6b6ec156d2",
-    "playbooks": "e37240ca49f9557a",
+    "agents_registry": "0fe796f6c67a22c8",
+    "skills": "201b7fd2101007b8",
+    "playbooks": "b46d81c40c53b14c",
     "policy": "34880a707afb63ac"
   }
 }

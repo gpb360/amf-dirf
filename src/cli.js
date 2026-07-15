@@ -8,17 +8,17 @@
 //   dirf validate                                        validate registries + workflows
 //   dirf skills scan                                     scan host, print installed skills + resolved refs
 import { writeFileSync, readFileSync, existsSync, readdirSync, unlinkSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { join, dirname, isAbsolute, resolve } from "node:path";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { REGISTRY, SKILLS, PLAYBOOKS, POLICY, WORKFLOW_DIR, fileHash, loadJson, workflowPath } from "./paths.js";
+import { ROOT, REGISTRY, SKILLS, PLAYBOOKS, POLICY, WORKFLOW_DIR, fileHash, loadJson, workflowPath } from "./paths.js";
 import { recommend } from "./router.js";
-import { discover, loadRegistry } from "./skills.js";
+import { discover, loadRegistry, resolveAgentSkills } from "./skills.js";
 import { buildInstructions, buildHtml } from "./renderer.js";
 import { main as validateMain } from "./validate.js";
 import { inspect } from "./inspect.js";
-import { buildFlow } from "./flow.js";
+import { buildFlow, reconcile } from "./flow.js";
 
 function enrichAgents(agentNames) {
   // Resolve playbook agent names into full entries (file, tags, skills) from the registry.
@@ -31,24 +31,27 @@ function enrichAgents(agentNames) {
 }
 
 function buildPlan(name, task, path) {
-  // Route + assemble the full workflow JSON (the schema source of truth).
-  const rec = recommend(task);
-  const agents = enrichAgents(rec.agents);
+  const { selection, skillFlow, discovered } = assembleTaskRouting(task, path);
+  const agents = enrichAgents(selection.agents).map((agent) => ({
+    ...agent,
+    skills: resolveAgentSkills(agent.name, agent.skills, selection.baseline_skills, discovered),
+  }));
   const now = new Date().toISOString();
   return {
-    schema_version: 1,
+    schema_version: 2,
     name,
     task,
     path: path || null,
-    playbook: rec.playbook,
-    playbook_description: rec.playbook_description,
-    score: rec.score,
-    matched_keywords: rec.matched_keywords,
-    alternates: rec.alternates,
-    workflow: rec.workflow,
+    playbook: selection.playbook,
+    playbook_description: selection.playbook_description,
+    score: selection.score,
+    matched_keywords: selection.matched_keywords,
+    alternates: selection.alternates,
+    workflow: selection.workflow,
+    skill_flow: skillFlow,
     agents,
-    baseline_skills: rec.baseline_skills,
-    questions: rec.questions,
+    baseline_skills: resolveAgentSkills("*", [], selection.baseline_skills, discovered),
+    questions: selection.questions,
     policy: "policies/workflow-policy.md",
     state: { status: "created", starts: 0 },
     created_at: now,
@@ -59,6 +62,16 @@ function buildPlan(name, task, path) {
       policy: fileHash(POLICY),
     },
   };
+}
+
+function assembleTaskRouting(task, path) {
+  const playbooks = loadJson(PLAYBOOKS);
+  const errors = reconcile(playbooks);
+  if (errors.length) throw new Error(`Task Routing reconciliation failed:\n${errors.map((error) => `  - ${error}`).join("\n")}`);
+  const selection = recommend(task, undefined, playbooks);
+  const projectRoot = path ? (isAbsolute(path) ? path : resolve(ROOT, path)) : null;
+  const discovered = discover(projectRoot);
+  return { selection, discovered, skillFlow: buildFlow(selection, { task }, discovered) };
 }
 
 function savePlan(plan) {
@@ -164,7 +177,7 @@ Usage:
 function cmdFlow(args) {
   const task = args._.join(" ");
   if (!task) { console.error("usage: dirf flow \"<task>\" [--path DIR]"); process.exit(2); }
-  const flow = buildFlow(task, args.path || null);
+  const { skillFlow: flow } = assembleTaskRouting(task, args.path || null);
   console.log(`Flow: ${flow.label}`);
   console.log(`Playbook: ${flow.playbook}${flow.branches.length ? ` (branches: ${flow.branches.join(", ")})` : ""}\n`);
   let lastStage = "";
