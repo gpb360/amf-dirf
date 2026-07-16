@@ -1,7 +1,11 @@
 // Router tests via node:test. Run: node --test tests/test-router.js
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { recommend } from "../src/router.js";
+import { execFileSync } from "node:child_process";
+import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { collectRoutingFacts, recommend } from "../src/router.js";
 
 test("landing page match", () => {
   const r = recommend("build a landing page");
@@ -74,4 +78,46 @@ test("facts augment matching", () => {
   const without = recommend("help me with something");
   const withFacts = recommend("help me", ["build a landing page"]);
   assert.ok(withFacts.score >= without.score);
+});
+
+test("frontend design refactor selects the UI playbook", () => {
+  assert.equal(recommend("continue frontend design refactor").playbook, "ui-ux-review");
+});
+
+test("work-in-progress facts augment routing", () => {
+  const r = recommend("continue the current work", ["branch: m024/design-system-foundation"]);
+  assert.equal(r.playbook, "ui-ux-review");
+  assert.ok(r.matched_keywords.includes("design-system"));
+});
+
+test("work-in-progress facts cannot override explicit PR-review intent", () => {
+  const r = recommend(
+    "Review pull request 23 and determine merge next steps",
+    ["changed: flowstack-build-prompt.md", "changed: AGENTS.md", "changed: cleanup-notes.md"],
+  );
+  assert.equal(r.playbook, "pr-review");
+});
+
+test("work-in-progress facts cannot override explicit UI intent", () => {
+  const r = recommend(
+    "ui ux review, figure out what design piece to work on next",
+    ["changed: AGENTS.md", "branch: m024/design-system-foundation"],
+  );
+  assert.equal(r.playbook, "ui-ux-review");
+});
+
+test("collectRoutingFacts reads branch, changed paths, and active plan", () => {
+  const root = mkdtempSync(join(tmpdir(), "dirf-facts-"));
+  execFileSync("git", ["init", "-b", "design-system-foundation", root]);
+  mkdirSync(join(root, ".gsd"));
+  writeFileSync(join(root, ".gsd", "STATE.md"), "**Active Milestone:** Frontend refactor\n");
+  writeFileSync(join(root, "DesignPanel.tsx"), "export {}\n");
+  execFileSync("git", ["-C", root, "add", "DesignPanel.tsx"]);
+  execFileSync("git", ["-C", root, "-c", "user.name=DIRF Test", "-c", "user.email=dirf@example.invalid", "commit", "-m", "seed"]);
+  writeFileSync(join(root, "DesignPanel.tsx"), "export const changed = true\n");
+
+  const facts = collectRoutingFacts(root);
+  assert.ok(facts.includes("branch: design-system-foundation"));
+  assert.ok(facts.includes("changed: DesignPanel.tsx"));
+  assert.ok(facts.includes("plan: Active Milestone: Frontend refactor"));
 });

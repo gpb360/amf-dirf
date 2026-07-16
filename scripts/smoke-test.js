@@ -48,9 +48,10 @@ assertContains(out, "Workflow saved");
 assertContains(out, "Spec kit rendered:");
 
 const wfJson = join(WORKFLOWS, "smoke.json");
-const readme = join(WORKFLOWS, "instructions", "README.md");
-const html = join(WORKFLOWS, "instructions", "instructions.html");
-const detail = join(WORKFLOWS, "instructions", "agents", "frontend-developer.md");
+const smokeOutput = join(WORKFLOWS, "instructions", "smoke");
+const readme = join(smokeOutput, "README.md");
+const html = join(smokeOutput, "instructions.html");
+const detail = join(smokeOutput, "agents", "frontend-developer.md");
 for (const p of [wfJson, readme, html, detail]) {
   if (!existsSync(p)) throw new Error(`missing expected output: ${p}`);
 }
@@ -58,12 +59,19 @@ const readmeText = readFileSync(readme, "utf-8");
 assertContains(readmeText, "Definition of Done");
 assertContains(readmeText, "Agent roster");
 assertContains(readmeText.toLowerCase(), "baseline skills");
+assertContains(readmeText, "codex -C");
 if (readmeText.split("\n").length > 60) throw new Error("router README too long (>60 lines)");
 
 const htmlText = readFileSync(html, "utf-8");
 if (!htmlText.startsWith("<!doctype html>")) throw new Error("HTML missing doctype");
 if (htmlText.includes("src=") || htmlText.includes('href="')) throw new Error("HTML has external assets");
 if (!htmlText.includes("<details>")) throw new Error("HTML not collapsible");
+
+// A later workflow must not overwrite this workflow's artifacts.
+out = run(["build", "smoke-isolation", "review a pull request"]);
+const isolatedHtml = join(WORKFLOWS, "instructions", "smoke-isolation", "instructions.html");
+if (!existsSync(isolatedHtml)) throw new Error(`missing isolated output: ${isolatedHtml}`);
+assertContains(readFileSync(html, "utf-8"), "smoke — instruction set");
 
 // --- render existing ---
 out = run(["render", "smoke"]);
@@ -78,5 +86,8 @@ run(["render", "does-not-exist-xyz"], true);
 
 // cleanup
 try { rmSync(wfJson); } catch { /* ok */ }
+try { rmSync(join(WORKFLOWS, "smoke-isolation.json")); } catch { /* ok */ }
+rmSync(smokeOutput, { recursive: true, force: true });
+rmSync(join(WORKFLOWS, "instructions", "smoke-isolation"), { recursive: true, force: true });
 
 console.log("Smoke test passed");

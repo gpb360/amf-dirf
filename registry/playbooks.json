@@ -752,6 +752,7 @@
   "ui-ux-review": {
     "description": "Review or plan UI/UX with design-system, accessibility, responsive layout, and polish checks.",
     "keywords": [
+      "ui ux review",
       "ui ux",
       "ui/ux",
       "design system",
@@ -759,7 +760,11 @@
       "responsive",
       "layout",
       "visual polish",
-      "interface"
+      "interface",
+      "frontend design",
+      "frontend refactor",
+      "design refactor",
+      "design-system"
     ],
     "agents": [
       "ui-designer",

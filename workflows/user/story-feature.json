@@ -2,7 +2,7 @@
   "schema_version": 2,
   "name": "story-feature",
   "task": "build a fullstack feature for character profiles with api and database",
-  "path": "E:/s7s-projects/storytellers",
+  "path": "E:\\s7s-projects\\storytellers",
   "playbook": "fullstack-feature",
   "playbook_description": "Build a user-facing feature across UI, API, data, and tests.",
   "score": 12,
@@ -381,7 +381,7 @@
     "status": "created",
     "starts": 0
   },
-  "created_at": "2026-07-15T17:05:57.687Z",
+  "created_at": "2026-07-15T23:05:06.595Z",
   "source_hashes": {
     "agents_registry": "0fe796f6c67a22c8",
     "skills": "201b7fd2101007b8",

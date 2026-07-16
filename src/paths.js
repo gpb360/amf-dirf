@@ -3,7 +3,7 @@
 // 'repo root' computation lives in exactly one place.
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 // src/ -> repo root is one level up.
@@ -31,4 +31,8 @@ export function workflowPath(name) {
   const safe = name.trim().toLowerCase().replace(/[^a-z0-9_.-]+/g, "-").replace(/^[.-]+|[.-]+$/g, "");
   if (!safe) throw new Error("workflow name must contain alphanumeric characters");
   return join(WORKFLOW_DIR, `${safe}.json`);
+}
+
+export function workflowOutputDir(name) {
+  return join(WORKFLOW_DIR, "instructions", basename(workflowPath(name), ".json"));
 }

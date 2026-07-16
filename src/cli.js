@@ -8,12 +8,12 @@
 //   dirf validate                                        validate registries + workflows
 //   dirf skills scan                                     scan host, print installed skills + resolved refs
 import { writeFileSync, readFileSync, existsSync, readdirSync, unlinkSync } from "node:fs";
-import { join, dirname, isAbsolute, resolve } from "node:path";
+import { join, isAbsolute, resolve } from "node:path";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { ROOT, REGISTRY, SKILLS, PLAYBOOKS, POLICY, WORKFLOW_DIR, fileHash, loadJson, workflowPath } from "./paths.js";
-import { recommend } from "./router.js";
+import { ROOT, REGISTRY, SKILLS, PLAYBOOKS, POLICY, WORKFLOW_DIR, fileHash, loadJson, workflowOutputDir, workflowPath } from "./paths.js";
+import { collectRoutingFacts, recommend } from "./router.js";
 import { discover, loadRegistry, resolveAgentSkills } from "./skills.js";
 import { buildInstructions, buildHtml } from "./renderer.js";
 import { main as validateMain } from "./validate.js";
@@ -31,7 +31,7 @@ function enrichAgents(agentNames) {
 }
 
 function buildPlan(name, task, path) {
-  const { selection, skillFlow, discovered } = assembleTaskRouting(task, path);
+  const { selection, skillFlow, discovered, facts } = assembleTaskRouting(task, path);
   const agents = enrichAgents(selection.agents).map((agent) => ({
     ...agent,
     skills: resolveAgentSkills(agent.name, agent.skills, selection.baseline_skills, discovered),
@@ -48,6 +48,7 @@ function buildPlan(name, task, path) {
     matched_keywords: selection.matched_keywords,
     alternates: selection.alternates,
     workflow: selection.workflow,
+    routing_facts: facts,
     skill_flow: skillFlow,
     agents,
     baseline_skills: resolveAgentSkills("*", [], selection.baseline_skills, discovered),
@@ -68,10 +69,11 @@ function assembleTaskRouting(task, path) {
   const playbooks = loadJson(PLAYBOOKS);
   const errors = reconcile(playbooks);
   if (errors.length) throw new Error(`Task Routing reconciliation failed:\n${errors.map((error) => `  - ${error}`).join("\n")}`);
-  const selection = recommend(task, undefined, playbooks);
   const projectRoot = path ? (isAbsolute(path) ? path : resolve(ROOT, path)) : null;
+  const facts = collectRoutingFacts(projectRoot);
+  const selection = recommend(task, facts, playbooks);
   const discovered = discover(projectRoot);
-  return { selection, discovered, skillFlow: buildFlow(selection, { task }, discovered) };
+  return { selection, discovered, facts, skillFlow: buildFlow(selection, { task }, discovered) };
 }
 
 function savePlan(plan) {
@@ -82,7 +84,7 @@ function savePlan(plan) {
 
 function renderPlan(planPath, openBrowser = false) {
   const plan = JSON.parse(readFileSync(planPath, "utf-8"));
-  const outDir = join(dirname(planPath), "instructions");
+  const outDir = workflowOutputDir(plan.name);
   const written = buildInstructions(plan, outDir);
   const htmlPath = join(outDir, "instructions.html");
   writeFileSync(htmlPath, buildHtml(plan), "utf-8");

@@ -9,7 +9,7 @@
 // Markdown is source; HTML is the render of the same lean structure.
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { AGENTS_DIR, ROOT } from "./paths.js";
+import { AGENTS_DIR, ROOT, workflowOutputDir } from "./paths.js";
 
 const GOVERNANCE_MARKER = "<!-- governance:v1 -->";
 const FM_RE = /^([A-Za-z0-9_-]+):\s*(.*)$/;
@@ -17,6 +17,11 @@ const FM_RE = /^([A-Za-z0-9_-]+):\s*(.*)$/;
 function assertSnapshot(workflow) {
   if (workflow.schema_version !== 2) throw new Error(`workflow ${workflow.name || "?"}: schema_version must be 2`);
   if (!workflow.skill_flow?.steps) throw new Error(`workflow ${workflow.name || "?"}: missing persisted skill_flow`);
+}
+
+function launchCommand(workflow, readmePath) {
+  const quote = (value) => `'${String(value).replaceAll("'", "''")}'`;
+  return `codex -C ${quote(workflow.path || ".")} ${quote(`Use ${readmePath} as the operating workflow and execute the task.`)}`;
 }
 
 // --------------------------------------------------------------------------- //
@@ -171,6 +176,13 @@ export function buildInstructions(workflow, outDir) {
     "## Objective",
     task,
     "",
+    "## Next step",
+    "Run this from PowerShell:",
+    "",
+    "```powershell",
+    launchCommand(workflow, join(outDir, "README.md")),
+    "```",
+    "",
     "## Definition of Done",
     wf.output || "_(no output contract declared)_",
     "",
@@ -323,6 +335,7 @@ export function buildHtml(workflow) {
   const wf = workflow.workflow || {};
   const agents = workflow.agents || [];
   const baseline = workflow.baseline_skills || [];
+  const command = launchCommand(workflow, join(workflowOutputDir(workflow.name), "README.md"));
 
   const parts = [
     "<!doctype html><html><head><meta charset='utf-8'>",
@@ -332,6 +345,9 @@ export function buildHtml(workflow) {
 
   parts.push(`<h1>${escapeHtml(workflow.name || "")}</h1>`);
   parts.push(`<p class='mute'>${escapeHtml(workflow.task || "")}</p>`);
+
+  parts.push("<h2>Next step</h2><p>Run this from PowerShell:</p>");
+  parts.push(`<pre><code>${escapeHtml(command)}</code></pre>`);
 
   parts.push("<h2>Objective &amp; Definition of Done</h2>");
   parts.push(`<p>${escapeHtml(workflow.task || "")}</p>`);
@@ -348,6 +364,12 @@ export function buildHtml(workflow) {
     parts.push(`<li><span class='chip ${status}'>${escapeHtml(step.skill)}</span> ${escapeHtml(step.reason)}</li>`);
   }
   parts.push("</ol>");
+
+  if (workflow.routing_facts?.length) {
+    parts.push("<h2>Routing context</h2><ul>");
+    for (const fact of workflow.routing_facts) parts.push(`<li>${escapeHtml(fact)}</li>`);
+    parts.push("</ul>");
+  }
 
   parts.push("<h2>Baseline skills (every agent)</h2><p>");
   if (baseline.length) {

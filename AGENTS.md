@@ -41,3 +41,12 @@ node src/cli.js validate        # validate registries + workflows
 - One entry point: `src/cli.js`.
 - Markdown is source; HTML is a regenerable render (gitignored).
 - Validate before you commit: `node src/cli.js validate`.
+
+
+<claude-mem-context>
+# Memory Context
+
+# [amf-dirf] recent context, 2026-07-16 2:42pm EDT
+
+No previous sessions found.
+</claude-mem-context>
