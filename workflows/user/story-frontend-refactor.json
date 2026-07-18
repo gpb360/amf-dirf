@@ -1,8 +1,7 @@
 {
-  "schema_version": 2,
+  "schema_version": 4,
   "name": "story-frontend-refactor",
   "task": "continue frontend design refactor",
-  "path": ".",
   "playbook": "ui-ux-review",
   "playbook_description": "Review or plan UI/UX with design-system, accessibility, responsive layout, and polish checks.",
   "score": 6,
@@ -54,26 +53,27 @@
         "skill": "ui-ux-pro-max",
         "reason": "Review design-system, layout, and interaction quality.",
         "status": "installed",
-        "path": "C:/Users/garyp/.claude/skills/ui-ux-pro-max"
+        "provider": "claude"
       },
       {
         "stage": "review",
         "skill": "accessibility",
         "reason": "Review contrast, input, motion, and assistive states.",
         "status": "installed",
-        "path": "C:/Users/garyp/.agents/skills/accessibility"
+        "provider": "agents"
       },
       {
         "stage": "verify",
         "skill": "web-quality-audit",
         "reason": "Verify responsive and runtime behavior.",
         "status": "installed",
-        "path": "C:/Users/garyp/.agents/skills/web-quality-audit"
+        "provider": "agents"
       }
     ],
     "branches": [
       "ui"
-    ]
+    ],
+    "gaps": []
   },
   "agents": [
     {
@@ -90,49 +90,49 @@
           "status": "installed",
           "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
           "category": "minimalism",
-          "path": "C:/Users/garyp/.claude/skills/ponytail"
+          "provider": "claude"
         },
         {
           "name": "impeccable",
           "status": "installed",
           "summary": "quality gate against AI slop; clean reusable components; YAGNI/DRY/KISS",
           "category": "quality",
-          "path": "C:/Users/garyp/.claude/skills/impeccable"
+          "provider": "claude"
         },
         {
           "name": "ui-ux-pro-max",
           "status": "installed",
           "summary": "visual polish, layout quality, typography, interaction design",
           "category": "design",
-          "path": "C:/Users/garyp/.claude/skills/ui-ux-pro-max"
+          "provider": "claude"
         },
         {
           "name": "frontend-design",
           "status": "installed",
           "summary": "frontend layout, component composition, responsive design",
           "category": "design",
-          "path": "C:/Users/garyp/.claude/skills/frontend-design"
+          "provider": "claude"
         },
         {
           "name": "accessibility",
           "status": "installed",
           "summary": "a11y audits, semantic HTML, contrast, keyboard/screen-reader support",
           "category": "quality",
-          "path": "C:/Users/garyp/.agents/skills/accessibility"
+          "provider": "agents"
         },
         {
           "name": "web-quality-audit",
           "status": "installed",
           "summary": "runtime web quality, performance, Core Web Vitals",
           "category": "quality",
-          "path": "C:/Users/garyp/.agents/skills/web-quality-audit"
+          "provider": "agents"
         },
         {
           "name": "web-design-guidelines",
           "status": "installed",
           "summary": "Review UI code for Web Interface Guidelines: accessibility, UX, design compliance",
           "category": "design",
-          "path": "C:/Users/garyp/.claude/skills/web-design-guidelines"
+          "provider": "claude"
         }
       ]
     },
@@ -149,28 +149,28 @@
           "status": "installed",
           "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
           "category": "minimalism",
-          "path": "C:/Users/garyp/.claude/skills/ponytail"
+          "provider": "claude"
         },
         {
           "name": "impeccable",
           "status": "installed",
           "summary": "quality gate against AI slop; clean reusable components; YAGNI/DRY/KISS",
           "category": "quality",
-          "path": "C:/Users/garyp/.claude/skills/impeccable"
+          "provider": "claude"
         },
         {
           "name": "ui-ux-pro-max",
           "status": "installed",
           "summary": "visual polish, layout quality, typography, interaction design",
           "category": "design",
-          "path": "C:/Users/garyp/.claude/skills/ui-ux-pro-max"
+          "provider": "claude"
         },
         {
           "name": "accessibility",
           "status": "installed",
           "summary": "a11y audits, semantic HTML, contrast, keyboard/screen-reader support",
           "category": "quality",
-          "path": "C:/Users/garyp/.agents/skills/accessibility"
+          "provider": "agents"
         }
       ]
     },
@@ -187,28 +187,28 @@
           "status": "installed",
           "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
           "category": "minimalism",
-          "path": "C:/Users/garyp/.claude/skills/ponytail"
+          "provider": "claude"
         },
         {
           "name": "impeccable",
           "status": "installed",
           "summary": "quality gate against AI slop; clean reusable components; YAGNI/DRY/KISS",
           "category": "quality",
-          "path": "C:/Users/garyp/.claude/skills/impeccable"
+          "provider": "claude"
         },
         {
           "name": "ui-ux-pro-max",
           "status": "installed",
           "summary": "visual polish, layout quality, typography, interaction design",
           "category": "design",
-          "path": "C:/Users/garyp/.claude/skills/ui-ux-pro-max"
+          "provider": "claude"
         },
         {
           "name": "accessibility",
           "status": "installed",
           "summary": "a11y audits, semantic HTML, contrast, keyboard/screen-reader support",
           "category": "quality",
-          "path": "C:/Users/garyp/.agents/skills/accessibility"
+          "provider": "agents"
         }
       ]
     },
@@ -225,42 +225,42 @@
           "status": "installed",
           "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
           "category": "minimalism",
-          "path": "C:/Users/garyp/.claude/skills/ponytail"
+          "provider": "claude"
         },
         {
           "name": "web-quality-audit",
           "status": "installed",
           "summary": "runtime web quality, performance, Core Web Vitals",
           "category": "quality",
-          "path": "C:/Users/garyp/.agents/skills/web-quality-audit"
+          "provider": "agents"
         },
         {
           "name": "tdd",
           "status": "installed",
           "summary": "test-driven development; red-green-refactor",
           "category": "testing",
-          "path": "C:/Users/garyp/.codex/skills/tdd"
+          "provider": "codex"
         },
         {
           "name": "impeccable",
           "status": "installed",
           "summary": "quality gate against AI slop; clean reusable components; YAGNI/DRY/KISS",
           "category": "quality",
-          "path": "C:/Users/garyp/.claude/skills/impeccable"
+          "provider": "claude"
         },
         {
           "name": "ui-ux-pro-max",
           "status": "installed",
           "summary": "visual polish, layout quality, typography, interaction design",
           "category": "design",
-          "path": "C:/Users/garyp/.claude/skills/ui-ux-pro-max"
+          "provider": "claude"
         },
         {
           "name": "accessibility",
           "status": "installed",
           "summary": "a11y audits, semantic HTML, contrast, keyboard/screen-reader support",
           "category": "quality",
-          "path": "C:/Users/garyp/.agents/skills/accessibility"
+          "provider": "agents"
         }
       ]
     },
@@ -277,35 +277,35 @@
           "status": "installed",
           "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
           "category": "minimalism",
-          "path": "C:/Users/garyp/.claude/skills/ponytail"
+          "provider": "claude"
         },
         {
           "name": "tdd",
           "status": "installed",
           "summary": "test-driven development; red-green-refactor",
           "category": "testing",
-          "path": "C:/Users/garyp/.codex/skills/tdd"
+          "provider": "codex"
         },
         {
           "name": "impeccable",
           "status": "installed",
           "summary": "quality gate against AI slop; clean reusable components; YAGNI/DRY/KISS",
           "category": "quality",
-          "path": "C:/Users/garyp/.claude/skills/impeccable"
+          "provider": "claude"
         },
         {
           "name": "ui-ux-pro-max",
           "status": "installed",
           "summary": "visual polish, layout quality, typography, interaction design",
           "category": "design",
-          "path": "C:/Users/garyp/.claude/skills/ui-ux-pro-max"
+          "provider": "claude"
         },
         {
           "name": "accessibility",
           "status": "installed",
           "summary": "a11y audits, semantic HTML, contrast, keyboard/screen-reader support",
           "category": "quality",
-          "path": "C:/Users/garyp/.agents/skills/accessibility"
+          "provider": "agents"
         }
       ]
     }
@@ -316,28 +316,28 @@
       "status": "installed",
       "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
       "category": "minimalism",
-      "path": "C:/Users/garyp/.claude/skills/ponytail"
+      "provider": "claude"
     },
     {
       "name": "impeccable",
       "status": "installed",
       "summary": "quality gate against AI slop; clean reusable components; YAGNI/DRY/KISS",
       "category": "quality",
-      "path": "C:/Users/garyp/.claude/skills/impeccable"
+      "provider": "claude"
     },
     {
       "name": "ui-ux-pro-max",
       "status": "installed",
       "summary": "visual polish, layout quality, typography, interaction design",
       "category": "design",
-      "path": "C:/Users/garyp/.claude/skills/ui-ux-pro-max"
+      "provider": "claude"
     },
     {
       "name": "accessibility",
       "status": "installed",
       "summary": "a11y audits, semantic HTML, contrast, keyboard/screen-reader support",
       "category": "quality",
-      "path": "C:/Users/garyp/.agents/skills/accessibility"
+      "provider": "agents"
     }
   ],
   "questions": [
@@ -355,5 +355,6 @@
     "skills": "201b7fd2101007b8",
     "playbooks": "1de901ea3ec0d66d",
     "policy": "34880a707afb63ac"
-  }
+  },
+  "capability_gaps": []
 }

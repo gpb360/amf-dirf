@@ -1,8 +1,7 @@
 {
-  "schema_version": 2,
+  "schema_version": 4,
   "name": "guvflow-pr23-workflow",
   "task": "Review workflow and next steps for https://github.com/symbiotic7solutions/GuvFlow/pull/23",
-  "path": "E:\\FlowStack",
   "playbook": "agent-cleanup",
   "playbook_description": "Clean, rename, validate, and reorganize an agent collection.",
   "score": 12,
@@ -77,24 +76,25 @@
         "skill": "agent-organizer",
         "reason": "Inventory agent roles, overlaps, and host constraints.",
         "status": "installed",
-        "path": "C:/Users/garyp/.agents/skills/agent-organizer"
+        "provider": "agents"
       },
       {
         "stage": "simplify",
         "skill": "ponytail",
         "reason": "Delete duplication and keep the smallest useful agent surface.",
         "status": "installed",
-        "path": "C:/Users/garyp/.claude/skills/ponytail"
+        "provider": "claude"
       },
       {
         "stage": "verify",
         "skill": "code-review",
         "reason": "Review registry and agent-definition consistency.",
         "status": "installed",
-        "path": "C:/Users/garyp/.codex/skills/code-review"
+        "provider": "codex"
       }
     ],
-    "branches": []
+    "branches": [],
+    "gaps": []
   },
   "agents": [
     {
@@ -111,7 +111,7 @@
           "status": "installed",
           "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
           "category": "minimalism",
-          "path": "C:/Users/garyp/.claude/skills/ponytail"
+          "provider": "claude"
         }
       ]
     },
@@ -128,7 +128,7 @@
           "status": "installed",
           "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
           "category": "minimalism",
-          "path": "C:/Users/garyp/.claude/skills/ponytail"
+          "provider": "claude"
         }
       ]
     },
@@ -145,7 +145,7 @@
           "status": "installed",
           "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
           "category": "minimalism",
-          "path": "C:/Users/garyp/.claude/skills/ponytail"
+          "provider": "claude"
         }
       ]
     },
@@ -162,7 +162,7 @@
           "status": "installed",
           "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
           "category": "minimalism",
-          "path": "C:/Users/garyp/.claude/skills/ponytail"
+          "provider": "claude"
         }
       ]
     },
@@ -179,7 +179,7 @@
           "status": "installed",
           "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
           "category": "minimalism",
-          "path": "C:/Users/garyp/.claude/skills/ponytail"
+          "provider": "claude"
         }
       ]
     }
@@ -190,7 +190,7 @@
       "status": "installed",
       "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
       "category": "minimalism",
-      "path": "C:/Users/garyp/.claude/skills/ponytail"
+      "provider": "claude"
     }
   ],
   "questions": [
@@ -208,5 +208,6 @@
     "skills": "201b7fd2101007b8",
     "playbooks": "1de901ea3ec0d66d",
     "policy": "34880a707afb63ac"
-  }
+  },
+  "capability_gaps": []
 }

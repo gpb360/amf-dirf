@@ -41,9 +41,10 @@ export function reconcile(playbooks, knownBranches = KNOWN_BRANCHES) {
         errors.push(`playbook ${name}: step ${index + 1} must be an object`);
         return;
       }
-      for (const field of ["stage", "skill", "reason"]) {
+      for (const field of ["stage", "reason"]) {
         if (!step[field]) errors.push(`playbook ${name}: step ${index + 1} missing ${field}`);
       }
+      if (!step.capability && !step.skill) errors.push(`playbook ${name}: step ${index + 1} missing capability`);
       if (step.branch && !knownBranches.has(step.branch)) {
         errors.push(`playbook ${name}: step ${index + 1} references unknown branch ${step.branch}`);
       }
@@ -63,26 +64,78 @@ function branchesFor(task, playbookAgents) {
   return branches;
 }
 
+const STOP_WORDS = new Set(["and", "the", "for", "with", "from", "into", "before", "after", "when", "this", "that", "task", "skill", "use", "apply"]);
+
+function words(value) {
+  return new Set(String(value || "").toLowerCase().replaceAll("-", " ").match(/[a-z0-9]{3,}/g)?.filter((word) => !STOP_WORDS.has(word)) || []);
+}
+
+function capabilityType(name, item) {
+  if (item.type) return item.type;
+  if (/\b(rtk|cli|tool)\b/i.test(name)) return "tool";
+  if (/\b(mem|memory|obsidian)\b/i.test(name)) return "memory";
+  if (/\b(beads?|tracker|linear)\b/i.test(name)) return "tracker";
+  return "skill";
+}
+
+function selectCapability(requirement, selection, context, skillIndex) {
+  const capabilityWords = words(requirement.capability);
+  const ranked = Object.entries(skillIndex).map(([name, item]) => {
+    const candidate = words([name, item.description, item.summary, item.category, ...(item.applies_to || []), ...(item.tags || [])].join(" "));
+    const declared = Array.isArray(item.capabilities) ? item.capabilities : String(item.capabilities || "").split(",").map((value) => value.trim()).filter(Boolean);
+    const normalizedName = name.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+    const normalizedCapability = requirement.capability.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+    let score = declared.includes(requirement.capability) ? 100 : normalizedName === normalizedCapability ? 50 : 0;
+    let capabilityMatches = score ? 1 : 0;
+    for (const word of capabilityWords) if (candidate.has(word)) { score += 5; capabilityMatches += 1; }
+    if (!capabilityMatches) return { name, item, score: 0 };
+    return { name, item, score };
+  }).filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name) || String(a.item.path).localeCompare(String(b.item.path)));
+  const chosen = ranked[0];
+  if (!chosen) return null;
+  return {
+    stage: requirement.stage,
+    capability: requirement.capability || requirement.stage,
+    skill: chosen.name,
+    type: capabilityType(chosen.name, chosen.item),
+    reason: requirement.reason,
+    status: "installed",
+    provider: chosen.item.provider || "project",
+    selection_reason: `best installed match (${chosen.score}) for ${requirement.capability || requirement.stage}`,
+    rejected_candidates: ranked.slice(1, 4).map(({ name, score }) => ({ name, score })),
+  };
+}
+
 export function buildFlow(selection, context = {}, skillIndex = {}) {
   const flow = selection?.skill_flow;
   if (!flow?.steps) throw new Error(`playbook ${selection?.playbook || "?"}: missing skill_flow`);
 
   const branches = branchesFor(context.task, selection.agents);
-  const steps = flow.steps
+  const requirements = flow.steps
     .filter((step) => !step.branch || branches.has(step.branch))
-    .map(({ branch: _branch, ...step }) => {
-      const installed = skillIndex[step.skill];
-      return {
-        ...step,
-        status: installed ? "installed" : "recommended",
-        ...(installed ? { path: installed.path } : {}),
-      };
+    .map(({ branch: _branch, skill: _legacySkill, ...step }) => ({ ...step, capability: step.capability || step.stage }));
+  const steps = [];
+  const gaps = [];
+  for (const requirement of requirements) {
+    const selected = selectCapability(requirement, selection, context, skillIndex);
+    if (selected) steps.push(selected);
+    else gaps.push({
+      stage: requirement.stage,
+      capability: requirement.capability,
+      question: `No installed capability covers ${requirement.capability}. Would you like DIRF to suggest a trusted skill or derive a repo-local pattern?`,
+      reason: requirement.reason,
+      requires_approval: true,
+      trusted_candidates: (context.trustedSources || []).filter((source) =>
+        (source.capabilities || []).includes(requirement.capability)),
     });
+  }
 
   return {
     playbook: selection.playbook,
     label: flow.label,
     steps,
+    gaps,
     branches: [...branches],
   };
 }

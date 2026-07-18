@@ -35,6 +35,10 @@ test("implementation intent outranks incidental auth terminology", () => {
   assert.equal(recommend("Implement a security audit of auth").playbook, "security-review");
 });
 
+test("negated implementation language does not override explicit PR review", () => {
+  assert.equal(recommend("Review PR #900 and do not add split behavior").playbook, "pr-review");
+});
+
 test("implementation intent outranks domain review terminology", () => {
   assert.equal(
     recommend("Add paid-save entitlement checks and creator execution review access with Supabase persistence and tests").playbook,

@@ -1,8 +1,7 @@
 {
-  "schema_version": 2,
+  "schema_version": 4,
   "name": "guvflow-research",
   "task": "research and analyze the audit findings and compose recommendations",
-  "path": "E:/FlowStack",
   "playbook": "research",
   "playbook_description": "Research a topic, competitor, technology, or market and synthesize recommendations.",
   "score": 3,
@@ -36,17 +35,18 @@
         "skill": "grill-me",
         "reason": "Define the decision the research must support.",
         "status": "installed",
-        "path": "C:/Users/garyp/.codex/skills/grill-me"
+        "provider": "codex"
       },
       {
         "stage": "synthesize",
         "skill": "ponytail",
         "reason": "Stop at the smallest evidence-backed recommendation.",
         "status": "installed",
-        "path": "C:/Users/garyp/.claude/skills/ponytail"
+        "provider": "claude"
       }
     ],
-    "branches": []
+    "branches": [],
+    "gaps": []
   },
   "agents": [
     {
@@ -62,28 +62,28 @@
           "status": "installed",
           "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
           "category": "minimalism",
-          "path": "C:/Users/garyp/.claude/skills/ponytail"
+          "provider": "claude"
         },
         {
           "name": "scan-analyze",
           "status": "installed",
           "summary": "Turn a StructureSnapshot into structured findings: deterministic rules then LLM-enrichment",
           "category": "audit",
-          "path": "E:/FlowStack/audit-runtime/skills/scan-analyze"
+          "provider": "project"
         },
         {
           "name": "compose-recommendations",
           "status": "installed",
           "summary": "Merge findings + researcher report into one normalized, de-duplicated, ranked recommendation bundle",
           "category": "audit",
-          "path": "E:/FlowStack/audit-runtime/skills/compose-recommendations"
+          "provider": "project"
         },
         {
           "name": "cost-savings",
           "status": "installed",
           "summary": "Derive cost-savings estimates from detected tools + spend + pricing (current/recommended/savings USD/mo)",
           "category": "audit",
-          "path": "E:/FlowStack/audit-runtime/skills/cost-savings"
+          "provider": "project"
         }
       ]
     },
@@ -100,7 +100,7 @@
           "status": "installed",
           "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
           "category": "minimalism",
-          "path": "C:/Users/garyp/.claude/skills/ponytail"
+          "provider": "claude"
         }
       ]
     },
@@ -118,7 +118,7 @@
           "status": "installed",
           "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
           "category": "minimalism",
-          "path": "C:/Users/garyp/.claude/skills/ponytail"
+          "provider": "claude"
         }
       ]
     },
@@ -135,7 +135,7 @@
           "status": "installed",
           "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
           "category": "minimalism",
-          "path": "C:/Users/garyp/.claude/skills/ponytail"
+          "provider": "claude"
         }
       ]
     }
@@ -146,7 +146,7 @@
       "status": "installed",
       "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
       "category": "minimalism",
-      "path": "C:/Users/garyp/.claude/skills/ponytail"
+      "provider": "claude"
     }
   ],
   "questions": [
@@ -164,5 +164,6 @@
     "skills": "201b7fd2101007b8",
     "playbooks": "b46d81c40c53b14c",
     "policy": "34880a707afb63ac"
-  }
+  },
+  "capability_gaps": []
 }

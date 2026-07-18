@@ -1,0 +1,169 @@
+{
+  "schema_version": 4,
+  "name": "flowstack-isms-governance",
+  "task": "Implement the FlowStack ISMS documentation program from the supplied governance brief. Create a maintainable docs structure for governance, policies, standards, procedures, evidence registers, templates, and the SOC 2 control matrix. Cover the GUVFlow platform, environments, personnel, contractors, service providers, and vendors. Include the ISMS manual, charter, RACI, document control, core information-security policies, operating procedures, registers, templates, and a phased readiness roadmap. Ground every control and status in current repository evidence; clearly mark gaps and drafts, and do not claim operating effectiveness without evidence.",
+  "playbook": "documentation",
+  "playbook_description": "Write or improve developer-facing documentation.",
+  "score": 6,
+  "matched_keywords": [
+    "docs",
+    "documentation"
+  ],
+  "alternates": [
+    {
+      "playbook": "fullstack-feature",
+      "score": 3,
+      "description": "Build a user-facing feature across UI, API, data, and tests."
+    },
+    {
+      "playbook": "api-test",
+      "score": 3,
+      "description": "Validate API contracts, behavior, security, and failure handling."
+    }
+  ],
+  "workflow": {
+    "phases": [
+      "identify audience",
+      "inspect source truth",
+      "write",
+      "verify commands"
+    ],
+    "output": "clear docs grounded in current repo behavior",
+    "validation": "run or verify every documented command where practical",
+    "recovery": "if behavior cannot be verified, mark it explicitly"
+  },
+  "routing_facts": [
+    "branch: chore/pr-template-and-ai-label",
+    "changed: .bg-shell/manifest.json",
+    "changed: .gitignore",
+    "changed: @/components/ui/avatar.tsx",
+    "changed: @/components/ui/button.tsx",
+    "changed: @/components/ui/card.tsx",
+    "changed: @/components/ui/dialog.tsx",
+    "changed: @/components/ui/dropdown-menu.tsx",
+    "changed: @/components/ui/input.tsx",
+    "changed: @/components/ui/label.tsx",
+    "changed: @/components/ui/sheet.tsx",
+    "changed: @/components/ui/table.tsx",
+    "changed: AGENTS.md",
+    "changed: CLAUDE.md",
+    "changed: README.md",
+    "changed: docs/FLOWSTACK_REPO_CLEANUP_INVENTORY.md",
+    "changed: eslint.config.js",
+    "changed: flowstack-build-prompt.md",
+    "changed: src/features/audit/FrameworkAssessmentPanel.tsx",
+    "changed: src/features/governance/command-center/GovernanceCommandCenterPage.tsx",
+    "changed: src/features/governance/command-center/hooks/useGovernanceCommandCenter.ts",
+    "changed: src/features/governance/governanceApi.ts",
+    "changed: src/pages/AuthPage.tsx",
+    "changed: supabase/functions/github-evidence-webhook/index.ts",
+    "changed: supabase/functions/github-evidence-webhook/repo_test.ts",
+    "changed: supabase/functions/governance-assess/index.ts",
+    "changed: temp-untitledui-starter",
+    "changed: test-results/.last-run.json",
+    "changed: .zcode/",
+    "changed: \"docs/Aikido AI Pentest Example Report.pdf\"",
+    "plan: Active Milestone: M006: FlowStack MVP Release"
+  ],
+  "skill_flow": {
+    "playbook": "documentation",
+    "label": "developer documentation",
+    "steps": [
+      {
+        "stage": "inspect",
+        "skill": "ponytail",
+        "reason": "Ground the document in the smallest current source of truth.",
+        "status": "installed",
+        "provider": "claude"
+      },
+      {
+        "stage": "verify",
+        "skill": "code-review",
+        "reason": "Review commands, claims, and scope against source.",
+        "status": "installed",
+        "provider": "codex"
+      }
+    ],
+    "branches": [],
+    "gaps": []
+  },
+  "agents": [
+    {
+      "name": "documentation-engineer",
+      "file": "agents/documentation-engineer.md",
+      "tags": [
+        "docs",
+        "developer-experience"
+      ],
+      "skills": [
+        {
+          "name": "ponytail",
+          "status": "installed",
+          "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
+          "category": "minimalism",
+          "provider": "claude"
+        }
+      ]
+    },
+    {
+      "name": "dx-optimizer",
+      "file": "agents/dx-optimizer.md",
+      "tags": [
+        "developer-experience",
+        "workflow"
+      ],
+      "skills": [
+        {
+          "name": "ponytail",
+          "status": "installed",
+          "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
+          "category": "minimalism",
+          "provider": "claude"
+        }
+      ]
+    },
+    {
+      "name": "knowledge-synthesizer",
+      "file": "agents/knowledge-synthesizer.md",
+      "tags": [
+        "research",
+        "synthesis"
+      ],
+      "skills": [
+        {
+          "name": "ponytail",
+          "status": "installed",
+          "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
+          "category": "minimalism",
+          "provider": "claude"
+        }
+      ]
+    }
+  ],
+  "baseline_skills": [
+    {
+      "name": "ponytail",
+      "status": "installed",
+      "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
+      "category": "minimalism",
+      "provider": "claude"
+    }
+  ],
+  "questions": [
+    "Who is the doc for?",
+    "Should commands be verified or documented from source only?"
+  ],
+  "policy": "policies/workflow-policy.md",
+  "state": {
+    "status": "created",
+    "starts": 0
+  },
+  "created_at": "2026-07-17T02:21:37.909Z",
+  "source_hashes": {
+    "agents_registry": "0fe796f6c67a22c8",
+    "skills": "201b7fd2101007b8",
+    "playbooks": "43f90fb8342d0003",
+    "policy": "34880a707afb63ac"
+  },
+  "capability_gaps": []
+}

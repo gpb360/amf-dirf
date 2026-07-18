@@ -14,6 +14,7 @@ export const AGENTS_DIR = join(ROOT, "agents");
 export const REGISTRY = join(ROOT, "registry", "agents.json");
 export const SKILLS = join(ROOT, "registry", "skills.json");
 export const PLAYBOOKS = join(ROOT, "registry", "playbooks.json");
+export const PLAYBOOK_DIR = join(ROOT, "playbooks");
 export const POLICY = join(ROOT, "policies", "workflow-policy.md");
 export const WORKFLOW_DIR = join(ROOT, "workflows", "user");
 
@@ -34,5 +35,5 @@ export function workflowPath(name) {
 }
 
 export function workflowOutputDir(name) {
-  return join(WORKFLOW_DIR, "instructions", basename(workflowPath(name), ".json"));
+  return join(WORKFLOW_DIR, basename(workflowPath(name), ".json"));
 }

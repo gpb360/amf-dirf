@@ -3,104 +3,203 @@
     {
       "name": "ponytail",
       "category": "minimalism",
-      "applies_to": ["*"],
-      "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)"
+      "applies_to": [
+        "*"
+      ],
+      "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
+      "capabilities": [
+        "minimalism"
+      ]
     },
     {
       "name": "impeccable",
       "category": "quality",
-      "applies_to": ["frontend-developer", "ui-designer", "backend-architect", "rapid-prototyper"],
-      "summary": "quality gate against AI slop; clean reusable components; YAGNI/DRY/KISS"
+      "applies_to": [
+        "frontend-developer",
+        "ui-designer",
+        "backend-architect",
+        "rapid-prototyper"
+      ],
+      "summary": "quality gate against AI slop; clean reusable components; YAGNI/DRY/KISS",
+      "capabilities": [
+        "product quality"
+      ]
     },
     {
       "name": "ui-ux-pro-max",
       "category": "design",
-      "applies_to": ["ui-designer", "frontend-developer"],
-      "summary": "visual polish, layout quality, typography, interaction design"
+      "applies_to": [
+        "ui-designer",
+        "frontend-developer"
+      ],
+      "summary": "visual polish, layout quality, typography, interaction design",
+      "capabilities": [
+        "user experience design"
+      ]
     },
     {
       "name": "frontend-design",
       "category": "design",
-      "applies_to": ["frontend-developer", "ui-designer"],
-      "summary": "frontend layout, component composition, responsive design"
+      "applies_to": [
+        "frontend-developer",
+        "ui-designer"
+      ],
+      "summary": "frontend layout, component composition, responsive design",
+      "capabilities": [
+        "frontend design"
+      ]
     },
     {
       "name": "react-best-practices",
       "category": "frontend",
-      "applies_to": ["frontend-developer"],
-      "summary": "React component patterns, hooks, state management conventions"
+      "applies_to": [
+        "frontend-developer"
+      ],
+      "summary": "React component patterns, hooks, state management conventions",
+      "capabilities": [
+        "react engineering"
+      ]
     },
     {
       "name": "tdd",
       "category": "testing",
-      "applies_to": ["test-writer-fixer", "backend-architect"],
-      "summary": "test-driven development; red-green-refactor"
+      "applies_to": [
+        "test-writer-fixer",
+        "backend-architect"
+      ],
+      "summary": "test-driven development; red-green-refactor",
+      "capabilities": [
+        "testing"
+      ]
     },
     {
       "name": "accessibility",
       "category": "quality",
-      "applies_to": ["frontend-developer", "ui-designer"],
-      "summary": "a11y audits, semantic HTML, contrast, keyboard/screen-reader support"
+      "applies_to": [
+        "frontend-developer",
+        "ui-designer"
+      ],
+      "summary": "a11y audits, semantic HTML, contrast, keyboard/screen-reader support",
+      "capabilities": [
+        "accessibility"
+      ]
     },
     {
       "name": "security-review",
       "category": "security",
-      "applies_to": ["security-auditor", "backend-architect"],
-      "summary": "threat modeling, vulnerability review, trust boundaries"
+      "applies_to": [
+        "security-auditor",
+        "backend-architect"
+      ],
+      "summary": "threat modeling, vulnerability review, trust boundaries",
+      "capabilities": [
+        "security review"
+      ]
     },
     {
       "name": "systematic-debugging",
       "category": "process",
-      "applies_to": ["frontend-developer", "backend-architect", "error-coordinator"],
-      "summary": "root-cause debugging discipline; hypotheses before fixes"
+      "applies_to": [
+        "frontend-developer",
+        "backend-architect",
+        "error-coordinator"
+      ],
+      "summary": "root-cause debugging discipline; hypotheses before fixes",
+      "capabilities": [
+        "root cause debugging"
+      ]
     },
     {
       "name": "web-quality-audit",
       "category": "quality",
-      "applies_to": ["performance-benchmarker", "ui-designer"],
-      "summary": "runtime web quality, performance, Core Web Vitals"
+      "applies_to": [
+        "performance-benchmarker",
+        "ui-designer"
+      ],
+      "summary": "runtime web quality, performance, Core Web Vitals",
+      "capabilities": [
+        "web quality"
+      ]
     },
     {
       "name": "tanstack-query",
       "category": "frontend",
-      "applies_to": ["frontend-developer"],
-      "summary": "TanStack Query server-state conventions: hooks, cache invalidation, mutations"
+      "applies_to": [
+        "frontend-developer"
+      ],
+      "summary": "TanStack Query server-state conventions: hooks, cache invalidation, mutations",
+      "capabilities": [
+        "react engineering"
+      ]
     },
     {
       "name": "supabase-postgres-best-practices",
       "category": "backend",
-      "applies_to": ["backend-architect"],
-      "summary": "Supabase/Postgres patterns, RLS, table constants, withTimeout wrapper"
+      "applies_to": [
+        "backend-architect"
+      ],
+      "summary": "Supabase/Postgres patterns, RLS, table constants, withTimeout wrapper",
+      "capabilities": [
+        "backend architecture"
+      ]
     },
     {
       "name": "scan-analyze",
       "category": "audit",
-      "applies_to": ["research-analyst", "backend-architect"],
-      "summary": "Turn a StructureSnapshot into structured findings: deterministic rules then LLM-enrichment"
+      "applies_to": [
+        "research-analyst",
+        "backend-architect"
+      ],
+      "summary": "Turn a StructureSnapshot into structured findings: deterministic rules then LLM-enrichment",
+      "capabilities": [
+        "audit"
+      ]
     },
     {
       "name": "compose-recommendations",
       "category": "audit",
-      "applies_to": ["research-analyst"],
-      "summary": "Merge findings + researcher report into one normalized, de-duplicated, ranked recommendation bundle"
+      "applies_to": [
+        "research-analyst"
+      ],
+      "summary": "Merge findings + researcher report into one normalized, de-duplicated, ranked recommendation bundle",
+      "capabilities": [
+        "research synthesis"
+      ]
     },
     {
       "name": "cost-savings",
       "category": "audit",
-      "applies_to": ["research-analyst"],
-      "summary": "Derive cost-savings estimates from detected tools + spend + pricing (current/recommended/savings USD/mo)"
+      "applies_to": [
+        "research-analyst"
+      ],
+      "summary": "Derive cost-savings estimates from detected tools + spend + pricing (current/recommended/savings USD/mo)",
+      "capabilities": [
+        "cost analysis"
+      ]
     },
     {
       "name": "vercel-react-best-practices",
       "category": "frontend",
-      "applies_to": ["frontend-developer"],
-      "summary": "React/Next.js performance optimization guidelines from Vercel Engineering"
+      "applies_to": [
+        "frontend-developer"
+      ],
+      "summary": "React/Next.js performance optimization guidelines from Vercel Engineering",
+      "capabilities": [
+        "react engineering"
+      ]
     },
     {
       "name": "web-design-guidelines",
       "category": "design",
-      "applies_to": ["ui-designer", "frontend-developer"],
-      "summary": "Review UI code for Web Interface Guidelines: accessibility, UX, design compliance"
+      "applies_to": [
+        "ui-designer",
+        "frontend-developer"
+      ],
+      "summary": "Review UI code for Web Interface Guidelines: accessibility, UX, design compliance",
+      "capabilities": [
+        "web quality",
+        "user experience design"
+      ]
     }
   ]
 }

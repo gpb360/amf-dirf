@@ -48,7 +48,7 @@ assertContains(out, "Workflow saved");
 assertContains(out, "Spec kit rendered:");
 
 const wfJson = join(WORKFLOWS, "smoke.json");
-const smokeOutput = join(WORKFLOWS, "instructions", "smoke");
+const smokeOutput = join(WORKFLOWS, "smoke");
 const readme = join(smokeOutput, "README.md");
 const html = join(smokeOutput, "instructions.html");
 const detail = join(smokeOutput, "agents", "frontend-developer.md");
@@ -58,9 +58,17 @@ for (const p of [wfJson, readme, html, detail]) {
 const readmeText = readFileSync(readme, "utf-8");
 assertContains(readmeText, "Definition of Done");
 assertContains(readmeText, "Agent roster");
-assertContains(readmeText.toLowerCase(), "baseline skills");
-assertContains(readmeText, "codex -C");
-if (readmeText.split("\n").length > 60) throw new Error("router README too long (>60 lines)");
+assertContains(readmeText.toLowerCase(), "capabilities");
+if (readmeText.toLowerCase().includes("recommended — not installed")) throw new Error("absent skill leaked into executable workflow");
+assertContains(readmeText, "current host");
+if (/codex|claude/i.test(readmeText)) throw new Error("host-specific agent leaked into operating instructions");
+const snapshot = JSON.parse(readFileSync(wfJson, "utf-8"));
+if ("path" in snapshot) throw new Error("target repository path leaked into portable snapshot");
+if (JSON.stringify(snapshot).includes("C:/Users/") || JSON.stringify(snapshot).includes("C:\\\\Users\\\\")) throw new Error("host path leaked into portable snapshot");
+assertContains(run(["migrate", "smoke"]), "portable schema version 4");
+if (readmeText.split("\n").length > 75) throw new Error("router README too long (>75 lines)");
+assertContains(run(["validate", smokeOutput]), "Folder validation passed");
+assertContains(run(["graph", smokeOutput]), "[playbook] landing-page");
 
 const htmlText = readFileSync(html, "utf-8");
 if (!htmlText.startsWith("<!doctype html>")) throw new Error("HTML missing doctype");
@@ -69,7 +77,7 @@ if (!htmlText.includes("<details>")) throw new Error("HTML not collapsible");
 
 // A later workflow must not overwrite this workflow's artifacts.
 out = run(["build", "smoke-isolation", "review a pull request"]);
-const isolatedHtml = join(WORKFLOWS, "instructions", "smoke-isolation", "instructions.html");
+const isolatedHtml = join(WORKFLOWS, "smoke-isolation", "instructions.html");
 if (!existsSync(isolatedHtml)) throw new Error(`missing isolated output: ${isolatedHtml}`);
 assertContains(readFileSync(html, "utf-8"), "smoke — instruction set");
 
@@ -88,6 +96,7 @@ run(["render", "does-not-exist-xyz"], true);
 try { rmSync(wfJson); } catch { /* ok */ }
 try { rmSync(join(WORKFLOWS, "smoke-isolation.json")); } catch { /* ok */ }
 rmSync(smokeOutput, { recursive: true, force: true });
+rmSync(join(WORKFLOWS, "smoke-isolation"), { recursive: true, force: true });
 rmSync(join(WORKFLOWS, "instructions", "smoke-isolation"), { recursive: true, force: true });
 
 console.log("Smoke test passed");

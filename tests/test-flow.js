@@ -86,14 +86,18 @@ test("buildFlow assembles an existing Selection without classifying again", () =
     agents: [],
     skill_flow: {
       label: "build a feature",
-      steps: [{ stage: "build", skill: "tdd", reason: "Drive one behavior" }],
+      steps: [{ stage: "build", capability: "testing", reason: "Drive one behavior" }],
     },
   };
 
-  assert.deepEqual(buildFlow(selection, { task: "Add review access" }, { tdd: { path: "skills/tdd" } }), {
+  assert.deepEqual(buildFlow(selection, { task: "Add review access" }, { tdd: { path: "skills/tdd", description: "testing behavior", provider: "project" } }), {
     playbook: "fullstack-feature",
     label: "build a feature",
-    steps: [{ stage: "build", skill: "tdd", reason: "Drive one behavior", status: "installed", path: "skills/tdd" }],
+    steps: [{
+      stage: "build", capability: "testing", skill: "tdd", type: "skill", reason: "Drive one behavior",
+      status: "installed", provider: "project", selection_reason: "best installed match (5) for testing", rejected_candidates: [],
+    }],
+    gaps: [],
     branches: [],
   });
 });
@@ -105,14 +109,40 @@ test("buildFlow does not infer UI from the word build", () => {
     skill_flow: {
       label: "build",
       steps: [
-        { stage: "build", skill: "tdd", reason: "Drive behavior" },
-        { stage: "design", skill: "frontend-design", reason: "Design UI", branch: "ui" },
+        { stage: "build", capability: "testing", reason: "Drive behavior" },
+        { stage: "design", capability: "design", reason: "Design UI", branch: "ui" },
       ],
     },
   };
 
-  assert.deepEqual(buildFlow(selection, { task: "build an API" }).steps.map((step) => step.skill), ["tdd"]);
-  assert.deepEqual(buildFlow(selection, { task: "build a UI component" }).steps.map((step) => step.skill), ["tdd", "frontend-design"]);
+  const installed = {
+    tdd: { path: "skills/tdd", description: "testing behavior" },
+    "frontend-design": { path: "skills/frontend-design", description: "design UI" },
+  };
+  assert.deepEqual(buildFlow(selection, { task: "build an API" }, installed).steps.map((step) => step.skill), ["tdd"]);
+  assert.deepEqual(buildFlow(selection, { task: "build a UI component" }, installed).steps.map((step) => step.skill), ["tdd", "frontend-design"]);
+});
+
+test("buildFlow selects one deterministic installed match and reports gaps", () => {
+  const selection = {
+    playbook: "demo", agents: [],
+    skill_flow: { label: "demo", steps: [
+      { stage: "quality", capability: "quality", reason: "Improve quality" },
+      { stage: "memory", capability: "memory", reason: "Recover context" },
+    ] },
+  };
+  const flow = buildFlow(selection, {
+    task: "quality pass",
+    trustedSources: [{ name: "user-choice", capabilities: ["memory"], url: "https://example.test" }],
+  }, {
+    zeta: { path: "/z", description: "quality" },
+    alpha: { path: "/a", description: "quality" },
+  });
+  assert.equal(flow.steps.length, 1);
+  assert.equal(flow.steps[0].skill, "alpha");
+  assert.equal(flow.gaps[0].capability, "memory");
+  assert.equal(flow.gaps[0].requires_approval, true);
+  assert.equal(flow.gaps[0].trusted_candidates[0].name, "user-choice");
 });
 
 test("schema v2 requires resolved skill snapshots", () => {
@@ -159,4 +189,24 @@ test("schema v2 requires complete persisted flow fields", () => {
   assert.ok(errors.includes("demo.json: skill_flow.label must be a non-empty string"));
   assert.ok(errors.includes("demo.json: skill_flow step 1 stage must be a non-empty string"));
   assert.ok(errors.includes("demo.json: skill_flow step 1 reason must be a non-empty string"));
+});
+
+test("schema v4 rejects persisted runtime paths", () => {
+  const errors = validateSnapshot({
+    schema_version: 4,
+    name: "portable",
+    task: "build",
+    path: "C:\\repo",
+    playbook: "fullstack-feature",
+    playbook_description: "Build",
+    agents: [{ name: "backend-developer", skills: [{ name: "tdd", status: "installed", provider: "project", path: "C:/skills/tdd" }] }],
+    baseline_skills: [],
+    questions: [],
+    skill_flow: { label: "build", steps: [{ stage: "build", capability: "testing", skill: "tdd", status: "installed", provider: "project", reason: "Test" }], gaps: [] },
+    capability_gaps: [],
+    policy: "policies/workflow-policy.md",
+  }, "portable.json");
+
+  assert.ok(errors.includes("portable.json: must not persist target repository path"));
+  assert.ok(errors.includes("portable.json: agent 1 skill 1 must not persist a runtime path"));
 });

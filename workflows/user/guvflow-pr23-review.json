@@ -1,8 +1,7 @@
 {
-  "schema_version": 2,
+  "schema_version": 4,
   "name": "guvflow-pr23-review",
   "task": "Review pull request 23 for XAI drift controls and determine merge next steps",
-  "path": "E:\\FlowStack",
   "playbook": "pr-review",
   "playbook_description": "Review a pull request for bugs, regressions, security, and missing tests.",
   "score": 12,
@@ -77,24 +76,25 @@
         "skill": "code-review",
         "reason": "Review Standards and Spec independently.",
         "status": "installed",
-        "path": "C:/Users/garyp/.codex/skills/code-review"
+        "provider": "codex"
       },
       {
         "stage": "security",
         "skill": "security-review",
         "reason": "Check trust boundaries, secrets, injection, and auth gaps.",
         "status": "installed",
-        "path": "C:/Users/garyp/.agents/skills/security-review"
+        "provider": "agents"
       },
       {
         "stage": "verify",
         "skill": "tdd",
         "reason": "Check that changed behavior has regression coverage.",
         "status": "installed",
-        "path": "C:/Users/garyp/.codex/skills/tdd"
+        "provider": "codex"
       }
     ],
-    "branches": []
+    "branches": [],
+    "gaps": []
   },
   "agents": [
     {
@@ -111,7 +111,7 @@
           "status": "installed",
           "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
           "category": "minimalism",
-          "path": "C:/Users/garyp/.claude/skills/ponytail"
+          "provider": "claude"
         }
       ]
     },
@@ -128,14 +128,14 @@
           "status": "installed",
           "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
           "category": "minimalism",
-          "path": "C:/Users/garyp/.claude/skills/ponytail"
+          "provider": "claude"
         },
         {
           "name": "tdd",
           "status": "installed",
           "summary": "test-driven development; red-green-refactor",
           "category": "testing",
-          "path": "C:/Users/garyp/.codex/skills/tdd"
+          "provider": "codex"
         }
       ]
     },
@@ -152,14 +152,14 @@
           "status": "installed",
           "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
           "category": "minimalism",
-          "path": "C:/Users/garyp/.claude/skills/ponytail"
+          "provider": "claude"
         },
         {
           "name": "security-review",
           "status": "installed",
           "summary": "threat modeling, vulnerability review, trust boundaries",
           "category": "security",
-          "path": "C:/Users/garyp/.agents/skills/security-review"
+          "provider": "agents"
         }
       ]
     },
@@ -176,21 +176,21 @@
           "status": "installed",
           "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
           "category": "minimalism",
-          "path": "C:/Users/garyp/.claude/skills/ponytail"
+          "provider": "claude"
         },
         {
           "name": "web-quality-audit",
           "status": "installed",
           "summary": "runtime web quality, performance, Core Web Vitals",
           "category": "quality",
-          "path": "C:/Users/garyp/.agents/skills/web-quality-audit"
+          "provider": "agents"
         },
         {
           "name": "tdd",
           "status": "installed",
           "summary": "test-driven development; red-green-refactor",
           "category": "testing",
-          "path": "C:/Users/garyp/.codex/skills/tdd"
+          "provider": "codex"
         }
       ]
     }
@@ -201,7 +201,7 @@
       "status": "installed",
       "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
       "category": "minimalism",
-      "path": "C:/Users/garyp/.claude/skills/ponytail"
+      "provider": "claude"
     }
   ],
   "questions": [
@@ -219,5 +219,6 @@
     "skills": "201b7fd2101007b8",
     "playbooks": "1de901ea3ec0d66d",
     "policy": "34880a707afb63ac"
-  }
+  },
+  "capability_gaps": []
 }

@@ -1,0 +1,259 @@
+{
+  "schema_version": 4,
+  "name": "guvflow-current-review-20260717",
+  "task": "Triage current GuvFlow product state and unfinished repository work. Preserve all existing changes, identify the highest-value coherent next slice, verify claims with read-only code and test evidence, and return an implementation handoff without editing the target repository.",
+  "playbook": "pr-review",
+  "playbook_description": "Review a pull request for bugs, regressions, security, and missing tests.",
+  "score": 3,
+  "matched_keywords": [
+    "pr"
+  ],
+  "alternates": [],
+  "workflow": {
+    "phases": [
+      "inspect diff",
+      "check behavior risk",
+      "check security/test gaps",
+      "report findings"
+    ],
+    "output": "findings ordered by severity with file references",
+    "validation": "use git diff, tests, or static checks as available",
+    "recovery": "if no PR is available, ask for branch, diff, or PR URL"
+  },
+  "routing_facts": [
+    "branch: chore/pr-template-and-ai-label",
+    "changed: .bg-shell/manifest.json",
+    "changed: .gitignore",
+    "changed: @/components/ui/avatar.tsx",
+    "changed: @/components/ui/button.tsx",
+    "changed: @/components/ui/card.tsx",
+    "changed: @/components/ui/dialog.tsx",
+    "changed: @/components/ui/dropdown-menu.tsx",
+    "changed: @/components/ui/input.tsx",
+    "changed: @/components/ui/label.tsx",
+    "changed: @/components/ui/sheet.tsx",
+    "changed: @/components/ui/table.tsx",
+    "changed: AGENTS.md",
+    "changed: CLAUDE.md",
+    "changed: README.md",
+    "changed: docs/FLOWSTACK_REPO_CLEANUP_INVENTORY.md",
+    "changed: eslint.config.js",
+    "changed: flowstack-build-prompt.md",
+    "changed: src/context/AuthContext.tsx",
+    "changed: src/features/audit/FrameworkAssessmentPanel.tsx",
+    "changed: src/features/governance/command-center/GovernanceCommandCenterPage.tsx",
+    "changed: src/features/governance/command-center/hooks/useGovernanceCommandCenter.ts",
+    "changed: src/features/governance/governanceApi.ts",
+    "changed: src/pages/AuthPage.tsx",
+    "changed: src/pages/OnboardingWizard.tsx",
+    "changed: supabase/config.toml",
+    "changed: supabase/functions/github-evidence-webhook/index.ts",
+    "changed: supabase/functions/github-evidence-webhook/repo_test.ts",
+    "changed: supabase/functions/governance-assess/index.ts",
+    "changed: temp-untitledui-starter",
+    "changed: test-results/.last-run.json",
+    "changed: .zcode/",
+    "changed: \"docs/Aikido AI Pentest Example Report.pdf\"",
+    "changed: docs/marketing/",
+    "changed: supabase/functions/organization-bootstrap/",
+    "changed: supabase/migrations/20260712010000_organization_jurisdiction.sql",
+    "plan: Active Milestone: M006: FlowStack MVP Release"
+  ],
+  "skill_flow": {
+    "playbook": "pr-review",
+    "label": "review a pull request",
+    "steps": [
+      {
+        "stage": "review",
+        "capability": "code review",
+        "skill": "code-review",
+        "type": "skill",
+        "reason": "Review Standards and Spec independently.",
+        "status": "installed",
+        "provider": "codex",
+        "selection_reason": "best installed match (60) for code review",
+        "rejected_candidates": [
+          {
+            "name": "best-practices",
+            "score": 10
+          },
+          {
+            "name": "gsd-code-review",
+            "score": 10
+          },
+          {
+            "name": "gsd-ns-review",
+            "score": 10
+          }
+        ]
+      },
+      {
+        "stage": "security",
+        "capability": "security review",
+        "skill": "security-review",
+        "type": "skill",
+        "reason": "Check trust boundaries, secrets, injection, and auth gaps.",
+        "status": "installed",
+        "provider": "agents",
+        "selection_reason": "best installed match (110) for security review",
+        "rejected_candidates": [
+          {
+            "name": "best-practices",
+            "score": 10
+          },
+          {
+            "name": "gsd-code-review",
+            "score": 10
+          },
+          {
+            "name": "gsd-ns-review",
+            "score": 10
+          }
+        ]
+      },
+      {
+        "stage": "verify",
+        "capability": "testing",
+        "skill": "tdd",
+        "type": "skill",
+        "reason": "Check that changed behavior has regression coverage.",
+        "status": "installed",
+        "provider": "codex",
+        "selection_reason": "best installed match (105) for testing",
+        "rejected_candidates": [
+          {
+            "name": "agent-browser",
+            "score": 5
+          },
+          {
+            "name": "api-tester",
+            "score": 5
+          },
+          {
+            "name": "browse",
+            "score": 5
+          }
+        ]
+      }
+    ],
+    "gaps": [],
+    "branches": []
+  },
+  "capability_gaps": [],
+  "agents": [
+    {
+      "name": "agent-organizer",
+      "file": "agents/agent-organizer.md",
+      "tags": [
+        "orchestration",
+        "routing",
+        "teams"
+      ],
+      "skills": [
+        {
+          "name": "ponytail",
+          "status": "installed",
+          "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
+          "category": "minimalism",
+          "provider": "claude"
+        }
+      ]
+    },
+    {
+      "name": "test-writer-fixer",
+      "file": "agents/test-writer-fixer.md",
+      "tags": [
+        "tests",
+        "quality"
+      ],
+      "skills": [
+        {
+          "name": "ponytail",
+          "status": "installed",
+          "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
+          "category": "minimalism",
+          "provider": "claude"
+        },
+        {
+          "name": "tdd",
+          "status": "installed",
+          "summary": "test-driven development; red-green-refactor",
+          "category": "testing",
+          "provider": "codex"
+        }
+      ]
+    },
+    {
+      "name": "security-auditor",
+      "file": "agents/security-auditor.md",
+      "tags": [
+        "security",
+        "audit"
+      ],
+      "skills": [
+        {
+          "name": "ponytail",
+          "status": "installed",
+          "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
+          "category": "minimalism",
+          "provider": "claude"
+        },
+        {
+          "name": "security-review",
+          "status": "installed",
+          "summary": "threat modeling, vulnerability review, trust boundaries",
+          "category": "security",
+          "provider": "agents"
+        }
+      ]
+    },
+    {
+      "name": "performance-benchmarker",
+      "file": "agents/performance-benchmarker.md",
+      "tags": [
+        "performance",
+        "testing"
+      ],
+      "skills": [
+        {
+          "name": "ponytail",
+          "status": "installed",
+          "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
+          "category": "minimalism",
+          "provider": "claude"
+        },
+        {
+          "name": "web-quality-audit",
+          "status": "installed",
+          "summary": "runtime web quality, performance, Core Web Vitals",
+          "category": "quality",
+          "provider": "agents"
+        },
+        {
+          "name": "tdd",
+          "status": "installed",
+          "summary": "test-driven development; red-green-refactor",
+          "category": "testing",
+          "provider": "codex"
+        }
+      ]
+    }
+  ],
+  "baseline_skills": [],
+  "questions": [
+    "What branch or PR should be reviewed?",
+    "Should the review include security and performance checks?"
+  ],
+  "policy": "policies/workflow-policy.md",
+  "state": {
+    "status": "created",
+    "starts": 0
+  },
+  "created_at": "2026-07-18T01:17:29.797Z",
+  "source_hashes": {
+    "agents_registry": "0fe796f6c67a22c8",
+    "skills": "386f153d73a05517",
+    "playbooks": "3f4846741238bd40",
+    "policy": "7c3f2a1180b4ca89"
+  }
+}

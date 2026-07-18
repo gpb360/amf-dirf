@@ -1,0 +1,449 @@
+{
+  "schema_version": 4,
+  "name": "lowlands-missinglettr-seo-2026-07",
+  "task": "Create a reusable Storytellers HyperFrames SEO video campaign from E:\\lowlands\\client-content\\drive-lowlands-pics-2026-07-17. Deliver 4 keyword-targeted 35-60 second videos and 24 standalone 15-30 second vertical Shorts with voiceover scripts, burned-in captions, YouTube metadata, thumbnail notes, Missinglettr copy, and a CSV or JSON manifest. Use HyperFrames general-video, keep source assets read-only, select 12-18 strong images, use MOV as B-roll, maintain warm rustic branding and the CTA Check availability for your date. Build and approve one pilot main video plus two Shorts before rendering the remainder. Do not add dependencies unless the existing toolchain cannot render the outputs; keep commercial audio licensing and API secrets safe.",
+  "playbook": "fullstack-feature",
+  "playbook_description": "Build a user-facing feature across UI, API, data, and tests.",
+  "score": 6,
+  "matched_keywords": [
+    "feature",
+    "api"
+  ],
+  "alternates": [
+    {
+      "playbook": "landing-page",
+      "score": 3,
+      "description": "Plan, design, build, and verify a landing page."
+    },
+    {
+      "playbook": "deployment",
+      "score": 3,
+      "description": "Prepare, debug, or review deployment and release flow."
+    }
+  ],
+  "workflow": {
+    "phases": [
+      "define user outcome",
+      "reuse existing patterns",
+      "implement vertical slice",
+      "verify"
+    ],
+    "output": "small working feature slice",
+    "validation": "run focused tests or build for touched surface",
+    "recovery": "if contracts are unclear, stop after documenting the needed API/data decision"
+  },
+  "routing_facts": [],
+  "skill_flow": {
+    "playbook": "fullstack-feature",
+    "label": "idea → ship (build a feature)",
+    "steps": [
+      {
+        "stage": "sharpen",
+        "capability": "plan interview",
+        "skill": "grill-me",
+        "type": "skill",
+        "reason": "Resolve the decision tree before building.",
+        "status": "installed",
+        "selection_reason": "best installed match (10) for plan interview",
+        "rejected_candidates": [
+          {
+            "name": "grill-with-docs",
+            "score": 10
+          },
+          {
+            "name": "request-refactor-plan",
+            "score": 10
+          },
+          {
+            "name": "write-milestone-brief",
+            "score": 10
+          }
+        ],
+        "provider": "codex"
+      },
+      {
+        "stage": "plan",
+        "capability": "minimalism",
+        "skill": "ponytail",
+        "type": "skill",
+        "reason": "Reuse existing patterns and choose the smallest correct slice.",
+        "status": "installed",
+        "selection_reason": "best installed match (105) for minimalism",
+        "rejected_candidates": [],
+        "provider": "claude"
+      },
+      {
+        "stage": "design",
+        "capability": "frontend design",
+        "skill": "frontend-design",
+        "type": "skill",
+        "reason": "Design the UI structure when the task has a UI surface.",
+        "status": "installed",
+        "selection_reason": "best installed match (110) for frontend design",
+        "rejected_candidates": [
+          {
+            "name": "gsd-ui-phase",
+            "score": 10
+          },
+          {
+            "name": "impeccable",
+            "score": 10
+          },
+          {
+            "name": "make-interfaces-feel-better",
+            "score": 10
+          }
+        ],
+        "provider": "claude"
+      },
+      {
+        "stage": "build",
+        "capability": "testing",
+        "skill": "tdd",
+        "type": "skill",
+        "reason": "Drive each behavior through a red-green slice.",
+        "status": "installed",
+        "selection_reason": "best installed match (105) for testing",
+        "rejected_candidates": [
+          {
+            "name": "agent-browser",
+            "score": 5
+          },
+          {
+            "name": "api-tester",
+            "score": 5
+          },
+          {
+            "name": "browse",
+            "score": 5
+          }
+        ],
+        "provider": "codex"
+      },
+      {
+        "stage": "quality",
+        "capability": "product quality",
+        "skill": "impeccable",
+        "type": "skill",
+        "reason": "Apply the product-quality gate.",
+        "status": "installed",
+        "selection_reason": "best installed match (110) for product quality",
+        "rejected_candidates": [
+          {
+            "name": "accessibility",
+            "score": 5
+          },
+          {
+            "name": "best-practices",
+            "score": 5
+          },
+          {
+            "name": "brand-copywriter",
+            "score": 5
+          }
+        ],
+        "provider": "claude"
+      },
+      {
+        "stage": "review",
+        "capability": "code review",
+        "skill": "code-review",
+        "type": "skill",
+        "reason": "Review Standards and Spec before committing.",
+        "status": "installed",
+        "selection_reason": "best installed match (60) for code review",
+        "rejected_candidates": [
+          {
+            "name": "best-practices",
+            "score": 10
+          },
+          {
+            "name": "gsd-code-review",
+            "score": 10
+          },
+          {
+            "name": "gsd-ns-review",
+            "score": 10
+          }
+        ],
+        "provider": "codex"
+      }
+    ],
+    "gaps": [],
+    "branches": [
+      "ui"
+    ]
+  },
+  "capability_gaps": [],
+  "agents": [
+    {
+      "name": "rapid-prototyper",
+      "file": "agents/rapid-prototyper.md",
+      "tags": [
+        "prototype",
+        "mvp"
+      ],
+      "skills": [
+        {
+          "name": "ponytail",
+          "status": "installed",
+          "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
+          "category": "minimalism",
+          "provider": "claude"
+        },
+        {
+          "name": "impeccable",
+          "status": "installed",
+          "summary": "quality gate against AI slop; clean reusable components; YAGNI/DRY/KISS",
+          "category": "quality",
+          "provider": "claude"
+        }
+      ]
+    },
+    {
+      "name": "ux-researcher",
+      "file": "agents/ux-researcher.md",
+      "tags": [
+        "ux",
+        "research"
+      ],
+      "skills": [
+        {
+          "name": "ponytail",
+          "status": "installed",
+          "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
+          "category": "minimalism",
+          "provider": "claude"
+        }
+      ]
+    },
+    {
+      "name": "ui-designer",
+      "file": "agents/ui-designer.md",
+      "tags": [
+        "design",
+        "ui",
+        "ux"
+      ],
+      "skills": [
+        {
+          "name": "ponytail",
+          "status": "installed",
+          "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
+          "category": "minimalism",
+          "provider": "claude"
+        },
+        {
+          "name": "impeccable",
+          "status": "installed",
+          "summary": "quality gate against AI slop; clean reusable components; YAGNI/DRY/KISS",
+          "category": "quality",
+          "provider": "claude"
+        },
+        {
+          "name": "ui-ux-pro-max",
+          "status": "installed",
+          "summary": "visual polish, layout quality, typography, interaction design",
+          "category": "design",
+          "provider": "claude"
+        },
+        {
+          "name": "frontend-design",
+          "status": "installed",
+          "summary": "frontend layout, component composition, responsive design",
+          "category": "design",
+          "provider": "claude"
+        },
+        {
+          "name": "accessibility",
+          "status": "installed",
+          "summary": "a11y audits, semantic HTML, contrast, keyboard/screen-reader support",
+          "category": "quality",
+          "provider": "agents"
+        },
+        {
+          "name": "web-quality-audit",
+          "status": "installed",
+          "summary": "runtime web quality, performance, Core Web Vitals",
+          "category": "quality",
+          "provider": "agents"
+        },
+        {
+          "name": "web-design-guidelines",
+          "status": "installed",
+          "summary": "Review UI code for Web Interface Guidelines: accessibility, UX, design compliance",
+          "category": "design",
+          "provider": "claude"
+        }
+      ]
+    },
+    {
+      "name": "frontend-developer",
+      "file": "agents/frontend-developer.md",
+      "tags": [
+        "frontend",
+        "react",
+        "ui"
+      ],
+      "skills": [
+        {
+          "name": "ponytail",
+          "status": "installed",
+          "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
+          "category": "minimalism",
+          "provider": "claude"
+        },
+        {
+          "name": "impeccable",
+          "status": "installed",
+          "summary": "quality gate against AI slop; clean reusable components; YAGNI/DRY/KISS",
+          "category": "quality",
+          "provider": "claude"
+        },
+        {
+          "name": "ui-ux-pro-max",
+          "status": "installed",
+          "summary": "visual polish, layout quality, typography, interaction design",
+          "category": "design",
+          "provider": "claude"
+        },
+        {
+          "name": "frontend-design",
+          "status": "installed",
+          "summary": "frontend layout, component composition, responsive design",
+          "category": "design",
+          "provider": "claude"
+        },
+        {
+          "name": "react-best-practices",
+          "status": "installed",
+          "summary": "React component patterns, hooks, state management conventions",
+          "category": "frontend",
+          "provider": "agents"
+        },
+        {
+          "name": "accessibility",
+          "status": "installed",
+          "summary": "a11y audits, semantic HTML, contrast, keyboard/screen-reader support",
+          "category": "quality",
+          "provider": "agents"
+        },
+        {
+          "name": "systematic-debugging",
+          "status": "installed",
+          "summary": "root-cause debugging discipline; hypotheses before fixes",
+          "category": "process",
+          "provider": "claude"
+        },
+        {
+          "name": "tanstack-query",
+          "status": "installed",
+          "summary": "TanStack Query server-state conventions: hooks, cache invalidation, mutations",
+          "category": "frontend",
+          "provider": "claude"
+        },
+        {
+          "name": "vercel-react-best-practices",
+          "status": "installed",
+          "summary": "React/Next.js performance optimization guidelines from Vercel Engineering",
+          "category": "frontend",
+          "provider": "claude"
+        },
+        {
+          "name": "web-design-guidelines",
+          "status": "installed",
+          "summary": "Review UI code for Web Interface Guidelines: accessibility, UX, design compliance",
+          "category": "design",
+          "provider": "claude"
+        }
+      ]
+    },
+    {
+      "name": "backend-architect",
+      "file": "agents/backend-architect.md",
+      "tags": [
+        "backend",
+        "api",
+        "database"
+      ],
+      "skills": [
+        {
+          "name": "ponytail",
+          "status": "installed",
+          "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
+          "category": "minimalism",
+          "provider": "claude"
+        },
+        {
+          "name": "impeccable",
+          "status": "installed",
+          "summary": "quality gate against AI slop; clean reusable components; YAGNI/DRY/KISS",
+          "category": "quality",
+          "provider": "claude"
+        },
+        {
+          "name": "security-review",
+          "status": "installed",
+          "summary": "threat modeling, vulnerability review, trust boundaries",
+          "category": "security",
+          "provider": "agents"
+        },
+        {
+          "name": "tdd",
+          "status": "installed",
+          "summary": "test-driven development; red-green-refactor",
+          "category": "testing",
+          "provider": "codex"
+        },
+        {
+          "name": "systematic-debugging",
+          "status": "installed",
+          "summary": "root-cause debugging discipline; hypotheses before fixes",
+          "category": "process",
+          "provider": "claude"
+        }
+      ]
+    },
+    {
+      "name": "test-writer-fixer",
+      "file": "agents/test-writer-fixer.md",
+      "tags": [
+        "tests",
+        "quality"
+      ],
+      "skills": [
+        {
+          "name": "ponytail",
+          "status": "installed",
+          "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
+          "category": "minimalism",
+          "provider": "claude"
+        },
+        {
+          "name": "tdd",
+          "status": "installed",
+          "summary": "test-driven development; red-green-refactor",
+          "category": "testing",
+          "provider": "codex"
+        }
+      ]
+    }
+  ],
+  "baseline_skills": [],
+  "questions": [
+    "What is the user-visible success criteria?",
+    "What existing APIs, routes, or data models should be reused?"
+  ],
+  "policy": "policies/workflow-policy.md",
+  "state": {
+    "status": "created",
+    "starts": 0
+  },
+  "created_at": "2026-07-17T21:48:07.258Z",
+  "source_hashes": {
+    "agents_registry": "0fe796f6c67a22c8",
+    "skills": "386f153d73a05517",
+    "playbooks": "3f4846741238bd40",
+    "policy": "4a13daa48424061c"
+  }
+}

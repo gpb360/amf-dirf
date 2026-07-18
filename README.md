@@ -18,10 +18,9 @@ with a token-overlap heuristic that guesses wrong.
 
 ## Two governing principles
 
-1. **Agnostic skill mapping.** The kit never hardcodes skills. It scans the host
-   repo's skill folders (there can be several), indexes what's installed, and
-   resolves references. A referenced skill that isn't installed is flagged
-   "recommended, not installed" — never fatal.
+1. **Agnostic capability mapping.** Playbooks request outcomes, then DIRF scans
+   repo and host folders and selects the best installed skill. Missing skills or
+   tools become approval-gated gaps; named components are never universal.
 2. **Ponytail-lean output.** Smallest correct artifact first. A small
    always-loaded router + lazy-loaded detail one level deep. Unread files cost
    zero tokens. No monoliths, no prose padding.
@@ -45,10 +44,10 @@ node src/cli.js list
 ## The pipeline
 
 ```
-task description
+task description or folder README
   │
   ▼  router (keyword -> playbook match)
-workflow JSON
+workflow folder
   │   agents[]         each: {name, file, tags, skills[]}
   │   baseline_skills[]   cross-cutting skills for the whole workflow
   │
@@ -66,9 +65,8 @@ workflow JSON
 ## Output structure (lean, progressive disclosure)
 
 ```
-workflows/user/<name>.json              # the workflow definition (committed)
-workflows/user/instructions/
-├── README.md                           # ALWAYS-LOADED ROUTER (~35 lines)
+workflows/user/<name>/
+├── README.md                           # authoritative router and frontmatter
 ├── policy.md                           # the workflow policy (one level deep)
 ├── agents/
 │   ├── frontend-developer.md           # lazy-loaded detail per agent
@@ -76,7 +74,8 @@ workflows/user/instructions/
 └── instructions.html                   # self-contained human render (gitignored)
 ```
 
-The AI loads `README.md` first, then only the per-agent file it's acting as.
+The AI loads `README.md` first, follows its ordered folder references, then
+loads only the detail file required by the active stage.
 Unread files cost zero tokens.
 
 Each per-agent detail file is self-contained: role, **USE THESE SKILLS**
@@ -91,17 +90,43 @@ dirf build  <name> "<task>" [--path DIR] [--open]   full pipeline: route -> JSON
 dirf create <name> "<task>" [--path DIR]             route -> workflow JSON only
 dirf render <name> [--open]                          existing JSON -> md + html
 dirf list                                            list saved workflows
+dirf migrate [<name>]                                remove runtime paths from saved snapshots
 dirf validate                                        validate registries + workflows
+dirf validate <folder>                               validate one folder DAG
+dirf graph <folder>                                  show deterministic execution order
+dirf run <folder>                                    emit the execution handoff
+dirf render <folder>                                 generate its human HTML view
 dirf skills scan                                     scan host, show installed skills + resolved refs
 ```
 
 Run `node src/cli.js` with no arguments for help.
 
+## Eve-style folder contract
+
+DIRF uses four separate filesystem units with one small README-frontmatter
+interface: `skills/`, `tools/`, `playbooks/`, and `workflows/`. Skills contain
+bounded task directions; tools contain invocation and safety details; playbooks
+compose reusable work; workflows bind a concrete task. References form an
+ordered DAG, execute once, reject cycles, and lazy-load optional details.
+
+This keeps the portable advantages of Vercel Eve—filesystem-first definitions,
+bounded context, modular execution, approval before side effects, and traceable
+evidence—without importing a hosted runtime. Markdown is source, HTML is a
+generated human view, and the zero-dependency JavaScript CLI is the resolver.
+
+Generated workflows are host-neutral. Claude, Codex, another agent, or a person
+can execute the same README. Repository and installation paths are discovered
+for the current run only; snapshots retain capability names and provider hints.
+If a task needs isolation, keep worktrees beside the target repository unless
+the user configures another workspace root, and select scratch space inside that
+workspace instead of using an implicit operating-system temp directory.
+
 ## How skill mapping works (the heart of "right")
 
-The kit ships a small editable vocabulary in `registry/skills.json` — named
-skill **references** it knows how to recommend, each with a purpose and category
-but **no definition** (the definition lives in the host repo):
+The kit ships a small editable vocabulary in `registry/skills.json` that enriches
+discovered metadata. Playbooks request capabilities; they do not force skill names.
+DIRF deterministically selects the best installed match for each stage and keeps
+missing capabilities out of the executable flow.
 
 ```json
 {"name": "impeccable", "category": "quality",
@@ -113,7 +138,7 @@ At build time, `discover()` scans the host environment and resolves each
 reference:
 
 - **installed** — found in a scanned root (path included)
-- **recommended** — in the registry but not on disk (flagged, never fatal)
+- **capability gap** — no installed match; DIRF asks before suggesting or creating anything
 
 **Scan roots** (all optional): `~/.agents/skills/`, `~/.codex/skills/`,
 `~/.claude/skills/`, `~/.zcode/.../skills/`, plus project-local equivalents.
@@ -132,15 +157,22 @@ reflects the target project's skills (e.g. a repo's own `.agents/skills/`).
   `skills` refs.
 - **Add a skill to the vocabulary**: add an entry to `registry/skills.json`.
   The kit resolves it against whatever's installed on each host.
-- **Add a playbook**: add an entry to `registry/playbooks.json` with `agents`,
-  `baseline_skills`, `keywords`, `workflow`, `questions`.
+- **Add a playbook**: create `playbooks/<name>/README.md`; the JSON registry is
+  compatibility output, not the editable source.
+- **Trust skill sources**: create `~/.dirf/trusted-sources.json` or
+  `<project>/.dirf/trusted-sources.json` with a `sources` array. Each source may
+  declare `name`, `url`, and `capabilities`. DIRF only suggests configured sources
+  and always requires approval before installation or local derivation.
 - Then run `node src/cli.js validate`.
 
 ## Project layout
 
 ```
-src/             cli.js (entry), router.js, skills.js, renderer.js, validate.js, paths.js
-registry/        source of truth: agents.json, skills.json, playbooks.json
+src/             CLI, folder resolver, router, discovery, renderer, validation
+playbooks/       authoritative reusable playbook folders
+skills/          bounded task-oriented skill folders
+tools/           isolated tool invocation folders
+registry/        agents, skill metadata, and legacy compatibility JSON
 agents/          agent markdown definitions (21 curated)
 policies/        workflow-policy.md (embedded in every instruction set)
 tests/           test-router.js, test-skills.js, test-renderer.js (node:test)

@@ -61,7 +61,9 @@ test("buildInstructions writes router + per-agent detail", () => {
   assert.ok(readme.includes("review a pull request"));
   assert.ok(readme.includes("persisted-only"));
   assert.ok(readme.includes("## Next step"));
-  assert.ok(readme.includes("codex -C"));
+  assert.ok(readme.includes("current host"));
+  assert.ok(!/codex|claude/i.test(readme));
+  assert.ok(!readme.includes("C:\\Users"));
   assert.ok(readme.includes("Definition of Done"));
   assert.ok(readme.includes("agents/frontend-developer.md"));
   const detail = readFileSync(join(outDir, "agents", "frontend-developer.md"), "utf-8");
@@ -86,7 +88,8 @@ test("buildHtml is self-contained and collapsible", () => {
   assert.ok(html.includes("frontend-developer"));
   assert.ok(html.includes("persisted-only"));
   assert.ok(html.includes("<h2>Next step</h2>"));
-  assert.ok(html.includes("codex -C"));
+  assert.ok(html.includes("current host"));
+  assert.ok(!/codex|claude/i.test(html));
   assert.ok(html.includes("Definition of Done"));
   assert.ok(!html.includes("src=") && !html.includes('href="')); // no external assets
 });

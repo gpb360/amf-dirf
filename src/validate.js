@@ -1,8 +1,9 @@
 // Single validator for amf-dirf. Node built-ins only. Never cut the guards.
 import { readdirSync, readFileSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { AGENTS_DIR, REGISTRY, SKILLS, PLAYBOOKS, POLICY, WORKFLOW_DIR, loadJson } from "./paths.js";
+import { AGENTS_DIR, REGISTRY, ROOT, SKILLS, PLAYBOOKS, PLAYBOOK_DIR, POLICY, WORKFLOW_DIR, loadJson } from "./paths.js";
 import { reconcile } from "./flow.js";
+import { loadPlaybookFolders, resolveGraph } from "./folders.js";
 
 const FM_RE = /^([A-Za-z0-9_-]+):\s*(.*)$/;
 
@@ -24,7 +25,7 @@ export function validateSnapshot(data, label = "workflow") {
     if (!(key in data)) errors.push(`${label}: missing required key ${key}`);
     else if (!hasType(data[key], type)) errors.push(`${label}: key ${key} must be ${type}`);
   }
-  if (data.schema_version !== 2) errors.push(`${label}: schema_version must be 2`);
+  if (![2, 3, 4].includes(data.schema_version)) errors.push(`${label}: unsupported schema_version`);
 
   const resolvedSkillError = (skill, where, nameKey = "name") => {
     if (!skill || typeof skill !== "object" || typeof skill[nameKey] !== "string" || !skill[nameKey]) {
@@ -33,8 +34,12 @@ export function validateSnapshot(data, label = "workflow") {
     }
     if (!new Set(["installed", "recommended"]).has(skill.status)) {
       errors.push(`${label}: ${where} status must be installed or recommended`);
-    } else if (skill.status === "installed" && typeof skill.path !== "string") {
+    } else if (data.schema_version < 4 && skill.status === "installed" && typeof skill.path !== "string") {
       errors.push(`${label}: ${where} installed skill must include path`);
+    } else if (data.schema_version >= 4 && skill.status === "installed" && typeof skill.provider !== "string") {
+      errors.push(`${label}: ${where} installed skill must include provider`);
+    } else if (data.schema_version >= 4 && "path" in skill) {
+      errors.push(`${label}: ${where} must not persist a runtime path`);
     }
   };
 
@@ -53,8 +58,8 @@ export function validateSnapshot(data, label = "workflow") {
   if (typeof data.skill_flow?.label !== "string" || !data.skill_flow.label) {
     errors.push(`${label}: skill_flow.label must be a non-empty string`);
   }
-  if (!Array.isArray(data.skill_flow?.steps) || data.skill_flow.steps.length === 0) {
-    errors.push(`${label}: skill_flow.steps must be a non-empty array`);
+  if (!Array.isArray(data.skill_flow?.steps)) {
+    errors.push(`${label}: skill_flow.steps must be an array`);
   } else {
     for (const [index, step] of data.skill_flow.steps.entries()) {
       resolvedSkillError(step, `skill_flow step ${index + 1}`, "skill");
@@ -64,6 +69,12 @@ export function validateSnapshot(data, label = "workflow") {
         }
       }
     }
+  }
+  if (data.schema_version >= 3 && !Array.isArray(data.capability_gaps)) {
+    errors.push(`${label}: capability_gaps must be an array`);
+  }
+  if (data.schema_version >= 4 && "path" in data) {
+    errors.push(`${label}: must not persist target repository path`);
   }
   return errors;
 }
@@ -123,20 +134,29 @@ export function main() {
   }
 
   // --- playbooks ---
-  const playbooks = loadJson(PLAYBOOKS);
+  let playbooks;
+  try { playbooks = Object.keys(loadPlaybookFolders(PLAYBOOK_DIR)).length ? loadPlaybookFolders(PLAYBOOK_DIR) : loadJson(PLAYBOOKS); }
+  catch (error) { errors.push(error.message); playbooks = {}; }
   for (const [name, pb] of Object.entries(playbooks)) {
     for (const key of ["description", "keywords", "agents", "workflow"]) {
       if (!pb[key]) errors.push(`playbook ${name}: missing ${key}`);
     }
-    if (!("baseline_skills" in pb)) warnings.push(`playbook ${name}: no baseline_skills`);
     for (const an of (pb.agents || [])) {
       if (!registryNames.has(an)) errors.push(`playbook ${name}: references unknown agent ${an}`);
     }
-    for (const sn of (pb.baseline_skills || [])) {
-      if (!skillNames.has(sn)) warnings.push(`playbook ${name}: baseline skill ${sn} not in registry`);
-    }
   }
   errors.push(...reconcile(playbooks));
+
+  // --- folder-native units ---
+  for (const base of [PLAYBOOK_DIR, join(ROOT, "skills"), join(ROOT, "tools"), WORKFLOW_DIR]) {
+    let folders = [];
+    try { folders = readdirSync(base, { withFileTypes: true }).filter((entry) => entry.isDirectory() && entry.name !== "instructions" && existsSync(join(base, entry.name, "README.md"))); }
+    catch { /* optional root */ }
+    for (const folder of folders) {
+      try { resolveGraph(join(base, folder.name), { allowedRoots: [ROOT, base] }); }
+      catch (error) { errors.push(error.message); }
+    }
+  }
 
   // --- workflow JSONs ---
   let wfFiles = [];

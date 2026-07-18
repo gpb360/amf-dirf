@@ -62,7 +62,7 @@ function parseFrontmatter(text) {
   if (end === -1) return fields;
   for (const line of text.slice(4, end).split(/\r?\n/)) {
     const m = FM_RE.exec(line);
-    if (m) fields[m[1]] = m[2].trim();
+    if (m) fields[m[1]] = m[2].trim().replace(/^(["'])(.*)\1$/, "$2");
   }
   return fields;
 }
@@ -198,11 +198,40 @@ function indexOne(path, index) {
   // First found wins (SKILL.md priority order), but keep richer descriptions.
   const existing = index[name];
   if (existing && !desc) return;
-  index[name] = { name, path: path.replace(/\\/g, "/").replace(/\/[^/]+$/, ""), file: path.replace(/\\/g, "/").split("/").pop(), description: desc };
+  const normalized = path.replace(/\\/g, "/");
+  const provider = providerForPath(normalized);
+  index[name] = { name, path: normalized.replace(/\/[^/]+$/, ""), file: normalized.split("/").pop(), description: desc, provider };
+}
+
+export function providerForPath(path) {
+  const normalized = String(path || "").replace(/\\/g, "/");
+  const markers = [["/.agents/", "agents"], ["/.claude/", "claude"], ["/.codex/", "codex"], ["/.zcode/", "zcode"]];
+  return markers.reduce((best, [marker, provider]) => {
+    const index = normalized.lastIndexOf(marker);
+    return index > best.index ? { index, provider } : best;
+  }, { index: -1, provider: "project" }).provider;
 }
 
 export function loadRegistry() {
   return loadJson(SKILLS);
+}
+
+export function enrichDiscovered(discovered) {
+  const registry = Object.fromEntries((loadRegistry().skills || []).map((skill) => [skill.name, skill]));
+  return Object.fromEntries(Object.entries(discovered || {}).map(([name, item]) => [name, { ...registry[name], ...item }]));
+}
+
+export function loadTrustedSources(projectRoot) {
+  const files = [{ path: join(homedir(), ".dirf", "trusted-sources.json"), provider: "host" }];
+  if (projectRoot) files.push({ path: join(projectRoot, ".dirf", "trusted-sources.json"), provider: "project" });
+  const sources = [];
+  for (const file of files) {
+    try {
+      const data = JSON.parse(readFileSync(file.path, "utf-8"));
+      for (const source of data.sources || []) sources.push({ ...source, provider: file.provider });
+    } catch { /* absent or invalid user configuration contributes nothing */ }
+  }
+  return sources;
 }
 
 export function resolveAgentSkills(agentName, agentSkillRefs, baselineSkillRefs, discovered) {
@@ -227,7 +256,7 @@ export function resolveAgentSkills(agentName, agentSkillRefs, baselineSkillRefs,
       summary: entry.summary || (installed ? installed.description || "" : ""),
       category: entry.category || "",
     };
-    if (installed) item.path = installed.path;
+    if (installed) item.provider = installed.provider || "project";
     out.push(item);
   }
   return out;

@@ -7,18 +7,20 @@
 //   dirf list                                            list saved workflows
 //   dirf validate                                        validate registries + workflows
 //   dirf skills scan                                     scan host, print installed skills + resolved refs
+//   dirf validate|graph|run|render <folder>               operate an Eve-style folder DAG
 import { writeFileSync, readFileSync, existsSync, readdirSync, unlinkSync } from "node:fs";
-import { join, isAbsolute, resolve } from "node:path";
+import { dirname, join, isAbsolute, resolve } from "node:path";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { ROOT, REGISTRY, SKILLS, PLAYBOOKS, POLICY, WORKFLOW_DIR, fileHash, loadJson, workflowOutputDir, workflowPath } from "./paths.js";
-import { collectRoutingFacts, recommend } from "./router.js";
-import { discover, loadRegistry, resolveAgentSkills } from "./skills.js";
+import { collectRoutingFacts, loadPlaybooks, recommend } from "./router.js";
+import { discover, enrichDiscovered, loadRegistry, loadTrustedSources, providerForPath, resolveAgentSkills } from "./skills.js";
 import { buildInstructions, buildHtml } from "./renderer.js";
 import { main as validateMain } from "./validate.js";
 import { inspect } from "./inspect.js";
 import { buildFlow, reconcile } from "./flow.js";
+import { graphLines, renderFolderHtml, resolveGraph } from "./folders.js";
 
 function enrichAgents(agentNames) {
   // Resolve playbook agent names into full entries (file, tags, skills) from the registry.
@@ -34,14 +36,13 @@ function buildPlan(name, task, path) {
   const { selection, skillFlow, discovered, facts } = assembleTaskRouting(task, path);
   const agents = enrichAgents(selection.agents).map((agent) => ({
     ...agent,
-    skills: resolveAgentSkills(agent.name, agent.skills, selection.baseline_skills, discovered),
+    skills: resolveAgentSkills(agent.name, agent.skills, [], discovered).filter((skill) => skill.status === "installed"),
   }));
   const now = new Date().toISOString();
   return {
-    schema_version: 2,
+    schema_version: 4,
     name,
     task,
-    path: path || null,
     playbook: selection.playbook,
     playbook_description: selection.playbook_description,
     score: selection.score,
@@ -50,8 +51,9 @@ function buildPlan(name, task, path) {
     workflow: selection.workflow,
     routing_facts: facts,
     skill_flow: skillFlow,
+    capability_gaps: skillFlow.gaps,
     agents,
-    baseline_skills: resolveAgentSkills("*", [], selection.baseline_skills, discovered),
+    baseline_skills: [],
     questions: selection.questions,
     policy: "policies/workflow-policy.md",
     state: { status: "created", starts: 0 },
@@ -65,20 +67,45 @@ function buildPlan(name, task, path) {
   };
 }
 
+function portableReference(value) {
+  if (!value || typeof value !== "object") return value;
+  const out = { ...value };
+  if (!out.provider && (out.path || out.configured_in)) out.provider = providerForPath(out.path || out.configured_in);
+  delete out.path;
+  delete out.configured_in;
+  return out;
+}
+
+function portablePlan(plan) {
+  const out = structuredClone(plan);
+  out.schema_version = 4;
+  delete out.path;
+  out.baseline_skills = (out.baseline_skills || []).map(portableReference);
+  out.agents = (out.agents || []).map((agent) => ({ ...agent, skills: (agent.skills || []).map(portableReference) }));
+  out.skill_flow.steps = (out.skill_flow.steps || []).map(portableReference);
+  out.skill_flow.gaps = (out.skill_flow.gaps || []).map((gap) => ({
+    ...gap,
+    trusted_candidates: (gap.trusted_candidates || []).map(portableReference),
+  }));
+  out.capability_gaps = out.skill_flow.gaps;
+  return out;
+}
+
 function assembleTaskRouting(task, path) {
-  const playbooks = loadJson(PLAYBOOKS);
+  const playbooks = loadPlaybooks();
   const errors = reconcile(playbooks);
   if (errors.length) throw new Error(`Task Routing reconciliation failed:\n${errors.map((error) => `  - ${error}`).join("\n")}`);
   const projectRoot = path ? (isAbsolute(path) ? path : resolve(ROOT, path)) : null;
   const facts = collectRoutingFacts(projectRoot);
   const selection = recommend(task, facts, playbooks);
-  const discovered = discover(projectRoot);
-  return { selection, discovered, facts, skillFlow: buildFlow(selection, { task }, discovered) };
+  const discovered = enrichDiscovered(discover(projectRoot));
+  const trustedSources = loadTrustedSources(projectRoot);
+  return { selection, discovered, facts, skillFlow: buildFlow(selection, { task, trustedSources }, discovered) };
 }
 
 function savePlan(plan) {
   const path = workflowPath(plan.name);
-  writeFileSync(path, JSON.stringify(plan, null, 2), "utf-8");
+  writeFileSync(path, JSON.stringify(portablePlan(plan), null, 2), "utf-8");
   return path;
 }
 
@@ -133,8 +160,51 @@ function cmdList() {
   for (const n of names) console.log(`  - ${n}`);
 }
 
+function cmdMigrate(name) {
+  const paths = name
+    ? [workflowPath(name)]
+    : readdirSync(WORKFLOW_DIR).filter((file) => file.endsWith(".json")).map((file) => join(WORKFLOW_DIR, file));
+  for (const path of paths) {
+    if (!existsSync(path)) throw new Error(`No workflow named ${JSON.stringify(name)}`);
+    const plan = portablePlan(JSON.parse(readFileSync(path, "utf-8")));
+    writeFileSync(path, JSON.stringify(plan, null, 2), "utf-8");
+    if (existsSync(workflowOutputDir(plan.name))) renderPlan(path);
+  }
+  console.log(`Migrated ${paths.length} workflow snapshot(s) to portable schema version 4.`);
+}
+
 function cmdValidate() {
   validateMain();
+}
+
+function folderGraph(target) {
+  const absolute = resolve(target);
+  return resolveGraph(absolute, { allowedRoots: [ROOT, dirname(absolute)] });
+}
+
+function cmdFolderValidate(target) {
+  const units = folderGraph(target);
+  console.log(`Folder validation passed: ${units.length} unit(s)`);
+}
+
+function cmdGraph(target) {
+  console.log(graphLines(folderGraph(target)).join("\n"));
+}
+
+function cmdRun(target) {
+  const units = folderGraph(target);
+  console.log("Execution order:");
+  console.log(graphLines(units).join("\n"));
+  console.log("\nExecution handoff:");
+  for (const unit of units) console.log(`Read ${join(unit.folder, "README.md")}.`);
+  console.log(`Execute ${join(resolve(target), "README.md")} as the root operating workflow.`);
+}
+
+function cmdFolderRender(target) {
+  const units = folderGraph(target);
+  const output = join(resolve(target), "instructions.html");
+  writeFileSync(output, renderFolderHtml(units), "utf-8");
+  console.log(`Folder rendered: ${output}`);
 }
 
 function cmdSkillsScan() {
@@ -147,6 +217,11 @@ function cmdSkillsScan() {
     const loc = hit ? ` -> ${hit.path}` : "";
     console.log(`  ${ref.name.padEnd(24)} ${status}${loc}`);
   }
+}
+
+function cmdExportPlaybooks() {
+  writeFileSync(PLAYBOOKS, JSON.stringify(loadPlaybooks(), null, 2) + "\n", "utf-8");
+  console.log(`Compatibility playbook JSON exported: ${PLAYBOOKS}`);
 }
 
 // --- minimal arg parser (no dep) ---
@@ -169,9 +244,14 @@ Usage:
   dirf build  <name> "<task>" [--path DIR] [--open]   full pipeline
   dirf create <name> "<task>" [--path DIR]             JSON only
   dirf render <name> [--open]                          re-render existing
+  dirf validate <folder>                              validate a folder DAG
+  dirf graph <folder>                                 print ordered folder DAG
+  dirf run <folder>                                   print deterministic execution handoff
   dirf list                                            list saved workflows
+  dirf migrate [<name>]                                remove runtime paths from saved snapshots
   dirf validate                                        validate registries
   dirf skills scan                                     show installed skills
+  dirf export playbooks                                regenerate legacy playbooks JSON
   dirf inspect [<path>]                                detect a project's optimization stack + suggest gaps
   dirf flow "<task>" [--path DIR]                      show the ordered skill flow for a task (ask-matt style)
 `;
@@ -226,14 +306,22 @@ function main() {
 
   if (cmd === "build") { args.name = args._[0]; args.task = args._.slice(1).join(" "); cmdBuild(args); }
   else if (cmd === "create") { args.name = args._[0]; args.task = args._.slice(1).join(" "); cmdCreate(args); }
-  else if (cmd === "render") { args.name = args._[0]; cmdRender(args); }
+  else if (cmd === "render") {
+    const target = args._[0];
+    if (target && existsSync(resolve(target)) && !existsSync(workflowPath(target))) cmdFolderRender(target);
+    else { args.name = target; cmdRender(args); }
+  }
   else if (cmd === "list") cmdList();
-  else if (cmd === "validate") cmdValidate();
+  else if (cmd === "migrate") cmdMigrate(args._[0]);
+  else if (cmd === "validate") args._[0] ? cmdFolderValidate(args._[0]) : cmdValidate();
+  else if (cmd === "graph") cmdGraph(args._[0]);
+  else if (cmd === "run") cmdRun(args._[0]);
   else if (cmd === "skills") {
     const sub = args._[0];
     if (sub === "scan") cmdSkillsScan();
     else { console.log("usage: dirf skills scan"); process.exit(2); }
   }
+  else if (cmd === "export" && args._[0] === "playbooks") cmdExportPlaybooks();
   else if (cmd === "inspect") { args._ = args._.length ? args._ : [args.path]; cmdInspect(args); }
   else if (cmd === "flow") { cmdFlow(args); }
   else { console.error(`unknown command: ${cmd}\n\n${HELP}`); process.exit(2); }

@@ -49,12 +49,13 @@ test("discover handles null projectRoot (defaults to kit ROOT)", () => {
   assert.ok(typeof idx === "object");
 });
 
-test("resolve marks installed vs recommended", () => {
-  const discovered = { ponytail: { name: "ponytail", path: "/x", file: "SKILL.md", description: "" } };
+test("resolve marks installed vs recommended without persisting runtime paths", () => {
+  const discovered = { ponytail: { name: "ponytail", path: "/x", file: "SKILL.md", description: "", provider: "agents" } };
   const resolved = skills.resolveAgentSkills("frontend-developer", ["ponytail", "impeccable"], [], discovered);
   const byName = Object.fromEntries(resolved.map((s) => [s.name, s]));
   assert.equal(byName.ponytail.status, "installed");
-  assert.equal(byName.ponytail.path, "/x");
+  assert.equal(byName.ponytail.path, undefined);
+  assert.equal(byName.ponytail.provider, "agents");
   assert.equal(byName.impeccable.status, "recommended");
   assert.equal(byName.impeccable.path, undefined);
 });
@@ -71,4 +72,20 @@ test("resolve never fails on missing skill", () => {
   const resolved = skills.resolveAgentSkills("x", ["totally-unknown-skill"], [], {});
   assert.equal(resolved[0].status, "recommended");
   assert.equal(resolved[0].name, "totally-unknown-skill");
+});
+
+test("trusted sources come from host configuration", () => {
+  const root = makeRoot();
+  write(join(root, ".dirf"), "trusted-sources.json", JSON.stringify({
+    sources: [{ name: "user-approved", url: "https://example.test/skill", capabilities: ["quality"] }],
+  }));
+  const sources = skills.loadTrustedSources(root);
+  const source = sources.find(({ name }) => name === "user-approved");
+  assert.equal(source.url, "https://example.test/skill");
+  assert.equal(source.provider, "project");
+  assert.equal(source.configured_in, undefined);
+});
+
+test("provider hint follows the nearest skill namespace, not an enclosing worktree", () => {
+  assert.equal(skills.providerForPath("C:/Users/example/.codex/worktrees/123/repo/.agents/skills/review"), "agents");
 });

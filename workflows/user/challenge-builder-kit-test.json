@@ -1,8 +1,7 @@
 {
-  "schema_version": 2,
+  "schema_version": 4,
   "name": "challenge-builder-kit-test",
   "task": "Add paid-save entitlement checks and creator execution review access with Supabase persistence and tests",
-  "path": "E:\\Challenge-builder",
   "playbook": "fullstack-feature",
   "playbook_description": "Build a user-facing feature across UI, API, data, and tests.",
   "score": 3,
@@ -30,47 +29,48 @@
         "skill": "grill-me",
         "reason": "Resolve the decision tree before building.",
         "status": "installed",
-        "path": "C:/Users/garyp/.codex/skills/grill-me"
+        "provider": "codex"
       },
       {
         "stage": "plan",
         "skill": "ponytail",
         "reason": "Reuse existing patterns and choose the smallest correct slice.",
         "status": "installed",
-        "path": "C:/Users/garyp/.claude/skills/ponytail"
+        "provider": "claude"
       },
       {
         "stage": "design",
         "skill": "frontend-design",
         "reason": "Design the UI structure when the task has a UI surface.",
         "status": "installed",
-        "path": "E:/Challenge-builder/.agents/skills/frontend-design"
+        "provider": "agents"
       },
       {
         "stage": "build",
         "skill": "tdd",
         "reason": "Drive each behavior through a red-green slice.",
         "status": "installed",
-        "path": "C:/Users/garyp/.codex/skills/tdd"
+        "provider": "codex"
       },
       {
         "stage": "quality",
         "skill": "impeccable",
         "reason": "Apply the product-quality gate.",
         "status": "installed",
-        "path": "C:/Users/garyp/.claude/skills/impeccable"
+        "provider": "claude"
       },
       {
         "stage": "review",
         "skill": "code-review",
         "reason": "Review Standards and Spec before committing.",
         "status": "installed",
-        "path": "C:/Users/garyp/.codex/skills/code-review"
+        "provider": "codex"
       }
     ],
     "branches": [
       "ui"
-    ]
+    ],
+    "gaps": []
   },
   "agents": [
     {
@@ -86,14 +86,14 @@
           "status": "installed",
           "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
           "category": "minimalism",
-          "path": "C:/Users/garyp/.claude/skills/ponytail"
+          "provider": "claude"
         },
         {
           "name": "impeccable",
           "status": "installed",
           "summary": "quality gate against AI slop; clean reusable components; YAGNI/DRY/KISS",
           "category": "quality",
-          "path": "C:/Users/garyp/.claude/skills/impeccable"
+          "provider": "claude"
         }
       ]
     },
@@ -110,14 +110,14 @@
           "status": "installed",
           "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
           "category": "minimalism",
-          "path": "C:/Users/garyp/.claude/skills/ponytail"
+          "provider": "claude"
         },
         {
           "name": "impeccable",
           "status": "installed",
           "summary": "quality gate against AI slop; clean reusable components; YAGNI/DRY/KISS",
           "category": "quality",
-          "path": "C:/Users/garyp/.claude/skills/impeccable"
+          "provider": "claude"
         }
       ]
     },
@@ -135,49 +135,49 @@
           "status": "installed",
           "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
           "category": "minimalism",
-          "path": "C:/Users/garyp/.claude/skills/ponytail"
+          "provider": "claude"
         },
         {
           "name": "impeccable",
           "status": "installed",
           "summary": "quality gate against AI slop; clean reusable components; YAGNI/DRY/KISS",
           "category": "quality",
-          "path": "C:/Users/garyp/.claude/skills/impeccable"
+          "provider": "claude"
         },
         {
           "name": "ui-ux-pro-max",
           "status": "installed",
           "summary": "visual polish, layout quality, typography, interaction design",
           "category": "design",
-          "path": "C:/Users/garyp/.claude/skills/ui-ux-pro-max"
+          "provider": "claude"
         },
         {
           "name": "frontend-design",
           "status": "installed",
           "summary": "frontend layout, component composition, responsive design",
           "category": "design",
-          "path": "E:/Challenge-builder/.agents/skills/frontend-design"
+          "provider": "agents"
         },
         {
           "name": "accessibility",
           "status": "installed",
           "summary": "a11y audits, semantic HTML, contrast, keyboard/screen-reader support",
           "category": "quality",
-          "path": "C:/Users/garyp/.agents/skills/accessibility"
+          "provider": "agents"
         },
         {
           "name": "web-quality-audit",
           "status": "installed",
           "summary": "runtime web quality, performance, Core Web Vitals",
           "category": "quality",
-          "path": "C:/Users/garyp/.agents/skills/web-quality-audit"
+          "provider": "agents"
         },
         {
           "name": "web-design-guidelines",
           "status": "installed",
           "summary": "Review UI code for Web Interface Guidelines: accessibility, UX, design compliance",
           "category": "design",
-          "path": "C:/Users/garyp/.claude/skills/web-design-guidelines"
+          "provider": "claude"
         }
       ]
     },
@@ -195,70 +195,70 @@
           "status": "installed",
           "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
           "category": "minimalism",
-          "path": "C:/Users/garyp/.claude/skills/ponytail"
+          "provider": "claude"
         },
         {
           "name": "impeccable",
           "status": "installed",
           "summary": "quality gate against AI slop; clean reusable components; YAGNI/DRY/KISS",
           "category": "quality",
-          "path": "C:/Users/garyp/.claude/skills/impeccable"
+          "provider": "claude"
         },
         {
           "name": "ui-ux-pro-max",
           "status": "installed",
           "summary": "visual polish, layout quality, typography, interaction design",
           "category": "design",
-          "path": "C:/Users/garyp/.claude/skills/ui-ux-pro-max"
+          "provider": "claude"
         },
         {
           "name": "frontend-design",
           "status": "installed",
           "summary": "frontend layout, component composition, responsive design",
           "category": "design",
-          "path": "E:/Challenge-builder/.agents/skills/frontend-design"
+          "provider": "agents"
         },
         {
           "name": "react-best-practices",
           "status": "installed",
           "summary": "React component patterns, hooks, state management conventions",
           "category": "frontend",
-          "path": "C:/Users/garyp/.agents/skills/react-best-practices"
+          "provider": "agents"
         },
         {
           "name": "accessibility",
           "status": "installed",
           "summary": "a11y audits, semantic HTML, contrast, keyboard/screen-reader support",
           "category": "quality",
-          "path": "C:/Users/garyp/.agents/skills/accessibility"
+          "provider": "agents"
         },
         {
           "name": "systematic-debugging",
           "status": "installed",
           "summary": "root-cause debugging discipline; hypotheses before fixes",
           "category": "process",
-          "path": "C:/Users/garyp/.claude/skills/systematic-debugging"
+          "provider": "claude"
         },
         {
           "name": "tanstack-query",
           "status": "installed",
           "summary": "TanStack Query server-state conventions: hooks, cache invalidation, mutations",
           "category": "frontend",
-          "path": "C:/Users/garyp/.claude/skills/tanstack-query"
+          "provider": "claude"
         },
         {
           "name": "vercel-react-best-practices",
           "status": "installed",
           "summary": "React/Next.js performance optimization guidelines from Vercel Engineering",
           "category": "frontend",
-          "path": "C:/Users/garyp/.claude/skills/vercel-react-best-practices"
+          "provider": "claude"
         },
         {
           "name": "web-design-guidelines",
           "status": "installed",
           "summary": "Review UI code for Web Interface Guidelines: accessibility, UX, design compliance",
           "category": "design",
-          "path": "C:/Users/garyp/.claude/skills/web-design-guidelines"
+          "provider": "claude"
         }
       ]
     },
@@ -276,35 +276,35 @@
           "status": "installed",
           "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
           "category": "minimalism",
-          "path": "C:/Users/garyp/.claude/skills/ponytail"
+          "provider": "claude"
         },
         {
           "name": "impeccable",
           "status": "installed",
           "summary": "quality gate against AI slop; clean reusable components; YAGNI/DRY/KISS",
           "category": "quality",
-          "path": "C:/Users/garyp/.claude/skills/impeccable"
+          "provider": "claude"
         },
         {
           "name": "security-review",
           "status": "installed",
           "summary": "threat modeling, vulnerability review, trust boundaries",
           "category": "security",
-          "path": "C:/Users/garyp/.agents/skills/security-review"
+          "provider": "agents"
         },
         {
           "name": "tdd",
           "status": "installed",
           "summary": "test-driven development; red-green-refactor",
           "category": "testing",
-          "path": "C:/Users/garyp/.codex/skills/tdd"
+          "provider": "codex"
         },
         {
           "name": "systematic-debugging",
           "status": "installed",
           "summary": "root-cause debugging discipline; hypotheses before fixes",
           "category": "process",
-          "path": "C:/Users/garyp/.claude/skills/systematic-debugging"
+          "provider": "claude"
         },
         {
           "name": "supabase-postgres-best-practices",
@@ -333,21 +333,21 @@
           "status": "installed",
           "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
           "category": "minimalism",
-          "path": "C:/Users/garyp/.claude/skills/ponytail"
+          "provider": "claude"
         },
         {
           "name": "tdd",
           "status": "installed",
           "summary": "test-driven development; red-green-refactor",
           "category": "testing",
-          "path": "C:/Users/garyp/.codex/skills/tdd"
+          "provider": "codex"
         },
         {
           "name": "impeccable",
           "status": "installed",
           "summary": "quality gate against AI slop; clean reusable components; YAGNI/DRY/KISS",
           "category": "quality",
-          "path": "C:/Users/garyp/.claude/skills/impeccable"
+          "provider": "claude"
         }
       ]
     }
@@ -358,14 +358,14 @@
       "status": "installed",
       "summary": "laziest correct solution; the reuse ladder (reuse > stdlib > native > installed > one line > minimum)",
       "category": "minimalism",
-      "path": "C:/Users/garyp/.claude/skills/ponytail"
+      "provider": "claude"
     },
     {
       "name": "impeccable",
       "status": "installed",
       "summary": "quality gate against AI slop; clean reusable components; YAGNI/DRY/KISS",
       "category": "quality",
-      "path": "C:/Users/garyp/.claude/skills/impeccable"
+      "provider": "claude"
     }
   ],
   "questions": [
@@ -383,5 +383,6 @@
     "skills": "201b7fd2101007b8",
     "playbooks": "b46d81c40c53b14c",
     "policy": "34880a707afb63ac"
-  }
+  },
+  "capability_gaps": []
 }
