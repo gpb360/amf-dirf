@@ -1,4 +1,4 @@
-# DIRF — Do It Right First
+# Do It Right First
 
 ![DIRF: a routed workflow ending in a verified check](docs/assets/dirf-hero.png)
 
