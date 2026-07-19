@@ -47,7 +47,7 @@ node src/cli.js list
 ```
 task description
   │
-  ▼  router (keyword -> playbook match)
+  ▼  router (keywords + what-the-playbook-does content match)
 workflow JSON
   │   agents[]         each: {name, file, tags, skills[]}
   │   baseline_skills[]   cross-cutting skills for the whole workflow
