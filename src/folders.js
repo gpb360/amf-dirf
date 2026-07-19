@@ -1,4 +1,4 @@
-// Eve-style filesystem units: README source, ordered DAG composition, HTML view.
+// Filesystem units: README source, ordered DAG composition, and HTML view.
 import { existsSync, readFileSync, realpathSync, readdirSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 

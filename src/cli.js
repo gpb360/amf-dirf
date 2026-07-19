@@ -5,7 +5,7 @@
 //   dirf build  <name> "<task>" [--path DIR] [--open]   full pipeline into a disposable attempt
 //   dirf create <name> "<task>" [--path DIR]             route -> attempt workflow JSON only
 //   dirf render <name-or-id> [--path DIR] [--open]       render the latest matching attempt
-//   dirf list [--path DIR]                               list target attempts
+//   dirf list [--path DIR]                               list saved attempts
 //   dirf resume <name-or-id> [--path DIR]                load the workflow handoff
 //   dirf validate                                        validate registries + workflows
 //   dirf skills scan                                     scan host, print installed skills + resolved refs
@@ -280,7 +280,6 @@ function cmdExportPlaybooks() {
   console.log(`Compatibility playbook JSON exported: ${PLAYBOOKS}`);
 }
 
-// --- minimal arg parser (no dep) ---
 function parse(argv) {
   const [cmd, ...rest] = argv;
   const out = { _: [] };

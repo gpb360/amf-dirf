@@ -1,4 +1,4 @@
-// Single validator for amf-dirf. Node built-ins only. Never cut the guards.
+// Registry, workflow, and folder-contract validation.
 import { readdirSync, readFileSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { AGENTS_DIR, REGISTRY, ROOT, SKILLS, PLAYBOOKS, PLAYBOOK_DIR, POLICY, loadJson } from "./paths.js";
@@ -182,7 +182,6 @@ export function main() {
   console.log(`Validation passed: ${registryNames.size} agents, ${Object.keys(playbooks).length} playbooks, ${skillNames.size} skills`);
 }
 
-// Standalone entry: `node src/validate.js` (cli.js calls main() directly).
 import { pathToFileURL } from "node:url";
 if (pathToFileURL(process.argv[1]).href === import.meta.url) {
   main();

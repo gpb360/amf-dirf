@@ -1,12 +1,9 @@
-// Shared path + constants for amf-dirf. Node built-ins only.
-// All other modules import ROOT and the registry/policy paths from here so the
-// 'repo root' computation lives in exactly one place.
+// Shared repository paths and file helpers.
 import { createHash } from "node:crypto";
 import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-// src/ -> repo root is one level up.
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const ROOT = resolve(HERE, "..");
 
@@ -22,7 +19,6 @@ export function loadJson(path) {
 }
 
 export function fileHash(path) {
-  // First 16 hex chars of the SHA-256 of raw file bytes (drift guard).
   return createHash("sha256").update(readFileSync(path)).digest("hex").slice(0, 16);
 }
 

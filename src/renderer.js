@@ -1,12 +1,4 @@
-// Lean instruction-set renderer. Node built-ins only.
-//
-// Ponytail principle: smallest correct artifact, progressive disclosure.
-//   - parseAgentMd: tolerant frontmatter + separates the governance boilerplate
-//   - renderMarkdownLite: only what agent markdowns contain (no general md engine)
-//   - buildInstructions: lean router + one lazy-loaded detail file per agent
-//   - buildHtml: same structure, collapsible <details> for humans
-//
-// Markdown is source; HTML is the render of the same lean structure.
+// Renders workflow Markdown and its self-contained HTML view.
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { AGENTS_DIR, ROOT } from "./paths.js";
