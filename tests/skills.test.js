@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { ROOT } from "../src/paths.js";
 import * as skills from "../src/skills.js";
 
 function makeRoot() {
@@ -88,4 +89,19 @@ test("trusted sources come from host configuration", () => {
 
 test("provider hint follows the nearest skill namespace, not an enclosing worktree", () => {
   assert.equal(skills.providerForPath("C:/Users/example/.codex/worktrees/123/repo/.agents/skills/review"), "agents");
+});
+
+test("discover never indexes the kit's own bundled skills", () => {
+  const bundledRoot = join(ROOT, "skills").replace(/\\/g, "/");
+  const idx = skills.discover();
+  const leaked = Object.values(idx).filter((item) => String(item.path).replace(/\\/g, "/").startsWith(bundledRoot + "/"));
+  assert.deepEqual(leaked, []);
+  assert.equal(idx["minimal-implementation"], undefined);
+});
+
+test("bundledSkills exposes kit units with declared capabilities", () => {
+  const bundled = skills.bundledSkills();
+  assert.ok(bundled["minimal-implementation"], "bundled fallback should be readable");
+  assert.deepEqual(bundled["minimal-implementation"].capabilities, ["minimalism"]);
+  assert.equal(bundled["minimal-implementation"].provider, "dirf");
 });

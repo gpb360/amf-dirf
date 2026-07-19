@@ -1,5 +1,6 @@
 // Assemble an already-selected Playbook's ordered skill flow.
 // Selection happens in router.js; this module never classifies a task.
+import { bundledSkills } from "./skills.js";
 
 export const KNOWN_BRANCHES = new Set(["ui", "react"]);
 
@@ -124,9 +125,20 @@ export function buildFlow(selection, context = {}, skillIndex = {}) {
     .map(({ branch: _branch, skill: _legacySkill, ...step }) => ({ ...step, capability: step.capability || step.stage }));
   const steps = [];
   const gaps = [];
+  // The kit ships zero installed skills; its bundled skills/ folder is a
+  // fallback consulted ONLY when the local install has nothing for a
+  // capability, and the step is labeled so — never passed off as installed.
+  let bundled;
   for (const requirement of requirements) {
     const selected = selectCapability(requirement, selection, context, skillIndex);
+    const fallback = selected ? null : selectCapability(
+      requirement, selection, context, (bundled ??= context.bundledIndex || bundledSkills()));
     if (selected) steps.push(selected);
+    else if (fallback) steps.push({
+      ...fallback,
+      status: "fallback",
+      selection_reason: `bundled fallback for ${requirement.capability || requirement.stage} — no matching skill in the local install`,
+    });
     else gaps.push({
       stage: requirement.stage,
       capability: requirement.capability,

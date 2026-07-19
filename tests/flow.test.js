@@ -131,6 +131,28 @@ test("single-word capabilities do not match a passing description mention", () =
   assert.equal(flow.gaps[0].capability, "testing");
 });
 
+test("kit ships zero skills: bundled units are fallback-only and labeled", () => {
+  const selection = {
+    playbook: "demo", agents: [],
+    skill_flow: { label: "demo", steps: [{ stage: "build", capability: "minimalism", reason: "Small change" }] },
+  };
+  const bundledIndex = {
+    "minimal-implementation": { path: "/kit/skills/minimal-implementation", description: "smallest correct implementation", capabilities: ["minimalism"], provider: "dirf" },
+  };
+  // Local install has nothing -> bundled fallback, explicitly labeled.
+  const fallback = buildFlow(selection, { bundledIndex }, {});
+  assert.equal(fallback.steps[0].skill, "minimal-implementation");
+  assert.equal(fallback.steps[0].status, "fallback");
+  assert.match(fallback.steps[0].selection_reason, /no matching skill in the local install/);
+  assert.deepEqual(fallback.gaps, []);
+  // Local install covers it -> the host skill wins, bundled never consulted.
+  const local = buildFlow(selection, { bundledIndex }, {
+    ponytail: { path: "/home/skills/ponytail", description: "minimalism ladder", capabilities: ["minimalism"], provider: "claude" },
+  });
+  assert.equal(local.steps[0].skill, "ponytail");
+  assert.equal(local.steps[0].status, "installed");
+});
+
 test("buildFlow rejects incidental one-word overlap", () => {
   const selection = {
     playbook: "triage", agents: [],
