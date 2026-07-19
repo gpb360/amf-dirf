@@ -92,7 +92,7 @@ dirf create <name> "<task>" [--path DIR]             route -> workflow JSON only
 dirf render <name> [--open]                          existing JSON -> md + html
 dirf list                                            list saved workflows
 dirf validate                                        validate registries + workflows
-dirf skills scan                                     scan host, show installed skills + resolved refs
+dirf skills scan [--path DIR]                        scan host, show installed skills + resolved refs
 ```
 
 Run `node src/cli.js` with no arguments for help.

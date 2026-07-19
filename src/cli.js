@@ -6,7 +6,7 @@
 //   dirf render <name> [--open]                          existing JSON -> lean md + html
 //   dirf list                                            list saved workflows
 //   dirf validate                                        validate registries + workflows
-//   dirf skills scan                                     scan host, print installed skills + resolved refs
+//   dirf skills scan [--path DIR]                        scan host, print installed skills + resolved refs
 import { writeFileSync, readFileSync, existsSync, readdirSync, unlinkSync } from "node:fs";
 import { join, isAbsolute, resolve } from "node:path";
 import { spawn } from "node:child_process";
@@ -137,8 +137,9 @@ function cmdValidate() {
   validateMain();
 }
 
-function cmdSkillsScan() {
-  const idx = discover();
+function cmdSkillsScan(args) {
+  const projectRoot = args.path ? (isAbsolute(args.path) ? args.path : resolve(ROOT, args.path)) : null;
+  const idx = discover(projectRoot);
   console.log(`Discovered ${Object.keys(idx).length} installed skills across scanned roots.`);
   console.log("\nRegistry references resolved:");
   for (const ref of loadRegistry().skills || []) {
@@ -171,7 +172,7 @@ Usage:
   dirf render <name> [--open]                          re-render existing
   dirf list                                            list saved workflows
   dirf validate                                        validate registries
-  dirf skills scan                                     show installed skills
+  dirf skills scan [--path DIR]                        show installed skills
   dirf inspect [<path>]                                detect a project's optimization stack + suggest gaps
   dirf flow "<task>" [--path DIR]                      show the ordered skill flow for a task (ask-matt style)
 `;
@@ -231,8 +232,8 @@ function main() {
   else if (cmd === "validate") cmdValidate();
   else if (cmd === "skills") {
     const sub = args._[0];
-    if (sub === "scan") cmdSkillsScan();
-    else { console.log("usage: dirf skills scan"); process.exit(2); }
+    if (sub === "scan") cmdSkillsScan(args);
+    else { console.log("usage: dirf skills scan [--path DIR]"); process.exit(2); }
   }
   else if (cmd === "inspect") { args._ = args._.length ? args._ : [args.path]; cmdInspect(args); }
   else if (cmd === "flow") { cmdFlow(args); }
