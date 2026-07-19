@@ -21,10 +21,16 @@ export function kickoffPrompt(workflow) {
   const wf = workflow.workflow || {};
   const agents = (workflow.agents || []).map((a) => a.name).filter(Boolean);
   const phases = wf.phases || [];
+  const repo = workflow.repository;
+  const repoLine = repo
+    ? `Repository: ${repo.remote || repo.name}${repo.remote && repo.name ? ` (${repo.name})` : ""} — all work happens inside this repository. Clone or open it before starting; if you cannot access it, say so and ask for the relevant files instead of guessing.`
+    : "Repository: not recorded — ask which repository this task targets and open it before starting.";
   return [
     `You are executing the "${workflow.name || workflow.playbook || "workflow"}" DIRF workflow.`,
     "",
     `Task: ${workflow.task || "(ask for the task before starting)"}`,
+    "",
+    repoLine,
     "",
     "Operating rules:",
     "1. The instruction set's README.md is the authoritative router; each agent role has a detail file under agents/. If you can read files, load ONLY the file for the role you are acting as. If you cannot, ask for it to be pasted before acting as that role.",
