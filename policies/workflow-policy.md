@@ -51,6 +51,13 @@ Use this policy in every generated workflow prompt.
 - Do not spawn agents only to look busy.
 - Define verification gates before merge or release.
 
+## Idea to Ship
+- Clarify the intent with the best installed interview capability before implementation.
+- Prototype only when a question needs a runnable answer.
+- Keep small work in one context; publish a tracked spec and dependency-ordered tickets for multi-session work.
+- Execute one ticket per fresh context, then review independently against both the specification and repository standards.
+- Treat `.dirf/attempts/` as disposable execution evidence, not durable project knowledge.
+
 ## UI/UX Quality
 - Use UI/UX design-system guidance for visible interface work.
 - Check accessibility, touch targets, responsive layout, typography, color contrast, loading/error states, and reduced motion.

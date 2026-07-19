@@ -1,26 +1,36 @@
 #!/usr/bin/env node
 // amf-dirf — Agent Spec Kit (Do It Right First). Unified CLI. Node built-ins only.
 //
-//   dirf build  <name> "<task>" [--path DIR] [--open]   full pipeline: route -> JSON -> lean md + html
-//   dirf create <name> "<task>" [--path DIR]             route -> workflow JSON only
-//   dirf render <name> [--open]                          existing JSON -> lean md + html
-//   dirf list                                            list saved workflows
+//   dirf setup [path]                                    configure a target repository
+//   dirf build  <name> "<task>" [--path DIR] [--open]   full pipeline into a disposable attempt
+//   dirf create <name> "<task>" [--path DIR]             route -> attempt workflow JSON only
+//   dirf render <name-or-id> [--path DIR] [--open]       render the latest matching attempt
+//   dirf list [--path DIR]                               list target attempts
 //   dirf validate                                        validate registries + workflows
 //   dirf skills scan                                     scan host, print installed skills + resolved refs
 //   dirf validate|graph|run|render <folder>               operate an Eve-style folder DAG
-import { writeFileSync, readFileSync, existsSync, readdirSync, unlinkSync } from "node:fs";
+import { writeFileSync, readFileSync, existsSync } from "node:fs";
 import { dirname, join, isAbsolute, resolve } from "node:path";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { ROOT, REGISTRY, SKILLS, PLAYBOOKS, POLICY, WORKFLOW_DIR, fileHash, loadJson, workflowOutputDir, workflowPath } from "./paths.js";
+import { ROOT, REGISTRY, SKILLS, PLAYBOOKS, POLICY, fileHash, loadJson } from "./paths.js";
 import { collectRoutingFacts, loadPlaybooks, recommend } from "./router.js";
 import { discover, enrichDiscovered, loadRegistry, loadTrustedSources, providerForPath, resolveAgentSkills } from "./skills.js";
 import { buildInstructions, buildHtml } from "./renderer.js";
 import { main as validateMain } from "./validate.js";
 import { inspect } from "./inspect.js";
-import { buildFlow, reconcile } from "./flow.js";
+import { buildFlow, findCapabilityGaps, reconcile } from "./flow.js";
 import { graphLines, renderFolderHtml, resolveGraph } from "./folders.js";
+import { createAttempt, findAttempt, listAttempts, loadProjectConfig, projectRoot, setupProject } from "./project.js";
+
+const LIFECYCLE = {
+  clarify: "Use the best installed interview capability before implementation.",
+  prototype: "Prototype only when a question needs a runnable answer.",
+  split: "Keep small work in one context; publish a spec and dependency-ordered tickets for multi-session work.",
+  implement: "Execute one ticket per fresh context.",
+  review: "Review independently against both the specification and repository standards.",
+};
 
 function enrichAgents(agentNames) {
   // Resolve playbook agent names into full entries (file, tags, skills) from the registry.
@@ -40,7 +50,7 @@ function buildPlan(name, task, path) {
   }));
   const now = new Date().toISOString();
   return {
-    schema_version: 4,
+    schema_version: 5,
     name,
     task,
     playbook: selection.playbook,
@@ -64,6 +74,7 @@ function buildPlan(name, task, path) {
       playbooks: fileHash(PLAYBOOKS),
       policy: fileHash(POLICY),
     },
+    lifecycle: LIFECYCLE,
   };
 }
 
@@ -78,7 +89,7 @@ function portableReference(value) {
 
 function portablePlan(plan) {
   const out = structuredClone(plan);
-  out.schema_version = 4;
+  out.schema_version = 5;
   delete out.path;
   out.baseline_skills = (out.baseline_skills || []).map(portableReference);
   out.agents = (out.agents || []).map((agent) => ({ ...agent, skills: (agent.skills || []).map(portableReference) }));
@@ -103,15 +114,16 @@ function assembleTaskRouting(task, path) {
   return { selection, discovered, facts, skillFlow: buildFlow(selection, { task, trustedSources }, discovered) };
 }
 
-function savePlan(plan) {
-  const path = workflowPath(plan.name);
+function savePlan(plan, attempt) {
+  const path = join(attempt.folder, "workflow.json");
+  plan.attempt = { id: attempt.id, path: attempt.relativePath };
   writeFileSync(path, JSON.stringify(portablePlan(plan), null, 2), "utf-8");
   return path;
 }
 
 function renderPlan(planPath, openBrowser = false) {
   const plan = JSON.parse(readFileSync(planPath, "utf-8"));
-  const outDir = workflowOutputDir(plan.name);
+  const outDir = dirname(planPath);
   const written = buildInstructions(plan, outDir);
   const htmlPath = join(outDir, "instructions.html");
   writeFileSync(htmlPath, buildHtml(plan), "utf-8");
@@ -130,47 +142,64 @@ function openBrowserAt(filePath) {
 }
 
 function cmdBuild(args) {
-  const plan = buildPlan(args.name, args.task, args.path);
-  const planPath = savePlan(plan);
-  console.log(`Workflow saved: ${planPath}`);
+  const target = projectRoot(args.path);
+  loadProjectConfig(target);
+  const plan = buildPlan(args.name, args.task, target);
+  const attempt = createAttempt(target, args.name);
+  const planPath = savePlan(plan, attempt);
+  console.log(`Attempt saved: ${attempt.id}`);
   renderPlan(planPath, args.open);
 }
 
 function cmdCreate(args) {
-  const plan = buildPlan(args.name, args.task, args.path);
-  const planPath = savePlan(plan);
-  console.log(`Workflow saved: ${planPath}`);
+  const target = projectRoot(args.path);
+  loadProjectConfig(target);
+  const plan = buildPlan(args.name, args.task, target);
+  const attempt = createAttempt(target, args.name);
+  savePlan(plan, attempt);
+  console.log(`Attempt saved: ${attempt.id}`);
   console.log(`Routed to playbook: ${plan.playbook} (score ${plan.score})`);
 }
 
 function cmdRender(args) {
-  const planPath = workflowPath(args.name);
+  const attempt = findAttempt(projectRoot(args.path), args.name);
+  const planPath = join(attempt.folder, "workflow.json");
   if (!existsSync(planPath)) {
-    console.error(`No workflow named ${JSON.stringify(args.name)} (looked for ${planPath})`);
+    console.error(`Attempt ${attempt.id} has no workflow.json`);
     process.exit(2);
   }
   renderPlan(planPath, args.open);
 }
 
-function cmdList() {
-  let names = [];
-  try { names = readdirSync(WORKFLOW_DIR).filter((f) => f.endsWith(".json")).map((f) => f.replace(/\.json$/, "")).sort(); } catch { /* none */ }
-  if (!names.length) { console.log("(no workflows saved)"); return; }
-  console.log("Saved workflows:");
-  for (const n of names) console.log(`  - ${n}`);
+function cmdList(args) {
+  const attempts = listAttempts(projectRoot(args.path));
+  if (!attempts.length) { console.log("(no attempts saved)"); return; }
+  console.log("Saved attempts:");
+  for (const attempt of attempts) console.log(`  - ${attempt.id}  ${attempt.name}`);
 }
 
-function cmdMigrate(name) {
-  const paths = name
-    ? [workflowPath(name)]
-    : readdirSync(WORKFLOW_DIR).filter((file) => file.endsWith(".json")).map((file) => join(WORKFLOW_DIR, file));
+function cmdMigrate(name, target) {
+  const root = projectRoot(target);
+  const attempts = name ? [findAttempt(root, name)] : listAttempts(root);
+  const paths = attempts.map((attempt) => join(attempt.folder, "workflow.json")).filter(existsSync);
   for (const path of paths) {
-    if (!existsSync(path)) throw new Error(`No workflow named ${JSON.stringify(name)}`);
     const plan = portablePlan(JSON.parse(readFileSync(path, "utf-8")));
     writeFileSync(path, JSON.stringify(plan, null, 2), "utf-8");
-    if (existsSync(workflowOutputDir(plan.name))) renderPlan(path);
+    if (existsSync(join(dirname(path), "README.md"))) renderPlan(path);
   }
-  console.log(`Migrated ${paths.length} workflow snapshot(s) to portable schema version 4.`);
+  console.log(`Migrated ${paths.length} workflow snapshot(s) to portable schema version 5.`);
+}
+
+function cmdSetup(args) {
+  const target = args._[0] || args.path || ".";
+  const result = setupProject(target, { tracker: args.tracker, context: args.context });
+  console.log(`DIRF configured: ${result.root}`);
+  console.log(result.created.length ? `Created: ${result.created.join(", ")}` : "Already configured; no files changed.");
+  const discovered = enrichDiscovered(discover(result.root));
+  const gaps = findCapabilityGaps(loadPlaybooks(), discovered);
+  console.log(`Detected ${Object.keys(discovered).length} installed skills; no skills were installed.`);
+  if (gaps.length) console.log(`Capability gaps: ${gaps.map((gap) => gap.capability).join(", ")}`);
+  else console.log("Capability gaps: none.");
 }
 
 function cmdValidate() {
@@ -231,6 +260,8 @@ function parse(argv) {
   for (let i = 0; i < rest.length; i++) {
     const a = rest[i];
     if (a === "--path") { out.path = rest[++i]; continue; }
+    if (a === "--tracker") { out.tracker = rest[++i]; continue; }
+    if (a === "--context") { out.context = rest[++i]; continue; }
     if (a === "--open") { out.open = true; continue; }
     if (a === "--help" || a === "-h") { out.help = true; continue; }
     out._.push(a);
@@ -241,13 +272,14 @@ function parse(argv) {
 const HELP = `amf-dirf — Agent Spec Kit (Do It Right First)
 
 Usage:
+  dirf setup [path] [--tracker local] [--context single|multi]
   dirf build  <name> "<task>" [--path DIR] [--open]   full pipeline
   dirf create <name> "<task>" [--path DIR]             JSON only
-  dirf render <name> [--open]                          re-render existing
+  dirf render <name-or-id> [--path DIR] [--open]       re-render an attempt
   dirf validate <folder>                              validate a folder DAG
   dirf graph <folder>                                 print ordered folder DAG
   dirf run <folder>                                   print deterministic execution handoff
-  dirf list                                            list saved workflows
+  dirf list [--path DIR]                               list saved attempts
   dirf migrate [<name>]                                remove runtime paths from saved snapshots
   dirf validate                                        validate registries
   dirf skills scan                                     show installed skills
@@ -304,15 +336,17 @@ function main() {
   const { cmd, args } = parse(argv);
   if (args.help) { console.log(HELP); return; }
 
-  if (cmd === "build") { args.name = args._[0]; args.task = args._.slice(1).join(" "); cmdBuild(args); }
+  if (cmd === "setup") cmdSetup(args);
+  else if (cmd === "build") { args.name = args._[0]; args.task = args._.slice(1).join(" "); cmdBuild(args); }
   else if (cmd === "create") { args.name = args._[0]; args.task = args._.slice(1).join(" "); cmdCreate(args); }
   else if (cmd === "render") {
     const target = args._[0];
-    if (target && existsSync(resolve(target)) && !existsSync(workflowPath(target))) cmdFolderRender(target);
+    const explicitFolder = target && !args.path && (isAbsolute(target) || target.startsWith(".") || /[\\/]/.test(target));
+    if (explicitFolder && existsSync(resolve(target))) cmdFolderRender(target);
     else { args.name = target; cmdRender(args); }
   }
-  else if (cmd === "list") cmdList();
-  else if (cmd === "migrate") cmdMigrate(args._[0]);
+  else if (cmd === "list") cmdList(args);
+  else if (cmd === "migrate") cmdMigrate(args._[0], args.path);
   else if (cmd === "validate") args._[0] ? cmdFolderValidate(args._[0]) : cmdValidate();
   else if (cmd === "graph") cmdGraph(args._[0]);
   else if (cmd === "run") cmdRun(args._[0]);
@@ -327,4 +361,8 @@ function main() {
   else { console.error(`unknown command: ${cmd}\n\n${HELP}`); process.exit(2); }
 }
 
-main();
+try { main(); }
+catch (error) {
+  console.error(error.message);
+  process.exitCode = 1;
+}

@@ -28,8 +28,11 @@ with a token-overlap heuristic that guesses wrong.
 ## Quick start
 
 ```bash
+# One-time target-repository setup (tracked config/docs, ignored attempts)
+node src/cli.js setup /path/to/project
+
 # Full pipeline: task -> workflow JSON -> lean instruction set + HTML
-node src/cli.js build demo "build a landing page"
+node src/cli.js build demo "build a landing page" --path /path/to/project
 
 # See what skills are installed on this host and which refs resolve
 node src/cli.js skills scan
@@ -37,7 +40,7 @@ node src/cli.js skills scan
 # Validate all registries + workflows
 node src/cli.js validate
 
-# List saved workflows
+# List saved attempts
 node src/cli.js list
 ```
 
@@ -65,7 +68,9 @@ workflow folder
 ## Output structure (lean, progressive disclosure)
 
 ```
-workflows/user/<name>/
+.dirf/attempts/<timestamp>-<name>/
+├── attempt.json                        # portable attempt identity
+├── workflow.json                       # resolved workflow snapshot
 ├── README.md                           # authoritative router and frontmatter
 ├── policy.md                           # the workflow policy (one level deep)
 ├── agents/
@@ -88,9 +93,10 @@ done-when checklist.
 ```
 dirf build  <name> "<task>" [--path DIR] [--open]   full pipeline: route -> JSON -> md + html
 dirf create <name> "<task>" [--path DIR]             route -> workflow JSON only
-dirf render <name> [--open]                          existing JSON -> md + html
-dirf list                                            list saved workflows
-dirf migrate [<name>]                                remove runtime paths from saved snapshots
+dirf setup [path] [--tracker local] [--context single|multi]
+dirf render <name-or-id> [--path DIR] [--open]       render the latest matching attempt
+dirf list [--path DIR]                               list target attempts
+dirf migrate [<name-or-id>] [--path DIR]             refresh portable attempt snapshots
 dirf validate                                        validate registries + workflows
 dirf validate <folder>                               validate one folder DAG
 dirf graph <folder>                                  show deterministic execution order
@@ -114,7 +120,7 @@ bounded context, modular execution, approval before side effects, and traceable
 evidence—without importing a hosted runtime. Markdown is source, HTML is a
 generated human view, and the zero-dependency JavaScript CLI is the resolver.
 
-Generated workflows are host-neutral. Claude, Codex, another agent, or a person
+Generated attempts are host-neutral. Claude, Codex, another agent, or a person
 can execute the same README. Repository and installation paths are discovered
 for the current run only; snapshots retain capability names and provider hints.
 If a task needs isolation, keep worktrees beside the target repository unless
@@ -177,14 +183,15 @@ agents/          agent markdown definitions (21 curated)
 policies/        workflow-policy.md (embedded in every instruction set)
 tests/           test-router.js, test-skills.js, test-renderer.js (node:test)
 scripts/         smoke-test.js
-workflows/user/  generated workflow JSONs (committed) + renders (gitignored)
+workflows/       authored reusable workflow folders
+.dirf/attempts/  target-owned generated runs (gitignored in each target repo)
 ```
 
 ## Conventions
 
 - **Zero dependencies.** Pure Node.js built-ins (no `node_modules`).
 - **One entry point:** `src/cli.js`.
-- **Markdown is source; HTML is a regenerable render** (gitignored).
+- **Markdown playbooks are source; generated attempts and HTML are disposable** (gitignored).
 - **Validate before you commit:** `node src/cli.js validate`.
 
 ## Running the tests

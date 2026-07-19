@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildFlow, reconcile } from "../src/flow.js";
+import { buildFlow, findCapabilityGaps, reconcile } from "../src/flow.js";
 import { validateSnapshot } from "../src/validate.js";
 
 const WORKFLOW = {
@@ -145,6 +145,15 @@ test("buildFlow selects one deterministic installed match and reports gaps", () 
   assert.equal(flow.gaps[0].trusted_candidates[0].name, "user-choice");
 });
 
+test("findCapabilityGaps reports unresolved configured requirements once", () => {
+  const playbooks = {
+    one: { description: "one", agents: [], skill_flow: { label: "one", steps: [{ stage: "build", capability: "testing", reason: "test" }] } },
+    two: { description: "two", agents: [], skill_flow: { label: "two", steps: [{ stage: "verify", capability: "testing", reason: "verify" }, { stage: "review", capability: "code review", reason: "review" }] } },
+  };
+
+  assert.deepEqual(findCapabilityGaps(playbooks, { tdd: { description: "testing" } }).map((gap) => gap.capability), ["code review"]);
+});
+
 test("schema v2 requires resolved skill snapshots", () => {
   const snapshot = {
     schema_version: 2,
@@ -209,4 +218,18 @@ test("schema v4 rejects persisted runtime paths", () => {
 
   assert.ok(errors.includes("portable.json: must not persist target repository path"));
   assert.ok(errors.includes("portable.json: agent 1 skill 1 must not persist a runtime path"));
+});
+
+test("schema v5 requires portable attempt metadata and lifecycle guidance", () => {
+  const errors = validateSnapshot({
+    schema_version: 5,
+    name: "demo", task: "build", playbook: "fullstack-feature", playbook_description: "Build",
+    agents: [], baseline_skills: [], questions: [], capability_gaps: [], policy: "policies/workflow-policy.md",
+    skill_flow: { label: "build", steps: [] },
+    attempt: { id: "demo", path: "C:\\tmp\\demo" },
+    lifecycle: {},
+  }, "demo");
+
+  assert.ok(errors.includes("demo: attempt path must be target-relative"));
+  assert.ok(errors.includes("demo: lifecycle.review must be a non-empty string"));
 });

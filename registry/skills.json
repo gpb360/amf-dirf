@@ -200,6 +200,133 @@
         "web quality",
         "user experience design"
       ]
+    },
+    {
+      "name": "hyperframes",
+      "category": "video",
+      "applies_to": [
+        "video-producer",
+        "motion-designer",
+        "frontend-developer"
+      ],
+      "summary": "Route, brief, author, validate, and render HyperFrames HTML video compositions",
+      "capabilities": [
+        "video creation",
+        "video production"
+      ]
+    },
+    {
+      "name": "hyperframes-animation",
+      "category": "video",
+      "applies_to": [
+        "video-producer",
+        "motion-designer"
+      ],
+      "summary": "Motion language, animation timing, transitions, kinetic text, and composition polish for HyperFrames videos",
+      "capabilities": [
+        "motion design",
+        "video animation"
+      ]
+    },
+    {
+      "name": "hyperframes-core",
+      "category": "video",
+      "applies_to": [
+        "video-producer",
+        "frontend-developer"
+      ],
+      "summary": "Core HyperFrames composition contract, timing model, assets, and validation rules",
+      "capabilities": [
+        "video composition"
+      ]
+    },
+    {
+      "name": "hyperframes-cli",
+      "category": "video",
+      "applies_to": [
+        "video-producer",
+        "frontend-developer"
+      ],
+      "summary": "HyperFrames preview, validation, rendering, and batch-render operations",
+      "capabilities": [
+        "video rendering"
+      ]
+    },
+    {
+      "name": "brand-guardian",
+      "category": "brand",
+      "applies_to": [
+        "brand-guardian",
+        "video-producer",
+        "ui-designer"
+      ],
+      "summary": "Brand identity, visual consistency, color, typography, asset usage, and motion standards",
+      "capabilities": [
+        "brand system",
+        "visual identity"
+      ]
+    },
+    {
+      "name": "brand-copywriter",
+      "category": "copy",
+      "applies_to": [
+        "content-marketer",
+        "video-producer"
+      ],
+      "summary": "Platform-aware marketing scripts, hooks, CTAs, and campaign copy",
+      "capabilities": [
+        "copywriting",
+        "video script"
+      ]
+    },
+    {
+      "name": "youtube-seo",
+      "category": "seo",
+      "applies_to": [
+        "content-marketer",
+        "video-producer"
+      ],
+      "summary": "YouTube titles, descriptions, tags, thumbnail guidance, Shorts discovery, and video SEO",
+      "capabilities": [
+        "youtube seo",
+        "video seo"
+      ]
+    },
+    {
+      "name": "seo-content-writer",
+      "category": "seo",
+      "applies_to": [
+        "content-marketer"
+      ],
+      "summary": "SEO content writing, keyword mapping, search intent, metadata, and content structure",
+      "capabilities": [
+        "seo content",
+        "keyword content"
+      ]
+    },
+    {
+      "name": "remotion-best-practices",
+      "category": "video",
+      "applies_to": [
+        "video-producer",
+        "frontend-developer"
+      ],
+      "summary": "Remotion composition best practices when a video task uses Remotion",
+      "capabilities": [
+        "remotion video"
+      ]
+    },
+    {
+      "name": "remotion-to-hyperframes",
+      "category": "video",
+      "applies_to": [
+        "video-producer",
+        "frontend-developer"
+      ],
+      "summary": "Port existing Remotion compositions to HyperFrames when migration is explicit",
+      "capabilities": [
+        "remotion migration"
+      ]
     }
   ]
 }

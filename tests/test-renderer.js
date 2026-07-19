@@ -72,6 +72,20 @@ test("buildInstructions writes router + per-agent detail", () => {
   assert.ok(detail.includes("global skill"), "agent should be told it can use global skill discovery");
 });
 
+test("buildInstructions includes lifecycle guidance when persisted", () => {
+  const outDir = mkdtempSync(join(tmpdir(), "dirf-lifecycle-"));
+  const workflow = {
+    name: "demo", task: "build", playbook: "fullstack-feature",
+    workflow: { phases: ["build"], output: "done", validation: "test", recovery: "stop" },
+    agents: [], baseline_skills: [], skill_flow: { label: "build", steps: [] }, schema_version: 4,
+    lifecycle: { clarify: "Clarify first", review: "Review independently" },
+  };
+  buildInstructions(workflow, outDir);
+  const readme = readFileSync(join(outDir, "README.md"), "utf8");
+  assert.match(readme, /## Idea to ship/);
+  assert.match(readme, /Review independently/);
+});
+
 test("buildHtml is self-contained and collapsible", () => {
   const workflow = {
     name: "demo", task: "build a landing page",

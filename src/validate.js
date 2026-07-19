@@ -1,7 +1,7 @@
 // Single validator for amf-dirf. Node built-ins only. Never cut the guards.
 import { readdirSync, readFileSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { AGENTS_DIR, REGISTRY, ROOT, SKILLS, PLAYBOOKS, PLAYBOOK_DIR, POLICY, WORKFLOW_DIR, loadJson } from "./paths.js";
+import { AGENTS_DIR, REGISTRY, ROOT, SKILLS, PLAYBOOKS, PLAYBOOK_DIR, POLICY, loadJson } from "./paths.js";
 import { reconcile } from "./flow.js";
 import { loadPlaybookFolders, resolveGraph } from "./folders.js";
 
@@ -25,7 +25,7 @@ export function validateSnapshot(data, label = "workflow") {
     if (!(key in data)) errors.push(`${label}: missing required key ${key}`);
     else if (!hasType(data[key], type)) errors.push(`${label}: key ${key} must be ${type}`);
   }
-  if (![2, 3, 4].includes(data.schema_version)) errors.push(`${label}: unsupported schema_version`);
+  if (![2, 3, 4, 5].includes(data.schema_version)) errors.push(`${label}: unsupported schema_version`);
 
   const resolvedSkillError = (skill, where, nameKey = "name") => {
     if (!skill || typeof skill !== "object" || typeof skill[nameKey] !== "string" || !skill[nameKey]) {
@@ -75,6 +75,16 @@ export function validateSnapshot(data, label = "workflow") {
   }
   if (data.schema_version >= 4 && "path" in data) {
     errors.push(`${label}: must not persist target repository path`);
+  }
+  if (data.schema_version >= 5) {
+    if (!data.attempt || typeof data.attempt.id !== "string" || typeof data.attempt.path !== "string") {
+      errors.push(`${label}: attempt must include id and target-relative path`);
+    } else if (/^(?:[A-Za-z]:[\\/]|[\\/]{1,2})/.test(data.attempt.path)) {
+      errors.push(`${label}: attempt path must be target-relative`);
+    }
+    for (const stage of ["clarify", "prototype", "split", "implement", "review"]) {
+      if (typeof data.lifecycle?.[stage] !== "string" || !data.lifecycle[stage]) errors.push(`${label}: lifecycle.${stage} must be a non-empty string`);
+    }
   }
   return errors;
 }
@@ -148,25 +158,13 @@ export function main() {
   errors.push(...reconcile(playbooks));
 
   // --- folder-native units ---
-  for (const base of [PLAYBOOK_DIR, join(ROOT, "skills"), join(ROOT, "tools"), WORKFLOW_DIR]) {
+  for (const base of [PLAYBOOK_DIR, join(ROOT, "skills"), join(ROOT, "tools"), join(ROOT, "workflows")]) {
     let folders = [];
     try { folders = readdirSync(base, { withFileTypes: true }).filter((entry) => entry.isDirectory() && entry.name !== "instructions" && existsSync(join(base, entry.name, "README.md"))); }
     catch { /* optional root */ }
     for (const folder of folders) {
       try { resolveGraph(join(base, folder.name), { allowedRoots: [ROOT, base] }); }
       catch (error) { errors.push(error.message); }
-    }
-  }
-
-  // --- workflow JSONs ---
-  let wfFiles = [];
-  try { wfFiles = readdirSync(WORKFLOW_DIR).filter((f) => f.endsWith(".json")).sort(); } catch { /* none */ }
-  for (const wp of wfFiles) {
-    const data = loadJson(join(WORKFLOW_DIR, wp));
-    errors.push(...validateSnapshot(data, wp));
-    for (const a of (Array.isArray(data.agents) ? data.agents : [])) {
-      if (typeof a !== "object" || typeof a.name !== "string") errors.push(`${wp}: agent entry malformed`);
-      else if (!registryNames.has(a.name) && !a.missing) errors.push(`${wp}: references unknown agent ${a.name}`);
     }
   }
 
