@@ -16,11 +16,7 @@
       "content-marketer",
       "brand-guardian",
       "performance-benchmarker",
-      "test-writer-fixer"
-    ],
-    "baseline_skills": [
-      "ponytail",
-      "impeccable"
+      "test-engineer"
     ],
     "workflow": {
       "phases": [
@@ -43,33 +39,33 @@
       "steps": [
         {
           "stage": "sharpen",
-          "skill": "grill-me",
-          "reason": "Sharpen the offer, audience, and CTA before designing."
+          "reason": "Sharpen the offer, audience, and CTA before designing.",
+          "capability": "plan interview"
         },
         {
           "stage": "design",
-          "skill": "ui-ux-pro-max",
-          "reason": "Set visual hierarchy, typography, layout, and interaction quality."
+          "reason": "Set visual hierarchy, typography, layout, and interaction quality.",
+          "capability": "user experience design"
         },
         {
           "stage": "design",
-          "skill": "accessibility",
-          "reason": "Catch semantic, contrast, and keyboard issues during design."
+          "reason": "Catch semantic, contrast, and keyboard issues during design.",
+          "capability": "accessibility"
         },
         {
           "stage": "build",
-          "skill": "ponytail",
-          "reason": "Build the smallest correct implementation with existing patterns."
+          "reason": "Build the smallest correct implementation with existing patterns.",
+          "capability": "minimalism"
         },
         {
           "stage": "quality",
-          "skill": "impeccable",
-          "reason": "Apply the final product-quality pass."
+          "reason": "Apply the final product-quality pass.",
+          "capability": "product quality"
         },
         {
           "stage": "verify",
-          "skill": "web-quality-audit",
-          "reason": "Verify performance, responsiveness, and accessibility at runtime."
+          "reason": "Verify performance, responsiveness, and accessibility at runtime.",
+          "capability": "web quality"
         }
       ]
     }
@@ -86,12 +82,9 @@
     ],
     "agents": [
       "agent-organizer",
-      "test-writer-fixer",
+      "test-engineer",
       "security-auditor",
       "performance-benchmarker"
-    ],
-    "baseline_skills": [
-      "ponytail"
     ],
     "workflow": {
       "phases": [
@@ -113,18 +106,18 @@
       "steps": [
         {
           "stage": "review",
-          "skill": "code-review",
-          "reason": "Review Standards and Spec independently."
+          "reason": "Review Standards and Spec independently.",
+          "capability": "code review"
         },
         {
           "stage": "security",
-          "skill": "security-review",
-          "reason": "Check trust boundaries, secrets, injection, and auth gaps."
+          "reason": "Check trust boundaries, secrets, injection, and auth gaps.",
+          "capability": "security review"
         },
         {
           "stage": "verify",
-          "skill": "tdd",
-          "reason": "Check that changed behavior has regression coverage."
+          "reason": "Check that changed behavior has regression coverage.",
+          "capability": "testing"
         }
       ]
     }
@@ -145,11 +138,7 @@
       "frontend-developer",
       "backend-architect",
       "error-coordinator",
-      "test-writer-fixer"
-    ],
-    "baseline_skills": [
-      "ponytail",
-      "systematic-debugging"
+      "test-engineer"
     ],
     "workflow": {
       "phases": [
@@ -171,23 +160,23 @@
       "steps": [
         {
           "stage": "diagnose",
-          "skill": "systematic-debugging",
-          "reason": "Build a tight feedback loop before theorizing."
+          "reason": "Build a tight feedback loop before theorizing.",
+          "capability": "root cause debugging"
         },
         {
           "stage": "diagnose",
-          "skill": "ponytail",
-          "reason": "Patch the smallest shared source of the bug."
+          "reason": "Patch the smallest shared source of the bug.",
+          "capability": "minimalism"
         },
         {
           "stage": "fix",
-          "skill": "tdd",
-          "reason": "Lock the bug down with a red-green regression test."
+          "reason": "Lock the bug down with a red-green regression test.",
+          "capability": "testing"
         },
         {
           "stage": "review",
-          "skill": "code-review",
-          "reason": "Review the fix for regressions and scope."
+          "reason": "Review the fix for regressions and scope.",
+          "capability": "code review"
         }
       ]
     }
@@ -208,11 +197,7 @@
       "ui-designer",
       "frontend-developer",
       "backend-architect",
-      "test-writer-fixer"
-    ],
-    "baseline_skills": [
-      "ponytail",
-      "impeccable"
+      "test-engineer"
     ],
     "workflow": {
       "phases": [
@@ -234,40 +219,123 @@
       "steps": [
         {
           "stage": "sharpen",
-          "skill": "grill-me",
-          "reason": "Resolve the decision tree before building."
+          "reason": "Resolve the decision tree before building.",
+          "capability": "plan interview"
         },
         {
           "stage": "plan",
-          "skill": "ponytail",
-          "reason": "Reuse existing patterns and choose the smallest correct slice."
+          "reason": "Reuse existing patterns and choose the smallest correct slice.",
+          "capability": "minimalism"
         },
         {
           "stage": "design",
-          "skill": "frontend-design",
           "reason": "Design the UI structure when the task has a UI surface.",
-          "branch": "ui"
+          "branch": "ui",
+          "capability": "frontend design"
         },
         {
           "stage": "build",
-          "skill": "tdd",
-          "reason": "Drive each behavior through a red-green slice."
+          "reason": "Drive each behavior through a red-green slice.",
+          "capability": "testing"
         },
         {
           "stage": "build",
-          "skill": "react-best-practices",
           "reason": "Apply React conventions when React is explicit.",
-          "branch": "react"
+          "branch": "react",
+          "capability": "react engineering"
         },
         {
           "stage": "quality",
-          "skill": "impeccable",
-          "reason": "Apply the product-quality gate."
+          "reason": "Apply the product-quality gate.",
+          "capability": "product quality"
         },
         {
           "stage": "review",
-          "skill": "code-review",
-          "reason": "Review Standards and Spec before committing."
+          "reason": "Review Standards and Spec before committing.",
+          "capability": "code review"
+        }
+      ]
+    }
+  },
+  "video-campaign": {
+    "description": "Create or repair a professional video campaign with motion design, scripts, brand consistency, platform SEO, and render verification.",
+    "keywords": [
+      "video",
+      "videos",
+      "shorts",
+      "youtube shorts",
+      "youtube",
+      "missinglettr",
+      "hyperframes",
+      "remotion",
+      "motion",
+      "animation",
+      "animated",
+      "b-roll",
+      "broll",
+      "social media post",
+      "campaign video"
+    ],
+    "agents": [
+      "ui-designer",
+      "brand-guardian",
+      "content-marketer",
+      "frontend-developer",
+      "performance-benchmarker",
+      "test-engineer"
+    ],
+    "workflow": {
+      "phases": [
+        "inventory source assets and target platform constraints",
+        "lock brand system, script hooks, and SEO keyword map",
+        "build motion compositions and render pilots",
+        "batch render and verify campaign manifest"
+      ],
+      "output": "rendered video campaign package with scripts, metadata, Missinglettr copy, and verification evidence",
+      "validation": "probe rendered media durations, inspect sample frames, verify manifests and platform metadata",
+      "recovery": "if video runtime is unavailable, use the narrowest local renderer and keep source compositions portable"
+    },
+    "questions": [
+      "What assets, target keywords, and platform formats should be used?",
+      "Should this produce final renders or a storyboard/pilot first?"
+    ],
+    "skill_flow": {
+      "label": "video campaign → render package",
+      "steps": [
+        {
+          "stage": "route",
+          "reason": "Select the right video workflow and composition contract.",
+          "capability": "video creation"
+        },
+        {
+          "stage": "brand",
+          "reason": "Set visual identity, logo, color, typography, and motion consistency.",
+          "capability": "brand system"
+        },
+        {
+          "stage": "copy",
+          "reason": "Write platform-aware hooks, voiceover scripts, captions, and CTAs.",
+          "capability": "copywriting"
+        },
+        {
+          "stage": "seo",
+          "reason": "Map keywords into titles, descriptions, tags, and Shorts metadata.",
+          "capability": "youtube seo"
+        },
+        {
+          "stage": "motion",
+          "reason": "Apply professional animation, transitions, kinetic text, and visual rhythm.",
+          "capability": "motion design"
+        },
+        {
+          "stage": "render",
+          "reason": "Render and validate platform-ready video outputs.",
+          "capability": "video rendering"
+        },
+        {
+          "stage": "quality",
+          "reason": "Final product-quality pass before handoff.",
+          "capability": "product quality"
         }
       ]
     }
@@ -287,9 +355,6 @@
       "competitive-analyst",
       "content-marketer",
       "knowledge-synthesizer"
-    ],
-    "baseline_skills": [
-      "ponytail"
     ],
     "workflow": {
       "phases": [
@@ -311,13 +376,13 @@
       "steps": [
         {
           "stage": "research",
-          "skill": "grill-me",
-          "reason": "Define the decision the research must support."
+          "reason": "Define the decision the research must support.",
+          "capability": "plan interview"
         },
         {
           "stage": "synthesize",
-          "skill": "ponytail",
-          "reason": "Stop at the smallest evidence-backed recommendation."
+          "reason": "Stop at the smallest evidence-backed recommendation.",
+          "capability": "minimalism"
         }
       ]
     }
@@ -336,11 +401,7 @@
       "performance-benchmarker",
       "frontend-developer",
       "backend-architect",
-      "test-writer-fixer"
-    ],
-    "baseline_skills": [
-      "ponytail",
-      "web-quality-audit"
+      "test-engineer"
     ],
     "workflow": {
       "phases": [
@@ -362,18 +423,18 @@
       "steps": [
         {
           "stage": "measure",
-          "skill": "web-quality-audit",
-          "reason": "Establish a baseline before changing code."
+          "reason": "Establish a baseline before changing code.",
+          "capability": "web quality"
         },
         {
           "stage": "fix",
-          "skill": "ponytail",
-          "reason": "Patch the smallest measured bottleneck."
+          "reason": "Patch the smallest measured bottleneck.",
+          "capability": "minimalism"
         },
         {
           "stage": "remeasure",
-          "skill": "web-quality-audit",
-          "reason": "Repeat the same measurement for before-after proof."
+          "reason": "Repeat the same measurement for before-after proof.",
+          "capability": "web quality"
         }
       ]
     }
@@ -392,12 +453,8 @@
     "agents": [
       "security-auditor",
       "backend-architect",
-      "test-writer-fixer",
+      "test-engineer",
       "documentation-engineer"
-    ],
-    "baseline_skills": [
-      "ponytail",
-      "security-review"
     ],
     "workflow": {
       "phases": [
@@ -419,18 +476,18 @@
       "steps": [
         {
           "stage": "map",
-          "skill": "security-review",
-          "reason": "Map the trust boundary and attacker model."
+          "reason": "Map the trust boundary and attacker model.",
+          "capability": "security review"
         },
         {
           "stage": "inspect",
-          "skill": "systematic-debugging",
-          "reason": "Trace the control flow methodically."
+          "reason": "Trace the control flow methodically.",
+          "capability": "root cause debugging"
         },
         {
           "stage": "verify",
-          "skill": "tdd",
-          "reason": "Prove findings through code references or a focused test."
+          "reason": "Prove findings through code references or a focused test.",
+          "capability": "testing"
         }
       ]
     }
@@ -453,9 +510,6 @@
       "cli-developer",
       "dx-optimizer"
     ],
-    "baseline_skills": [
-      "ponytail"
-    ],
     "workflow": {
       "phases": [
         "inventory",
@@ -476,18 +530,18 @@
       "steps": [
         {
           "stage": "inventory",
-          "skill": "agent-organizer",
-          "reason": "Inventory agent roles, overlaps, and host constraints."
+          "reason": "Inventory agent roles, overlaps, and host constraints.",
+          "capability": "agent orchestration"
         },
         {
           "stage": "simplify",
-          "skill": "ponytail",
-          "reason": "Delete duplication and keep the smallest useful agent surface."
+          "reason": "Delete duplication and keep the smallest useful agent surface.",
+          "capability": "minimalism"
         },
         {
           "stage": "verify",
-          "skill": "code-review",
-          "reason": "Review registry and agent-definition consistency."
+          "reason": "Review registry and agent-definition consistency.",
+          "capability": "code review"
         }
       ]
     }
@@ -508,11 +562,7 @@
       "api-tester",
       "backend-architect",
       "security-auditor",
-      "test-writer-fixer"
-    ],
-    "baseline_skills": [
-      "ponytail",
-      "tdd"
+      "test-engineer"
     ],
     "workflow": {
       "phases": [
@@ -534,18 +584,18 @@
       "steps": [
         {
           "stage": "map",
-          "skill": "api-tester",
-          "reason": "Identify the contract and observable behavior."
+          "reason": "Identify the contract and observable behavior.",
+          "capability": "api testing"
         },
         {
           "stage": "security",
-          "skill": "security-review",
-          "reason": "Check trust-boundary and failure-path behavior."
+          "reason": "Check trust-boundary and failure-path behavior.",
+          "capability": "security review"
         },
         {
           "stage": "verify",
-          "skill": "tdd",
-          "reason": "Exercise happy paths and failure paths through the contract."
+          "reason": "Exercise happy paths and failure paths through the contract.",
+          "capability": "testing"
         }
       ]
     }
@@ -564,9 +614,6 @@
       "documentation-engineer",
       "dx-optimizer",
       "knowledge-synthesizer"
-    ],
-    "baseline_skills": [
-      "ponytail"
     ],
     "workflow": {
       "phases": [
@@ -588,13 +635,13 @@
       "steps": [
         {
           "stage": "inspect",
-          "skill": "ponytail",
-          "reason": "Ground the document in the smallest current source of truth."
+          "reason": "Ground the document in the smallest current source of truth.",
+          "capability": "minimalism"
         },
         {
           "stage": "verify",
-          "skill": "code-review",
-          "reason": "Review commands, claims, and scope against source."
+          "reason": "Review commands, claims, and scope against source.",
+          "capability": "code review"
         }
       ]
     }
@@ -613,11 +660,8 @@
     "agents": [
       "devops-automator",
       "backend-architect",
-      "test-writer-fixer",
+      "test-engineer",
       "documentation-engineer"
-    ],
-    "baseline_skills": [
-      "ponytail"
     ],
     "workflow": {
       "phases": [
@@ -639,18 +683,18 @@
       "steps": [
         {
           "stage": "diagnose",
-          "skill": "systematic-debugging",
-          "reason": "Inspect the current deployment path and reproduce the blocker."
+          "reason": "Inspect the current deployment path and reproduce the blocker.",
+          "capability": "root cause debugging"
         },
         {
           "stage": "change",
-          "skill": "ponytail",
-          "reason": "Make the smallest deployment or configuration change."
+          "reason": "Make the smallest deployment or configuration change.",
+          "capability": "minimalism"
         },
         {
           "stage": "verify",
-          "skill": "tdd",
-          "reason": "Run the narrowest build, CI, or dry-run check."
+          "reason": "Run the narrowest build, CI, or dry-run check.",
+          "capability": "testing"
         }
       ]
     }
@@ -668,9 +712,6 @@
       "agent-organizer",
       "documentation-engineer",
       "dx-optimizer"
-    ],
-    "baseline_skills": [
-      "ponytail"
     ],
     "workflow": {
       "phases": [
@@ -692,8 +733,8 @@
       "steps": [
         {
           "stage": "classify",
-          "skill": "grill-me",
-          "reason": "Ask the smallest question that classifies the task."
+          "reason": "Ask the smallest question that classifies the task.",
+          "capability": "plan interview"
         }
       ]
     }
@@ -715,9 +756,6 @@
       "dx-optimizer",
       "documentation-engineer"
     ],
-    "baseline_skills": [
-      "ponytail"
-    ],
     "workflow": {
       "phases": [
         "inspect local context",
@@ -738,13 +776,13 @@
       "steps": [
         {
           "stage": "plan",
-          "skill": "grill-me",
-          "reason": "Resolve load-bearing decisions before implementation."
+          "reason": "Resolve load-bearing decisions before implementation.",
+          "capability": "plan interview"
         },
         {
           "stage": "plan",
-          "skill": "ponytail",
-          "reason": "Use the cheapest sufficient execution shape."
+          "reason": "Use the cheapest sufficient execution shape.",
+          "capability": "minimalism"
         }
       ]
     }
@@ -773,13 +811,7 @@
       "ux-researcher",
       "brand-guardian",
       "performance-benchmarker",
-      "test-writer-fixer"
-    ],
-    "baseline_skills": [
-      "ponytail",
-      "impeccable",
-      "ui-ux-pro-max",
-      "accessibility"
+      "test-engineer"
     ],
     "workflow": {
       "phases": [
@@ -801,18 +833,18 @@
       "steps": [
         {
           "stage": "review",
-          "skill": "ui-ux-pro-max",
-          "reason": "Review design-system, layout, and interaction quality."
+          "reason": "Review design-system, layout, and interaction quality.",
+          "capability": "user experience design"
         },
         {
           "stage": "review",
-          "skill": "accessibility",
-          "reason": "Review contrast, input, motion, and assistive states."
+          "reason": "Review contrast, input, motion, and assistive states.",
+          "capability": "accessibility"
         },
         {
           "stage": "verify",
-          "skill": "web-quality-audit",
-          "reason": "Verify responsive and runtime behavior."
+          "reason": "Verify responsive and runtime behavior.",
+          "capability": "web quality"
         }
       ]
     }
@@ -832,13 +864,8 @@
       "ui-designer",
       "brand-guardian",
       "performance-benchmarker",
-      "test-writer-fixer",
+      "test-engineer",
       "documentation-engineer"
-    ],
-    "baseline_skills": [
-      "ponytail",
-      "impeccable",
-      "ui-ux-pro-max"
     ],
     "workflow": {
       "phases": [
@@ -860,18 +887,18 @@
       "steps": [
         {
           "stage": "scan",
-          "skill": "ui-ux-pro-max",
-          "reason": "Find visible hierarchy, spacing, and interaction rough edges."
+          "reason": "Find visible hierarchy, spacing, and interaction rough edges.",
+          "capability": "user experience design"
         },
         {
           "stage": "polish",
-          "skill": "impeccable",
-          "reason": "Apply the smallest product-quality fixes."
+          "reason": "Apply the smallest product-quality fixes.",
+          "capability": "product quality"
         },
         {
           "stage": "verify",
-          "skill": "web-quality-audit",
-          "reason": "Verify responsive, performance, and accessibility behavior."
+          "reason": "Verify responsive, performance, and accessibility behavior.",
+          "capability": "web quality"
         }
       ]
     }
@@ -894,11 +921,7 @@
       "agent-organizer",
       "documentation-engineer",
       "error-coordinator",
-      "test-writer-fixer"
-    ],
-    "baseline_skills": [
-      "ponytail",
-      "security-review"
+      "test-engineer"
     ],
     "workflow": {
       "phases": [
@@ -920,18 +943,18 @@
       "steps": [
         {
           "stage": "map",
-          "skill": "security-review",
-          "reason": "Map authority, evidence, scope, and trust boundaries."
+          "reason": "Map authority, evidence, scope, and trust boundaries.",
+          "capability": "security review"
         },
         {
           "stage": "design",
-          "skill": "ponytail",
-          "reason": "Define the smallest enforceable governance contract."
+          "reason": "Define the smallest enforceable governance contract.",
+          "capability": "minimalism"
         },
         {
           "stage": "verify",
-          "skill": "tdd",
-          "reason": "Prove unauthorized state changes are denied."
+          "reason": "Prove unauthorized state changes are denied.",
+          "capability": "testing"
         }
       ]
     }

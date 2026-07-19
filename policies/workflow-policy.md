@@ -2,6 +2,20 @@
 
 Use this policy in every generated workflow prompt.
 
+## Folder Execution Contract
+- Treat each skill, tool, playbook, or workflow folder as an isolated unit whose root `README.md` is its public interface.
+- Follow declared folder references in order, load each unit once, and reject cycles.
+- Load optional detail files only when their stage is active.
+- Skills define bounded task behavior; tools define invocation only and cannot control workflows.
+- Keep Markdown authoritative, HTML regenerable, and execution evidence tied to the resolved folder graph.
+
+## Runtime Portability
+- Operating instructions are host-neutral. The current host may be Claude, Codex, another agent, or a person.
+- Resolve repository, skill, and tool paths at runtime. Never persist absolute host paths as workflow identity.
+- When isolation is required, place worktrees beside the target repository by default or under a root explicitly configured by the user.
+- Select scratch space inside the active workspace. Never silently fall back to another drive or the operating-system temp directory.
+- Persist capability names and provider hints, not installation paths.
+
 ## Build Bias
 - Start with the smallest useful workflow.
 - Prefer standard library and native platform features.
@@ -36,6 +50,19 @@ Use this policy in every generated workflow prompt.
 - Split parallel agents only when scopes are disjoint and file/module ownership is explicit.
 - Do not spawn agents only to look busy.
 - Define verification gates before merge or release.
+
+## Context Reserve
+- Keep the configured context reserve available for a final handoff; five percent is the default.
+- When the host exposes remaining context and reaches the reserve, update `HANDOFF.md`, then stop.
+- If usage telemetry is unavailable, checkpoint after every completed workflow phase.
+- Record the objective, current phase, completed work, decisions, changed files, validation, blockers, and exact next action.
+
+## Idea to Ship
+- Clarify the intent with the best installed interview capability before implementation.
+- Prototype only when a question needs a runnable answer.
+- Keep small work in one context; publish a tracked spec and dependency-ordered tickets for multi-session work.
+- Execute one ticket per fresh context, then review independently against both the specification and repository standards.
+- Treat `.dirf/attempts/` as disposable execution evidence, not durable project knowledge.
 
 ## UI/UX Quality
 - Use UI/UX design-system guidance for visible interface work.

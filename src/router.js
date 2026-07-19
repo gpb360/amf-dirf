@@ -7,7 +7,8 @@
 //      and catch keyword-less tasks, but never outvote a keyword match
 // Ties break by keyword count, then raw content overlap, then insertion order.
 // A task that matches neither signal falls back to triage — match or move on.
-import { loadJson, PLAYBOOKS } from "./paths.js";
+import { loadJson, PLAYBOOKS, PLAYBOOK_DIR } from "./paths.js";
+import { loadPlaybookFolders } from "./folders.js";
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -83,7 +84,12 @@ function scorePlaybook(haystack, taskTokens, playbook) {
   return { score, count: matched.length, context };
 }
 
-export function recommend(task, facts, playbooks = loadJson(PLAYBOOKS)) {
+export function loadPlaybooks() {
+  const folders = loadPlaybookFolders(PLAYBOOK_DIR);
+  return Object.keys(folders).length ? folders : loadJson(PLAYBOOKS);
+}
+
+export function recommend(task, facts, playbooks = loadPlaybooks()) {
   // Pick the best playbook for a task. Returns a recommendation object.
   const taskText = (task || "").toLowerCase();
   let haystack = taskText;
@@ -91,7 +97,8 @@ export function recommend(task, facts, playbooks = loadJson(PLAYBOOKS)) {
     name !== FALLBACK_PLAYBOOK && matchedKeywords(taskText, playbook).length > 0,
   );
   if (!taskHasRoutingCue && facts && facts.length) haystack += " " + facts.join(" ").toLowerCase();
-  const isImplementation = IMPLEMENTATION_INTENT.test(taskText);
+  const affirmativeTaskText = taskText.replace(/\b(?:do not|don't|dont|without)\s+(?:add|build|create|fix|implement)\b/g, "");
+  const isImplementation = IMPLEMENTATION_INTENT.test(affirmativeTaskText);
   const isExplicitSecurityAudit = EXPLICIT_SECURITY_AUDIT.test(taskText);
   if (isImplementation) haystack += " feature";
 
@@ -141,6 +148,6 @@ export function recommend(task, facts, playbooks = loadJson(PLAYBOOKS)) {
     skill_flow: pb.skill_flow,
     agents: pb.agents || [],
     questions: pb.questions || [],
-    baseline_skills: pb.baseline_skills || [],
+    baseline_skills: [],
   };
 }

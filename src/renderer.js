@@ -1,27 +1,40 @@
-// Lean instruction-set renderer. Node built-ins only.
-//
-// Ponytail principle: smallest correct artifact, progressive disclosure.
-//   - parseAgentMd: tolerant frontmatter + separates the governance boilerplate
-//   - renderMarkdownLite: only what agent markdowns contain (no general md engine)
-//   - buildInstructions: lean router + one lazy-loaded detail file per agent
-//   - buildHtml: same structure, collapsible <details> for humans
-//
-// Markdown is source; HTML is the render of the same lean structure.
+// Renders workflow Markdown and its self-contained HTML view.
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { AGENTS_DIR, ROOT, workflowOutputDir } from "./paths.js";
+import { AGENTS_DIR, ROOT } from "./paths.js";
 
 const GOVERNANCE_MARKER = "<!-- governance:v1 -->";
 const FM_RE = /^([A-Za-z0-9_-]+):\s*(.*)$/;
 
 function assertSnapshot(workflow) {
-  if (workflow.schema_version !== 2) throw new Error(`workflow ${workflow.name || "?"}: schema_version must be 2`);
+  if (![2, 3, 4, 5].includes(workflow.schema_version)) throw new Error(`workflow ${workflow.name || "?"}: unsupported schema_version`);
   if (!workflow.skill_flow?.steps) throw new Error(`workflow ${workflow.name || "?"}: missing persisted skill_flow`);
 }
 
-function launchCommand(workflow, readmePath) {
-  const quote = (value) => `'${String(value).replaceAll("'", "''")}'`;
-  return `codex -C ${quote(workflow.path || ".")} ${quote(`Use ${readmePath} as the operating workflow and execute the task.`)}`;
+function executionHandoff() {
+  return "Open the target repository in your current host. Load this README.md as the operating workflow and execute the task.";
+}
+
+export function kickoffPrompt(workflow) {
+  // A self-contained prompt anyone can paste into the model of their choice to
+  // execute this instruction set — including chat models with no file access.
+  const wf = workflow.workflow || {};
+  const agents = (workflow.agents || []).map((a) => a.name).filter(Boolean);
+  const phases = wf.phases || [];
+  return [
+    `You are executing the "${workflow.name || workflow.playbook || "workflow"}" DIRF workflow.`,
+    "",
+    `Task: ${workflow.task || "(ask for the task before starting)"}`,
+    "",
+    "Operating rules:",
+    "1. The instruction set's README.md is the authoritative router; each agent role has a detail file under agents/. If you can read files, load ONLY the file for the role you are acting as. If you cannot, ask for it to be pasted before acting as that role.",
+    `2. Act as one agent at a time${agents.length ? ` (roster: ${agents.join(", ")})` : ""}. Respect each agent's NOT YOUR JOB boundary — hand off instead of expanding scope.`,
+    `3. Work the phases in order${phases.length ? `: ${phases.join(" -> ")}` : ""}. Do not start the next phase until the current one is verifiably done. Validation: ${wf.validation || "state your evidence"}.`,
+    `4. Done means: ${wf.output || "the task's outcome is verified"}. Report evidence, not claims.`,
+    "5. When your context is nearly exhausted, write a handoff note (completed work, decisions, changed files, validation, blockers, exact next action) and stop.",
+    "",
+    `Begin with phase 1${phases[0] ? `: ${phases[0]}` : ""}.`,
+  ].join("\n");
 }
 
 // --------------------------------------------------------------------------- //
@@ -167,21 +180,43 @@ export function buildInstructions(workflow, outDir) {
   const playbook = workflow.playbook || "";
   const wf = workflow.workflow || {};
   const agents = workflow.agents || [];
-  const baseline = workflow.baseline_skills || [];
+  const flow = workflow.skill_flow;
   const written = [];
+  const skillUnits = (flow?.steps || []).map((step, index) => ({
+    ...step,
+    folder: `${String(index + 1).padStart(2, "0")}-${String(step.skill).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "capability"}`,
+  }));
 
   const lines = [
+    "---",
+    `name: ${workflow.name || playbook}`,
+    "kind: workflow",
+    `description: ${JSON.stringify(task)}`,
+    'uses: ["playbook"]',
+    `details: ${JSON.stringify(agents.map((agent) => `agents/${agent.name}.md`))}`,
+    `inputs: ${JSON.stringify(["task", "target repository"])}`,
+    `outputs: ${JSON.stringify([wf.output || "verified result"])}`,
+    `capabilities: ${JSON.stringify((flow?.steps || []).map((step) => step.capability).filter(Boolean))}`,
+    "---",
+    "",
     `# Instruction Set — ${workflow.name || playbook}`,
     "",
     "## Objective",
     task,
     "",
     "## Next step",
-    "Run this from PowerShell:",
+    executionHandoff(),
     "",
-    "```powershell",
-    launchCommand(workflow, join(outDir, "README.md")),
+    "## Kickoff prompt (copy into your model of choice)",
+    "",
+    "```text",
+    kickoffPrompt(workflow),
     "```",
+    "",
+    "## Context reserve",
+    `Keep ${workflow.context_reserve_percent ?? 5}% of the model context available for handoff. When the host reports that reserve or less, update HANDOFF.md with completed work, decisions, changed files, validation, blockers, and the exact next action, then stop. If the host does not expose context usage, update HANDOFF.md after every completed phase.`,
+    "",
+    "Runtime paths belong to this execution only. If isolation is needed, place worktrees beside the target repository or under the user-configured worktree root. Select a scratch directory inside that workspace; do not fall back to another drive or the operating-system temp directory.",
     "",
     "## Definition of Done",
     wf.output || "_(no output contract declared)_",
@@ -193,6 +228,10 @@ export function buildInstructions(workflow, outDir) {
   for (const phase of wf.phases || []) {
     i += 1;
     lines.push(`${i}. ${phase}`);
+  }
+  if (workflow.lifecycle) {
+    lines.push("", "## Idea to ship", "");
+    for (const [stage, guidance] of Object.entries(workflow.lifecycle)) lines.push(`- **${stage}:** ${guidance}`);
   }
   lines.push(
     "",
@@ -207,20 +246,23 @@ export function buildInstructions(workflow, outDir) {
   }
   lines.push(
     "",
-    "## Skills",
-    "Every agent can discover and invoke any installed skill via the host's global skill lookup. Baseline skills relevant to this workflow: " + (baseline.length ? baseline.map((skill) => skill.name).join(", ") : "_(none)_") + ". See each agent detail file for role-specific hints.",
+    "## Capabilities",
+    "DIRF selected the best installed capability for each stage. Resolve each capability by name in the current host; provider values in the snapshot are discovery hints, not runtime requirements. Absent capabilities are never placed in the executable flow.",
     "",
     "## Skill flow",
     "Reach for skills in this order — each has a reason for its place in the sequence:",
     "",
   );
-  const flow = workflow.skill_flow;
   if (!flow?.steps) throw new Error(`workflow ${workflow.name || "?"}: missing persisted skill_flow`);
   let lastStage = "";
   for (const s of flow.steps) {
     if (s.stage !== lastStage) { lines.push(`**${s.stage}**`); lastStage = s.stage; }
     const mark = s.status === "installed" ? "✅" : "⚠️";
     lines.push(`- ${mark} \`${s.skill}\` — ${s.reason}`);
+  }
+  if (flow.gaps?.length) {
+    lines.push("", "## Capability gaps", "");
+    for (const gap of flow.gaps) lines.push(`- **${gap.stage}:** ${gap.question}`);
   }
   lines.push(
     "",
@@ -229,12 +271,36 @@ export function buildInstructions(workflow, outDir) {
     "",
     "## If blocked",
     wf.recovery || "_(no recovery contract declared)_",
-    "",
-    `_Generated by amf-dirf. schema_version ${workflow.schema_version || 1}. Rebuild to refresh routing and skills: \`node src/cli.js build ${workflow.name || playbook} ${JSON.stringify(task)}${workflow.path ? ` --path ${JSON.stringify(workflow.path)}` : ""}\`_`,
   );
   const readme = join(outDir, "README.md");
   writeFileSync(readme, lines.join("\n"), "utf-8");
   written.push(readme);
+
+  const playbookDir = join(outDir, "playbook");
+  mkdirSync(playbookDir, { recursive: true });
+  const playbookReadme = join(playbookDir, "README.md");
+  writeFileSync(playbookReadme, [
+    "---", `name: ${playbook || "generated-playbook"}`, "kind: playbook",
+    `description: ${JSON.stringify(workflow.playbook_description || task)}`,
+    `uses: ${JSON.stringify(skillUnits.map((step) => `../skills/${step.folder}`))}`,
+    "details: []", 'inputs: ["task"]', `outputs: ${JSON.stringify([wf.output || "verified result"])}`,
+    `capabilities: ${JSON.stringify(skillUnits.map((step) => step.capability).filter(Boolean))}`,
+    "---", "", `# ${playbook || "Generated playbook"}`, "", "Execute the ordered capability units, then verify the declared output.",
+  ].join("\n"), "utf-8");
+  written.push(playbookReadme);
+
+  for (const step of skillUnits) {
+    const skillDir = join(outDir, "skills", step.folder);
+    mkdirSync(skillDir, { recursive: true });
+    const skillReadme = join(skillDir, "README.md");
+    writeFileSync(skillReadme, [
+      "---", `name: ${JSON.stringify(step.skill)}`, "kind: skill", `description: ${JSON.stringify(step.reason)}`,
+      "uses: []", "details: []", `inputs: ${JSON.stringify([step.stage])}`, 'outputs: ["stage result"]',
+      `capabilities: ${JSON.stringify(step.capability ? [step.capability] : [])}`, "---", "",
+      `# ${step.skill}`, "", step.reason,
+    ].join("\n"), "utf-8");
+    written.push(skillReadme);
+  }
 
   const policySrc = resolve(ROOT, workflow.policy || "policies/workflow-policy.md");
   const policyDst = join(outDir, "policy.md");
@@ -334,8 +400,7 @@ export function buildHtml(workflow) {
   assertSnapshot(workflow);
   const wf = workflow.workflow || {};
   const agents = workflow.agents || [];
-  const baseline = workflow.baseline_skills || [];
-  const command = launchCommand(workflow, join(workflowOutputDir(workflow.name), "README.md"));
+  const handoff = executionHandoff();
 
   const parts = [
     "<!doctype html><html><head><meta charset='utf-8'>",
@@ -346,8 +411,12 @@ export function buildHtml(workflow) {
   parts.push(`<h1>${escapeHtml(workflow.name || "")}</h1>`);
   parts.push(`<p class='mute'>${escapeHtml(workflow.task || "")}</p>`);
 
-  parts.push("<h2>Next step</h2><p>Run this from PowerShell:</p>");
-  parts.push(`<pre><code>${escapeHtml(command)}</code></pre>`);
+  parts.push("<h2>Next step</h2>");
+  parts.push(`<p>${escapeHtml(handoff)}</p>`);
+  parts.push("<h2>Kickoff prompt</h2>");
+  parts.push("<p class='mute'>Copy this into your model of choice to run the workflow. <button class='chip' onclick=\"navigator.clipboard.writeText(document.getElementById('kickoff').textContent).then(()=>{this.textContent='Copied ✓';})\">Copy prompt</button></p>");
+  parts.push(`<pre id='kickoff'>${escapeHtml(kickoffPrompt(workflow))}</pre>`);
+  parts.push("<p class='mute'>Runtime paths stay local to the current execution. Keep worktrees beside the target repository or in the configured worktree root, and select scratch space inside that workspace.</p>");
 
   parts.push("<h2>Objective &amp; Definition of Done</h2>");
   parts.push(`<p>${escapeHtml(workflow.task || "")}</p>`);
@@ -356,6 +425,20 @@ export function buildHtml(workflow) {
   parts.push("<h2>Phases</h2><ol>");
   for (const phase of wf.phases || []) parts.push(`<li>${escapeHtml(phase)}</li>`);
   parts.push("</ol>");
+
+  if (workflow.lifecycle) {
+    parts.push("<h2>Idea to ship</h2><ul>");
+    for (const [stage, guidance] of Object.entries(workflow.lifecycle)) {
+      parts.push(`<li><strong>${escapeHtml(stage)}:</strong> ${escapeHtml(guidance)}</li>`);
+    }
+    parts.push("</ul>");
+  }
+
+  if (workflow.skill_flow.gaps?.length) {
+    parts.push("<h2>Capability gaps</h2><ul>");
+    for (const gap of workflow.skill_flow.gaps) parts.push(`<li><strong>${escapeHtml(gap.stage)}:</strong> ${escapeHtml(gap.question)}</li>`);
+    parts.push("</ul>");
+  }
   parts.push(`<div class='gate'>⛔ Do not start the next phase until the current is verifiably done. Validation: ${escapeHtml(wf.validation || "—")}</div>`);
 
   parts.push("<h2>Skill flow</h2><ol>");
@@ -370,14 +453,6 @@ export function buildHtml(workflow) {
     for (const fact of workflow.routing_facts) parts.push(`<li>${escapeHtml(fact)}</li>`);
     parts.push("</ul>");
   }
-
-  parts.push("<h2>Baseline skills (every agent)</h2><p>");
-  if (baseline.length) {
-    parts.push(baseline.map(chip).join(""));
-  } else {
-    parts.push("<span class='mute'>none</span>");
-  }
-  parts.push("</p>");
 
   parts.push("<h2>Agent roster</h2>");
   parts.push("<p class='mute'>Click an agent to expand its detail, skills, and boundary.</p>");
@@ -411,9 +486,9 @@ export function buildHtml(workflow) {
   parts.push("<footer>");
   parts.push(`<p>schema_version ${workflow.schema_version || 1} · generated ${workflow.created_at || ""}</p>`);
   if (Object.keys(sh).length) {
-    parts.push("<p><strong>Drift guard.</strong> If these no longer match the registries, rebuild the workflow to refresh routing and skills:</p>");
+    parts.push("<p><strong>Drift guard.</strong> If these no longer match the authoritative sources, rebuild the workflow to refresh routing and skills:</p>");
     parts.push("<pre><code>" + escapeHtml(Object.entries(sh).map(([k, v]) => `${k}: ${v}`).join("\n")) + "</code></pre>");
-    parts.push(`<p><code>${escapeHtml(`node src/cli.js build ${workflow.name || ""} ${JSON.stringify(workflow.task || "")}${workflow.path ? ` --path ${JSON.stringify(workflow.path)}` : ""}`)}</code></p>`);
+    parts.push("<p>Rebuild locally to refresh routing and capabilities.</p>");
   }
   parts.push("</footer></div></body></html>");
   return parts.join("");

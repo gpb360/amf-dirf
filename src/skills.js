@@ -14,6 +14,7 @@ import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { homedir } from "node:os";
 import { loadJson, SKILLS, ROOT } from "./paths.js";
+import { loadUnit } from "./folders.js";
 
 // Home roots (resolved at call time). The zcode cache holds versioned plugin
 // dirs whose skills live under nested subfolders, so we recurse into it.
@@ -29,6 +30,10 @@ const PROJECT_ROOT_NAMES = [".agents/skills", ".codex/skills", ".claude/skills",
 const SKILL_FILES = ["SKILL.md", "skill.json", "README.md"];
 const FM_RE = /^([A-Za-z0-9_-]+):\s*(.*)$/;
 
+// The kit ships zero installed skills. Anything under the kit's own skills/
+// folder is a bundled fallback — never part of the host's installed index.
+const BUNDLED_DIR = join(ROOT, "skills");
+
 function skillRoots(projectRoot) {
   // Return all skill scan roots that exist on disk.
   // projectRoot null/undefined defaults to ROOT (the kit's own roots).
@@ -41,6 +46,7 @@ function skillRoots(projectRoot) {
   }
   for (const name of PROJECT_ROOT_NAMES) {
     const candidate = join(projectRoot, name);
+    if (candidate === BUNDLED_DIR) continue;
     if (isDir(candidate)) roots.push(candidate);
   }
   return roots;
@@ -62,7 +68,7 @@ function parseFrontmatter(text) {
   if (end === -1) return fields;
   for (const line of text.slice(4, end).split(/\r?\n/)) {
     const m = FM_RE.exec(line);
-    if (m) fields[m[1]] = m[2].trim();
+    if (m) fields[m[1]] = m[2].trim().replace(/^(["'])(.*)\1$/, "$2");
   }
   return fields;
 }
@@ -130,12 +136,13 @@ function findSkillFolders(projectRoot) {
     return out;
   }
   // <root>/skills
-  if (isDir(join(projectRoot, "skills"))) out.push(join(projectRoot, "skills"));
+  const rootSkills = join(projectRoot, "skills");
+  if (rootSkills !== BUNDLED_DIR && isDir(rootSkills)) out.push(rootSkills);
   // <root>/<dir>/skills
   for (const entry of top) {
     if (!entry.isDirectory() || skip.has(entry.name)) continue;
     const skillsDir = join(projectRoot, entry.name, "skills");
-    if (isDir(skillsDir)) out.push(skillsDir);
+    if (skillsDir !== BUNDLED_DIR && isDir(skillsDir)) out.push(skillsDir);
   }
   return out;
 }
@@ -198,11 +205,64 @@ function indexOne(path, index) {
   // First found wins (SKILL.md priority order), but keep richer descriptions.
   const existing = index[name];
   if (existing && !desc) return;
-  index[name] = { name, path: path.replace(/\\/g, "/").replace(/\/[^/]+$/, ""), file: path.replace(/\\/g, "/").split("/").pop(), description: desc };
+  const normalized = path.replace(/\\/g, "/");
+  const provider = providerForPath(normalized);
+  index[name] = { name, path: normalized.replace(/\/[^/]+$/, ""), file: normalized.split("/").pop(), description: desc, provider };
+}
+
+export function providerForPath(path) {
+  const normalized = String(path || "").replace(/\\/g, "/");
+  const markers = [["/.agents/", "agents"], ["/.claude/", "claude"], ["/.codex/", "codex"], ["/.zcode/", "zcode"]];
+  return markers.reduce((best, [marker, provider]) => {
+    const index = normalized.lastIndexOf(marker);
+    return index > best.index ? { index, provider } : best;
+  }, { index: -1, provider: "project" }).provider;
+}
+
+export function bundledSkills() {
+  // The kit's own skills/ folder, exposed ONLY as fallbacks for capabilities
+  // the local install cannot cover. Folder units parsed via the DAG contract
+  // so declared capabilities come through as real arrays.
+  const index = {};
+  if (!existsSync(BUNDLED_DIR)) return index;
+  let entries;
+  try { entries = readdirSync(BUNDLED_DIR, { withFileTypes: true }); } catch { return index; }
+  for (const entry of entries.filter((item) => item.isDirectory()).sort((a, b) => a.name.localeCompare(b.name))) {
+    try {
+      const unit = loadUnit(join(BUNDLED_DIR, entry.name));
+      if (unit.meta.kind !== "skill") continue;
+      index[unit.meta.name] = {
+        name: unit.meta.name,
+        path: unit.folder,
+        description: unit.meta.description || "",
+        capabilities: unit.meta.capabilities || [],
+        provider: "dirf",
+      };
+    } catch { /* a malformed bundled unit is validate's problem, not discovery's */ }
+  }
+  return index;
 }
 
 export function loadRegistry() {
   return loadJson(SKILLS);
+}
+
+export function enrichDiscovered(discovered) {
+  const registry = Object.fromEntries((loadRegistry().skills || []).map((skill) => [skill.name, skill]));
+  return Object.fromEntries(Object.entries(discovered || {}).map(([name, item]) => [name, { ...registry[name], ...item }]));
+}
+
+export function loadTrustedSources(projectRoot) {
+  const files = [{ path: join(homedir(), ".dirf", "trusted-sources.json"), provider: "host" }];
+  if (projectRoot) files.push({ path: join(projectRoot, ".dirf", "trusted-sources.json"), provider: "project" });
+  const sources = [];
+  for (const file of files) {
+    try {
+      const data = JSON.parse(readFileSync(file.path, "utf-8"));
+      for (const source of data.sources || []) sources.push({ ...source, provider: file.provider });
+    } catch { /* absent or invalid user configuration contributes nothing */ }
+  }
+  return sources;
 }
 
 export function resolveAgentSkills(agentName, agentSkillRefs, baselineSkillRefs, discovered) {
@@ -227,7 +287,7 @@ export function resolveAgentSkills(agentName, agentSkillRefs, baselineSkillRefs,
       summary: entry.summary || (installed ? installed.description || "" : ""),
       category: entry.category || "",
     };
-    if (installed) item.path = installed.path;
+    if (installed) item.provider = installed.provider || "project";
     out.push(item);
   }
   return out;

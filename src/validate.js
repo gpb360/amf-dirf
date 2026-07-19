@@ -1,8 +1,9 @@
-// Single validator for amf-dirf. Node built-ins only. Never cut the guards.
+// Registry, workflow, and folder-contract validation.
 import { readdirSync, readFileSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { AGENTS_DIR, REGISTRY, SKILLS, PLAYBOOKS, POLICY, WORKFLOW_DIR, loadJson } from "./paths.js";
+import { AGENTS_DIR, REGISTRY, ROOT, SKILLS, PLAYBOOKS, PLAYBOOK_DIR, POLICY, loadJson } from "./paths.js";
 import { reconcile } from "./flow.js";
+import { loadPlaybookFolders, resolveGraph } from "./folders.js";
 
 const FM_RE = /^([A-Za-z0-9_-]+):\s*(.*)$/;
 
@@ -24,17 +25,21 @@ export function validateSnapshot(data, label = "workflow") {
     if (!(key in data)) errors.push(`${label}: missing required key ${key}`);
     else if (!hasType(data[key], type)) errors.push(`${label}: key ${key} must be ${type}`);
   }
-  if (data.schema_version !== 2) errors.push(`${label}: schema_version must be 2`);
+  if (![2, 3, 4, 5].includes(data.schema_version)) errors.push(`${label}: unsupported schema_version`);
 
   const resolvedSkillError = (skill, where, nameKey = "name") => {
     if (!skill || typeof skill !== "object" || typeof skill[nameKey] !== "string" || !skill[nameKey]) {
       errors.push(`${label}: ${where} must be a resolved skill object`);
       return;
     }
-    if (!new Set(["installed", "recommended"]).has(skill.status)) {
-      errors.push(`${label}: ${where} status must be installed or recommended`);
-    } else if (skill.status === "installed" && typeof skill.path !== "string") {
+    if (!new Set(["installed", "recommended", "fallback"]).has(skill.status)) {
+      errors.push(`${label}: ${where} status must be installed, recommended, or fallback`);
+    } else if (data.schema_version < 4 && skill.status === "installed" && typeof skill.path !== "string") {
       errors.push(`${label}: ${where} installed skill must include path`);
+    } else if (data.schema_version >= 4 && skill.status === "installed" && typeof skill.provider !== "string") {
+      errors.push(`${label}: ${where} installed skill must include provider`);
+    } else if (data.schema_version >= 4 && "path" in skill) {
+      errors.push(`${label}: ${where} must not persist a runtime path`);
     }
   };
 
@@ -53,8 +58,8 @@ export function validateSnapshot(data, label = "workflow") {
   if (typeof data.skill_flow?.label !== "string" || !data.skill_flow.label) {
     errors.push(`${label}: skill_flow.label must be a non-empty string`);
   }
-  if (!Array.isArray(data.skill_flow?.steps) || data.skill_flow.steps.length === 0) {
-    errors.push(`${label}: skill_flow.steps must be a non-empty array`);
+  if (!Array.isArray(data.skill_flow?.steps)) {
+    errors.push(`${label}: skill_flow.steps must be an array`);
   } else {
     for (const [index, step] of data.skill_flow.steps.entries()) {
       resolvedSkillError(step, `skill_flow step ${index + 1}`, "skill");
@@ -63,6 +68,22 @@ export function validateSnapshot(data, label = "workflow") {
           errors.push(`${label}: skill_flow step ${index + 1} ${field} must be a non-empty string`);
         }
       }
+    }
+  }
+  if (data.schema_version >= 3 && !Array.isArray(data.capability_gaps)) {
+    errors.push(`${label}: capability_gaps must be an array`);
+  }
+  if (data.schema_version >= 4 && "path" in data) {
+    errors.push(`${label}: must not persist target repository path`);
+  }
+  if (data.schema_version >= 5) {
+    if (!data.attempt || typeof data.attempt.id !== "string" || typeof data.attempt.path !== "string") {
+      errors.push(`${label}: attempt must include id and target-relative path`);
+    } else if (/^(?:[A-Za-z]:[\\/]|[\\/]{1,2})/.test(data.attempt.path)) {
+      errors.push(`${label}: attempt path must be target-relative`);
+    }
+    for (const stage of ["clarify", "prototype", "split", "implement", "review"]) {
+      if (typeof data.lifecycle?.[stage] !== "string" || !data.lifecycle[stage]) errors.push(`${label}: lifecycle.${stage} must be a non-empty string`);
     }
   }
   return errors;
@@ -123,30 +144,27 @@ export function main() {
   }
 
   // --- playbooks ---
-  const playbooks = loadJson(PLAYBOOKS);
+  let playbooks;
+  try { playbooks = Object.keys(loadPlaybookFolders(PLAYBOOK_DIR)).length ? loadPlaybookFolders(PLAYBOOK_DIR) : loadJson(PLAYBOOKS); }
+  catch (error) { errors.push(error.message); playbooks = {}; }
   for (const [name, pb] of Object.entries(playbooks)) {
     for (const key of ["description", "keywords", "agents", "workflow"]) {
       if (!pb[key]) errors.push(`playbook ${name}: missing ${key}`);
     }
-    if (!("baseline_skills" in pb)) warnings.push(`playbook ${name}: no baseline_skills`);
     for (const an of (pb.agents || [])) {
       if (!registryNames.has(an)) errors.push(`playbook ${name}: references unknown agent ${an}`);
-    }
-    for (const sn of (pb.baseline_skills || [])) {
-      if (!skillNames.has(sn)) warnings.push(`playbook ${name}: baseline skill ${sn} not in registry`);
     }
   }
   errors.push(...reconcile(playbooks));
 
-  // --- workflow JSONs ---
-  let wfFiles = [];
-  try { wfFiles = readdirSync(WORKFLOW_DIR).filter((f) => f.endsWith(".json")).sort(); } catch { /* none */ }
-  for (const wp of wfFiles) {
-    const data = loadJson(join(WORKFLOW_DIR, wp));
-    errors.push(...validateSnapshot(data, wp));
-    for (const a of (Array.isArray(data.agents) ? data.agents : [])) {
-      if (typeof a !== "object" || typeof a.name !== "string") errors.push(`${wp}: agent entry malformed`);
-      else if (!registryNames.has(a.name) && !a.missing) errors.push(`${wp}: references unknown agent ${a.name}`);
+  // --- folder-native units ---
+  for (const base of [PLAYBOOK_DIR, join(ROOT, "skills"), join(ROOT, "tools"), join(ROOT, "workflows")]) {
+    let folders = [];
+    try { folders = readdirSync(base, { withFileTypes: true }).filter((entry) => entry.isDirectory() && entry.name !== "instructions" && existsSync(join(base, entry.name, "README.md"))); }
+    catch { /* optional root */ }
+    for (const folder of folders) {
+      try { resolveGraph(join(base, folder.name), { allowedRoots: [ROOT, base] }); }
+      catch (error) { errors.push(error.message); }
     }
   }
 
@@ -164,7 +182,6 @@ export function main() {
   console.log(`Validation passed: ${registryNames.size} agents, ${Object.keys(playbooks).length} playbooks, ${skillNames.size} skills`);
 }
 
-// Standalone entry: `node src/validate.js` (cli.js calls main() directly).
 import { pathToFileURL } from "node:url";
 if (pathToFileURL(process.argv[1]).href === import.meta.url) {
   main();

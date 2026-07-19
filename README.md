@@ -1,54 +1,73 @@
-# amf-dirf — Agent Spec Kit (Do It Right First)
+# DIRF — Do It Right First
+
+![DIRF: a routed workflow ending in a verified check](docs/assets/dirf-hero.png)
+
+DIRF turns a task into a small, executable instruction set for AI coding agents.
+It inspects the target repository, maps the capabilities actually installed on
+the host, assigns bounded roles, and leaves behind a human-readable workflow.
 
 **AMF** = Agent Marketing Factory · **DIRF** = Do It Right First.
 
-A standalone, **zero-dependency Node.js** spec kit. Drop it into any repo; it maps
-that repo's **actual installed skills** to agents/playbooks and emits a lean,
-token-cheap instruction set — markdown for the AI, plus an HTML render for humans.
+> Requires Node.js ≥ 18.17. Zero dependencies. No `npm install`.
 
-> Requires Node.js ≥ 18.17. No `npm install` — uses only Node built-ins.
+## What DIRF helps with
 
-## Why
+- **Wrong skills:** resolves capabilities from the current repo and host instead
+  of assuming every machine has the same tools.
+- **Prompt drift:** keeps the objective, role boundaries, policy, and done-when
+  checks inside the generated artifact.
+- **Bloated context:** loads one small router first, then only the detail needed
+  for the active stage.
+- **Weak handoffs:** produces durable markdown for agents and a matching HTML
+  view for people.
+- **Skipped verification:** makes evidence and completion checks part of the
+  workflow, not an afterthought.
 
-AI agents drift. They lose track of which skills apply to their role, skip
-verification, bleed scope across agents, and forget the objective. This kit
-produces a structured instruction artifact engineered against those failure
-modes — and it does the skill→agent mapping **correctly** (curated data), not
-with a token-overlap heuristic that guesses wrong.
+## How DIRF is different
 
-## Two governing principles
+| Typical agent setup | DIRF |
+| --- | --- |
+| One large prompt | A small router with lazy-loaded detail |
+| Hardcoded skill names | Capability requests resolved against installed skills |
+| Missing tools fail silently | Gaps are explicit and approval-gated |
+| Instructions tied to one agent host | Portable, host-neutral workflow snapshots |
+| “Done” means the agent stopped | Done-when checks and evidence travel with the task |
 
-1. **Agnostic skill mapping.** The kit never hardcodes skills. It scans the host
-   repo's skill folders (there can be several), indexes what's installed, and
-   resolves references. A referenced skill that isn't installed is flagged
-   "recommended, not installed" — never fatal.
-2. **Ponytail-lean output.** Smallest correct artifact first. A small
-   always-loaded router + lazy-loaded detail one level deep. Unread files cost
-   zero tokens. No monoliths, no prose padding.
+DIRF is the preflight layer. It does not replace Codex, Claude, or another
+executor; it gives that executor a repo-aware route before work begins.
 
 ## Quick start
 
 ```bash
-# Full pipeline: task -> workflow JSON -> lean instruction set + HTML
-node src/cli.js build demo "build a landing page"
+git clone https://github.com/gpb360/amf-dirf.git
+cd amf-dirf
 
-# See what skills are installed on this host and which refs resolve
+# One-time setup for the repository you want DIRF to work on
+node src/cli.js setup ../my-project --reserve-percent 5
+
+# Task -> routed workflow -> lean markdown + human HTML
+node src/cli.js build first-run "fix the checkout timeout" --path ../my-project
+```
+
+Open the generated `.dirf/attempts/<timestamp>-first-run/README.md`. It contains
+the ordered workflow and the handoff your agent host should execute.
+
+Useful next commands:
+
+```bash
+node src/cli.js flow "review this pull request" --path ../my-project
 node src/cli.js skills scan
-
-# Validate all registries + workflows
+node src/cli.js list --path ../my-project
 node src/cli.js validate
-
-# List saved workflows
-node src/cli.js list
 ```
 
 ## The pipeline
 
 ```
-task description
+task description or folder README
   │
   ▼  router (keywords + what-the-playbook-does content match)
-workflow JSON
+workflow folder
   │   agents[]         each: {name, file, tags, skills[]}
   │   baseline_skills[]   cross-cutting skills for the whole workflow
   │
@@ -66,9 +85,10 @@ workflow JSON
 ## Output structure (lean, progressive disclosure)
 
 ```
-workflows/user/<name>.json              # the workflow definition (committed)
-workflows/user/instructions/
-├── README.md                           # ALWAYS-LOADED ROUTER (~35 lines)
+.dirf/attempts/<timestamp>-<name>/
+├── attempt.json                        # portable attempt identity
+├── workflow.json                       # resolved workflow snapshot
+├── README.md                           # authoritative router and frontmatter
 ├── policy.md                           # the workflow policy (one level deep)
 ├── agents/
 │   ├── frontend-developer.md           # lazy-loaded detail per agent
@@ -76,8 +96,14 @@ workflows/user/instructions/
 └── instructions.html                   # self-contained human render (gitignored)
 ```
 
-The AI loads `README.md` first, then only the per-agent file it's acting as.
+The AI loads `README.md` first, follows its ordered folder references, then
+loads only the detail file required by the active stage.
 Unread files cost zero tokens.
+
+DIRF reserves 5% of model context for a structured `HANDOFF.md` by default.
+Hosts that expose remaining context trigger the handoff at that threshold;
+otherwise the workflow checkpoints after each completed phase. A different
+model can continue with `dirf resume <name-or-id> --path <project>`.
 
 Each per-agent detail file is self-contained: role, **USE THESE SKILLS**
 (resolved live from the host index, with installed/recommended status),
@@ -89,31 +115,63 @@ done-when checklist.
 ```
 dirf build  <name> "<task>" [--path DIR] [--open]   full pipeline: route -> JSON -> md + html
 dirf create <name> "<task>" [--path DIR]             route -> workflow JSON only
-dirf render <name> [--open]                          existing JSON -> md + html
-dirf list                                            list saved workflows
+dirf setup [path] [--tracker local] [--context single|multi] [--reserve-percent 5]
+dirf render <name-or-id> [--path DIR] [--open]       render the latest matching attempt
+dirf list [--path DIR]                               list target attempts
+dirf resume <name-or-id> [--path DIR]                load workflow + HANDOFF.md
+dirf migrate [<name-or-id>] [--path DIR]             refresh schema 2–5 attempt snapshots
 dirf validate                                        validate registries + workflows
+dirf validate <folder>                               validate one folder DAG
+dirf graph <folder>                                  show deterministic execution order
+dirf run <folder>                                    emit the execution handoff
+dirf render <folder>                                 generate its human HTML view
 dirf skills scan [--path DIR]                        scan host, show installed skills + resolved refs
 ```
 
 Run `node src/cli.js` with no arguments for help.
 
+## Folder contract
+
+DIRF uses four separate filesystem units with one small README-frontmatter
+interface: `skills/`, `tools/`, `playbooks/`, and `workflows/`. Skills contain
+bounded task directions; tools contain invocation and safety details; playbooks
+compose reusable work; workflows bind a concrete task. References form an
+ordered DAG, execute once, reject cycles, and lazy-load optional details.
+
+This provides filesystem-first definitions, bounded context, modular execution,
+approval before side effects, and traceable evidence. Markdown is source, HTML
+is a generated human view, and the zero-dependency JavaScript CLI is the resolver.
+
+The previous committed `workflows/user/*.json` files were generated snapshots,
+not authored workflows, and were removed. `dirf migrate` refreshes snapshots
+already stored under a configured target's `.dirf/attempts/`; it does not import
+the deleted legacy files.
+
+Generated attempts are host-neutral. Claude, Codex, another agent, or a person
+can execute the same README. Repository and installation paths are discovered
+for the current run only; snapshots retain capability names and provider hints.
+If a task needs isolation, keep worktrees beside the target repository unless
+the user configures another workspace root, and select scratch space inside that
+workspace instead of using an implicit operating-system temp directory.
+
 ## How skill mapping works (the heart of "right")
 
-The kit ships a small editable vocabulary in `registry/skills.json` — named
-skill **references** it knows how to recommend, each with a purpose and category
-but **no definition** (the definition lives in the host repo):
+The kit ships a small editable vocabulary in `registry/skills.json` that enriches
+discovered metadata. Playbooks request capabilities; they do not force skill names.
+DIRF deterministically selects the best installed match for each stage and keeps
+missing capabilities out of the executable flow.
 
 ```json
 {"name": "impeccable", "category": "quality",
  "applies_to": ["frontend-developer", "ui-designer"],
- "summary": "quality gate against AI slop; YAGNI/DRY/KISS"}
+"summary": "product-quality review using YAGNI, DRY, and KISS"}
 ```
 
 At build time, `discover()` scans the host environment and resolves each
 reference:
 
 - **installed** — found in a scanned root (path included)
-- **recommended** — in the registry but not on disk (flagged, never fatal)
+- **capability gap** — no installed match; DIRF asks before suggesting or creating anything
 
 **Scan roots** (all optional): `~/.agents/skills/`, `~/.codex/skills/`,
 `~/.claude/skills/`, `~/.zcode/.../skills/`, plus project-local equivalents.
@@ -132,37 +190,47 @@ reflects the target project's skills (e.g. a repo's own `.agents/skills/`).
   `skills` refs.
 - **Add a skill to the vocabulary**: add an entry to `registry/skills.json`.
   The kit resolves it against whatever's installed on each host.
-- **Add a playbook**: add an entry to `registry/playbooks.json` with `agents`,
-  `baseline_skills`, `keywords`, `workflow`, `questions`.
+- **Add a playbook**: create `playbooks/<name>/README.md`; the JSON registry is
+  compatibility output, not the editable source.
+- **Trust skill sources**: create `~/.dirf/trusted-sources.json` or
+  `<project>/.dirf/trusted-sources.json` with a `sources` array. Each source may
+  declare `name`, `url`, and `capabilities`. DIRF only suggests configured sources
+  and always requires approval before installation or local derivation.
 - Then run `node src/cli.js validate`.
 
 ## Project layout
 
 ```
-src/             cli.js (entry), router.js, skills.js, renderer.js, validate.js, paths.js
-registry/        source of truth: agents.json, skills.json, playbooks.json
+src/             CLI, folder resolver, router, discovery, renderer, validation
+playbooks/       authoritative reusable playbook folders
+skills/          bounded task-oriented skill folders
+tools/           isolated tool invocation folders
+registry/        agents, skill metadata, and legacy compatibility JSON
 agents/          agent markdown definitions (21 curated)
 policies/        workflow-policy.md (embedded in every instruction set)
-tests/           test-router.js, test-skills.js, test-renderer.js (node:test)
-scripts/         smoke-test.js
-workflows/user/  generated workflow JSONs (committed) + renders (gitignored)
+tests/           <domain>.test.js files using node:test
+scripts/         smoke.js integration check
+workflows/       authored reusable workflow folders
+.dirf/attempts/  target-owned generated runs (gitignored in each target repo)
 ```
 
 ## Conventions
 
 - **Zero dependencies.** Pure Node.js built-ins (no `node_modules`).
 - **One entry point:** `src/cli.js`.
-- **Markdown is source; HTML is a regenerable render** (gitignored).
+- **Names:** kebab-case folders, domain-named source files, and `<domain>.test.js` tests.
+- **Generated output:** `.dirf/attempts/`, `graphify-out/`, and HTML renders stay untracked.
+- **Markdown playbooks are source; generated attempts and HTML are disposable** (gitignored).
 - **Validate before you commit:** `node src/cli.js validate`.
 
 ## Running the tests
 
 ```bash
 npm test                                   # all unit tests (node:test)
-node --test tests/test-router.js           # router matching
-node --test tests/test-skills.js           # discovery + resolver
-node --test tests/test-renderer.js         # markdown + HTML rendering
-node scripts/smoke-test.js                 # full pipeline integration
+npm run test:router                        # router matching
+npm run test:skills                        # discovery + resolver
+npm run test:renderer                      # markdown + HTML rendering
+npm run smoke                              # full pipeline integration
 ```
 
 No test runner to install — Node's built-in `node:test` is used. CI runs the
