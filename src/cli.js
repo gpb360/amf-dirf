@@ -106,11 +106,11 @@ function assembleTaskRouting(task, path) {
   const playbooks = loadPlaybooks();
   const errors = reconcile(playbooks);
   if (errors.length) throw new Error(`Task Routing reconciliation failed:\n${errors.map((error) => `  - ${error}`).join("\n")}`);
-  const projectRoot = path ? (isAbsolute(path) ? path : resolve(ROOT, path)) : null;
-  const facts = collectRoutingFacts(projectRoot);
+  const targetRoot = path ? (isAbsolute(path) ? path : resolve(ROOT, path)) : null;
+  const facts = collectRoutingFacts(targetRoot);
   const selection = recommend(task, facts, playbooks);
-  const discovered = enrichDiscovered(discover(projectRoot));
-  const trustedSources = loadTrustedSources(projectRoot);
+  const discovered = enrichDiscovered(discover(targetRoot));
+  const trustedSources = loadTrustedSources(targetRoot);
   return { selection, discovered, facts, skillFlow: buildFlow(selection, { task, trustedSources }, discovered) };
 }
 
@@ -181,13 +181,19 @@ function cmdList(args) {
 function cmdMigrate(name, target) {
   const root = projectRoot(target);
   const attempts = name ? [findAttempt(root, name)] : listAttempts(root);
-  const paths = attempts.map((attempt) => join(attempt.folder, "workflow.json")).filter(existsSync);
-  for (const path of paths) {
-    const plan = portablePlan(JSON.parse(readFileSync(path, "utf-8")));
-    writeFileSync(path, JSON.stringify(plan, null, 2), "utf-8");
-    if (existsSync(join(dirname(path), "README.md"))) renderPlan(path);
+  const snapshots = attempts.map((attempt) => ({ attempt, path: join(attempt.folder, "workflow.json") })).filter(({ path }) => existsSync(path));
+  let migrated = 0;
+  for (const { attempt, path } of snapshots) {
+    try {
+      const plan = portablePlan(JSON.parse(readFileSync(path, "utf-8")));
+      writeFileSync(path, JSON.stringify(plan, null, 2), "utf-8");
+      if (existsSync(join(dirname(path), "README.md"))) renderPlan(path);
+      migrated += 1;
+    } catch (error) {
+      console.error(`Failed to migrate ${attempt.id}: ${error.message}`);
+    }
   }
-  console.log(`Migrated ${paths.length} workflow snapshot(s) to portable schema version 5.`);
+  console.log(`Migrated ${migrated} workflow snapshot(s) to portable schema version 5.`);
 }
 
 function cmdSetup(args) {

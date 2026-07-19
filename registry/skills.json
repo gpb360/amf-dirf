@@ -12,6 +12,34 @@
       ]
     },
     {
+      "name": "grill-me",
+      "category": "planning",
+      "applies_to": ["rapid-prototyper", "workflow-orchestrator"],
+      "summary": "Structured questioning that resolves requirements and decisions before implementation",
+      "capabilities": ["plan interview"]
+    },
+    {
+      "name": "code-review",
+      "category": "quality",
+      "applies_to": ["test-writer-fixer", "security-auditor", "workflow-orchestrator"],
+      "summary": "Independent review against repository standards and the requested specification",
+      "capabilities": ["code review"]
+    },
+    {
+      "name": "agent-organizer",
+      "category": "orchestration",
+      "applies_to": ["agent-organizer", "workflow-orchestrator"],
+      "summary": "Agent selection, delegation boundaries, and coordinated execution",
+      "capabilities": ["agent orchestration"]
+    },
+    {
+      "name": "api-tester",
+      "category": "testing",
+      "applies_to": ["api-tester", "backend-architect", "test-writer-fixer"],
+      "summary": "API contract, integration, failure-path, and regression testing",
+      "capabilities": ["api testing"]
+    },
+    {
       "name": "impeccable",
       "category": "quality",
       "applies_to": [

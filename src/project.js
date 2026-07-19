@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync } from "node:fs";
-import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 
 const CONFIG_PATH = join(".dirf", "config.json");
 const ATTEMPT_IGNORE = ".dirf/attempts/";
@@ -23,10 +23,14 @@ export function projectRoot(path = process.cwd()) {
 function containedPath(root, value, label) {
   if (typeof value !== "string" || !value || isAbsolute(value)) throw new Error(`${label} must be target-relative`);
   const path = resolve(root, value);
-  if (relative(root, path).startsWith("..")) throw new Error(`${label} must stay inside the target repository`);
+  const escapes = (from, to) => {
+    const rel = relative(from, to);
+    return rel === ".." || rel.startsWith(`..${sep}`) || isAbsolute(rel);
+  };
+  if (escapes(root, path)) throw new Error(`${label} must stay inside the target repository`);
   let ancestor = path;
   while (!existsSync(ancestor)) ancestor = dirname(ancestor);
-  if (relative(realpathSync(root), realpathSync(ancestor)).startsWith("..")) throw new Error(`${label} must not traverse a link outside the target repository`);
+  if (escapes(realpathSync(root), realpathSync(ancestor))) throw new Error(`${label} must not traverse a link outside the target repository`);
   return path;
 }
 

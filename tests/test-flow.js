@@ -90,16 +90,26 @@ test("buildFlow assembles an existing Selection without classifying again", () =
     },
   };
 
-  assert.deepEqual(buildFlow(selection, { task: "Add review access" }, { tdd: { path: "skills/tdd", description: "testing behavior", provider: "project" } }), {
+  assert.deepEqual(buildFlow(selection, { task: "Add review access" }, { tdd: { path: "skills/tdd", description: "testing behavior", capabilities: ["testing"], provider: "project" } }), {
     playbook: "fullstack-feature",
     label: "build a feature",
     steps: [{
       stage: "build", capability: "testing", skill: "tdd", type: "skill", reason: "Drive one behavior",
-      status: "installed", provider: "project", selection_reason: "best installed match (5) for testing", rejected_candidates: [],
+      status: "installed", provider: "project", selection_reason: "best installed match (105) for testing", rejected_candidates: [],
     }],
     gaps: [],
     branches: [],
   });
+});
+
+test("buildFlow rejects incidental one-word overlap", () => {
+  const selection = {
+    playbook: "triage", agents: [],
+    skill_flow: { label: "review", steps: [{ stage: "review", capability: "code review", reason: "Review independently" }] },
+  };
+  const flow = buildFlow(selection, {}, { formatter: { description: "formats code", provider: "project" } });
+  assert.deepEqual(flow.steps, []);
+  assert.equal(flow.gaps[0].capability, "code review");
 });
 
 test("buildFlow does not infer UI from the word build", () => {
@@ -116,8 +126,8 @@ test("buildFlow does not infer UI from the word build", () => {
   };
 
   const installed = {
-    tdd: { path: "skills/tdd", description: "testing behavior" },
-    "frontend-design": { path: "skills/frontend-design", description: "design UI" },
+    tdd: { path: "skills/tdd", description: "testing behavior", capabilities: ["testing"] },
+    "frontend-design": { path: "skills/frontend-design", description: "design UI", capabilities: ["design"] },
   };
   assert.deepEqual(buildFlow(selection, { task: "build an API" }, installed).steps.map((step) => step.skill), ["tdd"]);
   assert.deepEqual(buildFlow(selection, { task: "build a UI component" }, installed).steps.map((step) => step.skill), ["tdd", "frontend-design"]);
@@ -135,8 +145,8 @@ test("buildFlow selects one deterministic installed match and reports gaps", () 
     task: "quality pass",
     trustedSources: [{ name: "user-choice", capabilities: ["memory"], url: "https://example.test" }],
   }, {
-    zeta: { path: "/z", description: "quality" },
-    alpha: { path: "/a", description: "quality" },
+    zeta: { path: "/z", description: "quality", capabilities: ["quality"] },
+    alpha: { path: "/a", description: "quality", capabilities: ["quality"] },
   });
   assert.equal(flow.steps.length, 1);
   assert.equal(flow.steps[0].skill, "alpha");
@@ -151,7 +161,7 @@ test("findCapabilityGaps reports unresolved configured requirements once", () =>
     two: { description: "two", agents: [], skill_flow: { label: "two", steps: [{ stage: "verify", capability: "testing", reason: "verify" }, { stage: "review", capability: "code review", reason: "review" }] } },
   };
 
-  assert.deepEqual(findCapabilityGaps(playbooks, { tdd: { description: "testing" } }).map((gap) => gap.capability), ["code review"]);
+  assert.deepEqual(findCapabilityGaps(playbooks, { tdd: { description: "testing", capabilities: ["testing"] } }).map((gap) => gap.capability), ["code review"]);
 });
 
 test("schema v2 requires resolved skill snapshots", () => {

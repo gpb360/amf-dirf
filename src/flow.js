@@ -77,10 +77,10 @@ function selectCapability(requirement, selection, context, skillIndex) {
     const declared = Array.isArray(item.capabilities) ? item.capabilities : String(item.capabilities || "").split(",").map((value) => value.trim()).filter(Boolean);
     const normalizedName = name.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
     const normalizedCapability = requirement.capability.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-    let score = declared.includes(requirement.capability) ? 100 : normalizedName === normalizedCapability ? 50 : 0;
-    let capabilityMatches = score ? 1 : 0;
-    for (const word of capabilityWords) if (candidate.has(word)) { score += 5; capabilityMatches += 1; }
-    if (!capabilityMatches) return { name, item, score: 0 };
+    const directMatch = declared.includes(requirement.capability) || normalizedName === normalizedCapability;
+    const overlap = [...capabilityWords].filter((word) => candidate.has(word)).length;
+    if (!directMatch && overlap < Math.max(2, Math.ceil(capabilityWords.size / 2))) return { name, item, score: 0 };
+    const score = (declared.includes(requirement.capability) ? 100 : normalizedName === normalizedCapability ? 50 : 0) + overlap * 5;
     return { name, item, score };
   }).filter(({ score }) => score > 0)
     .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name) || String(a.item.path).localeCompare(String(b.item.path)));

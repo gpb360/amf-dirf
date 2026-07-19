@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Integration smoke test for amf-dirf. Node built-ins only.
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,12 +10,13 @@ const ROOT = resolve(fileURLToPath(import.meta.url), "..", "..");
 const CLI = join(ROOT, "src", "cli.js");
 const TESTS = join(ROOT, "tests");
 const TARGET = mkdtempSync(join(tmpdir(), "dirf-smoke-"));
+const TIMEOUT_MS = 30_000;
 
 function run(args, expectFail = false) {
-  const res = spawnSync(process.execPath, [CLI, ...args], { cwd: ROOT, encoding: "utf-8" });
+  const res = spawnSync(process.execPath, [CLI, ...args], { cwd: ROOT, encoding: "utf-8", timeout: TIMEOUT_MS });
   const failed = res.status !== 0;
   if (expectFail && !failed) throw new Error(`expected failure but succeeded: ${args.join(" ")}\n${res.stdout}`);
-  if (!expectFail && failed) throw new Error(`expected success but failed: ${args.join(" ")}\n${res.stderr || res.stdout}`);
+  if (!expectFail && failed) throw new Error(`expected success but failed: ${args.join(" ")}\n${res.error?.message || res.stderr || res.stdout}`);
   return `${res.stdout}${res.stderr}`;
 }
 
@@ -24,9 +25,9 @@ function assertContains(output, needle) {
 }
 
 try {
-  for (const t of ["test-router.js", "test-skills.js", "test-renderer.js", "test-project.js"]) {
-    const res = spawnSync(process.execPath, ["--test", join(TESTS, t)], { cwd: ROOT, encoding: "utf-8" });
-    if (res.status !== 0) throw new Error(`unit test failed: ${t}\n${res.stdout}`);
+  for (const t of ["test-router.js", "test-skills.js", "test-renderer.js", "test-project.js", "test-folders.js", "test-flow.js"]) {
+    const res = spawnSync(process.execPath, ["--test", join(TESTS, t)], { cwd: ROOT, encoding: "utf-8", timeout: TIMEOUT_MS });
+    if (res.status !== 0) throw new Error(`unit test failed: ${t}\n${res.error?.message || res.stderr || res.stdout}`);
     assertContains(res.stdout, "# fail 0");
   }
 
@@ -74,6 +75,11 @@ try {
   assertContains(run(["render", "smoke", "--path", TARGET]), "Spec kit rendered:");
   assertContains(run(["list", "--path", TARGET]), attemptId);
   run(["render", "does-not-exist-xyz", "--path", TARGET], true);
+  const invalidAttemptId = smokeAttempts.find((name) => name !== attemptId);
+  writeFileSync(join(attemptsRoot, invalidAttemptId, "workflow.json"), "{");
+  const migration = run(["migrate", "--path", TARGET]);
+  assertContains(migration, `Failed to migrate ${invalidAttemptId}`);
+  assertContains(migration, "Migrated 1 workflow snapshot(s)");
 
   console.log("Smoke test passed");
 } finally {

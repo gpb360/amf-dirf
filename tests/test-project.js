@@ -10,6 +10,8 @@ function project() {
   return mkdtempSync(join(tmpdir(), "dirf-project-"));
 }
 
+const TIMEOUT_MS = 30_000;
+
 test("setup creates the minimum tracked contract and is idempotent", () => {
   const root = project();
   const first = setupProject(root);
@@ -80,18 +82,29 @@ test("setup rejects configured write paths outside the target", () => {
   assert.throws(() => setupProject(root), /tickets path must stay inside/);
 });
 
+test("setup accepts names beginning with two dots when they remain inside", () => {
+  const root = project();
+  setupProject(root);
+  const configPath = join(root, ".dirf", "config.json");
+  const config = JSON.parse(readFileSync(configPath, "utf8"));
+  config.tracker.tickets_path = "..tickets.md";
+  writeFileSync(configPath, JSON.stringify(config));
+
+  assert.equal(loadProjectConfig(root).tracker.tickets_path, "..tickets.md");
+});
+
 test("Git sees setup docs but ignores attempts and renders", () => {
   const root = project();
-  execFileSync("git", ["init", "-q"], { cwd: root });
+  execFileSync("git", ["init", "-q"], { cwd: root, timeout: TIMEOUT_MS });
   setupProject(root);
   const attempt = createAttempt(root, "demo");
   writeFileSync(join(attempt.folder, "render.mp4"), "render");
 
-  const status = execFileSync("git", ["status", "--short", "--untracked-files=all"], { cwd: root, encoding: "utf8" });
+  const status = execFileSync("git", ["status", "--short", "--untracked-files=all"], { cwd: root, encoding: "utf8", timeout: TIMEOUT_MS });
   assert.match(status, /\.dirf\/config\.json/);
   assert.match(status, /docs\/agents\/domain\/CONTEXT\.md/);
   assert.doesNotMatch(status, /\.dirf\/attempts/);
-  assert.match(execFileSync("git", ["check-ignore", "-q", ".dirf/attempts/"], { cwd: root, encoding: "utf8" }), /^$/);
+  assert.match(execFileSync("git", ["check-ignore", "-q", ".dirf/attempts/"], { cwd: root, encoding: "utf8", timeout: TIMEOUT_MS }), /^$/);
 });
 
 test("attempt creation fails before setup", () => {
