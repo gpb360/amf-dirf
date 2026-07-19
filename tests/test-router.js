@@ -42,6 +42,24 @@ test("implementation intent outranks domain review terminology", () => {
   );
 });
 
+test("frontend mention routes to ui-ux-review", () => {
+  const r = recommend("refactor the audio module frontend");
+  assert.equal(r.playbook, "ui-ux-review");
+  assert.ok(r.matched_keywords.includes("frontend"));
+});
+
+test("redesign routes to ui-ux-review", () => {
+  assert.equal(recommend("redesign the dashboard").playbook, "ui-ux-review");
+});
+
+test("generic refactor routes to impeccable-polish", () => {
+  assert.equal(recommend("refactor the parser for clarity").playbook, "impeccable-polish");
+});
+
+test("frontend refactor prefers ui-ux-review over impeccable-polish", () => {
+  assert.equal(recommend("frontend refactor of the audio module").playbook, "ui-ux-review");
+});
+
 test("falls back to triage when nothing matches", () => {
   const r = recommend("xyzzy qwerty nothing matches here");
   assert.equal(r.playbook, "triage");
