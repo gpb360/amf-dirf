@@ -164,7 +164,7 @@ missing capabilities out of the executable flow.
 ```json
 {"name": "impeccable", "category": "quality",
  "applies_to": ["frontend-developer", "ui-designer"],
- "summary": "quality gate against AI slop; YAGNI/DRY/KISS"}
+"summary": "product-quality review using YAGNI, DRY, and KISS"}
 ```
 
 At build time, `discover()` scans the host environment and resolves each
@@ -208,8 +208,8 @@ tools/           isolated tool invocation folders
 registry/        agents, skill metadata, and legacy compatibility JSON
 agents/          agent markdown definitions (21 curated)
 policies/        workflow-policy.md (embedded in every instruction set)
-tests/           test-router.js, test-skills.js, test-renderer.js (node:test)
-scripts/         smoke-test.js
+tests/           <domain>.test.js files using node:test
+scripts/         smoke.js integration check
 workflows/       authored reusable workflow folders
 .dirf/attempts/  target-owned generated runs (gitignored in each target repo)
 ```
@@ -218,6 +218,8 @@ workflows/       authored reusable workflow folders
 
 - **Zero dependencies.** Pure Node.js built-ins (no `node_modules`).
 - **One entry point:** `src/cli.js`.
+- **Names:** kebab-case folders, domain-named source files, and `<domain>.test.js` tests.
+- **Generated output:** `.dirf/attempts/`, `graphify-out/`, and HTML renders stay untracked.
 - **Markdown playbooks are source; generated attempts and HTML are disposable** (gitignored).
 - **Validate before you commit:** `node src/cli.js validate`.
 
@@ -225,10 +227,10 @@ workflows/       authored reusable workflow folders
 
 ```bash
 npm test                                   # all unit tests (node:test)
-node --test tests/test-router.js           # router matching
-node --test tests/test-skills.js           # discovery + resolver
-node --test tests/test-renderer.js         # markdown + HTML rendering
-node scripts/smoke-test.js                 # full pipeline integration
+npm run test:router                        # router matching
+npm run test:skills                        # discovery + resolver
+npm run test:renderer                      # markdown + HTML rendering
+npm run smoke                              # full pipeline integration
 ```
 
 No test runner to install — Node's built-in `node:test` is used. CI runs the
