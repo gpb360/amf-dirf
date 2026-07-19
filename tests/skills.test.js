@@ -1,4 +1,4 @@
-// Skills discovery + resolver tests via node:test. Run: node --test tests/test-skills.js
+// Skill discovery tests via node:test. Run: npm run test:skills
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";

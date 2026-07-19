@@ -1,4 +1,4 @@
-// Renderer tests via node:test. Run: node --test tests/test-renderer.js
+// Renderer tests via node:test. Run: npm run test:renderer
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtempSync, writeFileSync, readFileSync, existsSync } from "node:fs";

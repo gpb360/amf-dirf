@@ -1,4 +1,4 @@
-// Router tests via node:test. Run: node --test tests/test-router.js
+// Router tests via node:test. Run: npm run test:router
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";

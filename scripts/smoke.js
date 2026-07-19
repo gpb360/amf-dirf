@@ -1,14 +1,13 @@
 #!/usr/bin/env node
-// Integration smoke test for amf-dirf. Node built-ins only.
+// Full CLI integration check.
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const ROOT = resolve(fileURLToPath(import.meta.url), "..", "..");
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const CLI = join(ROOT, "src", "cli.js");
-const TESTS = join(ROOT, "tests");
 const TARGET = mkdtempSync(join(tmpdir(), "dirf-smoke-"));
 const TIMEOUT_MS = 30_000;
 
@@ -25,11 +24,9 @@ function assertContains(output, needle) {
 }
 
 try {
-  for (const t of ["test-router.js", "test-skills.js", "test-renderer.js", "test-project.js", "test-folders.js", "test-flow.js"]) {
-    const res = spawnSync(process.execPath, ["--test", join(TESTS, t)], { cwd: ROOT, encoding: "utf-8", timeout: TIMEOUT_MS });
-    if (res.status !== 0) throw new Error(`unit test failed: ${t}\n${res.error?.message || res.stderr || res.stdout}`);
-    assertContains(res.stdout, "# fail 0");
-  }
+  const unit = spawnSync(process.execPath, ["--test"], { cwd: join(ROOT, "tests"), encoding: "utf-8", timeout: TIMEOUT_MS });
+  if (unit.status !== 0) throw new Error(`unit tests failed\n${unit.error?.message || unit.stderr || unit.stdout}`);
+  assertContains(unit.stdout, "# fail 0");
 
   assertContains(run(["validate"]), "Validation passed");
   assertContains(run(["skills", "scan"]), "Discovered");

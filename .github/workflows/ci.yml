@@ -19,4 +19,4 @@ jobs:
       - name: Validate registries
         run: node src/cli.js validate
       - name: Smoke test (full pipeline)
-        run: node scripts/smoke-test.js
+        run: npm run smoke
