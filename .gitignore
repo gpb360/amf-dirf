@@ -4,6 +4,7 @@ node_modules/
 # Legacy generated runs; new target-owned runs live under each target's .dirf/attempts/
 workflows/user/
 *.html
+/graphify-out/
 
 # OS / editor
 .DS_Store
