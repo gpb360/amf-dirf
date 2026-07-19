@@ -16,7 +16,7 @@
       "content-marketer",
       "brand-guardian",
       "performance-benchmarker",
-      "test-writer-fixer"
+      "test-engineer"
     ],
     "workflow": {
       "phases": [
@@ -82,7 +82,7 @@
     ],
     "agents": [
       "agent-organizer",
-      "test-writer-fixer",
+      "test-engineer",
       "security-auditor",
       "performance-benchmarker"
     ],
@@ -138,7 +138,7 @@
       "frontend-developer",
       "backend-architect",
       "error-coordinator",
-      "test-writer-fixer"
+      "test-engineer"
     ],
     "workflow": {
       "phases": [
@@ -197,7 +197,7 @@
       "ui-designer",
       "frontend-developer",
       "backend-architect",
-      "test-writer-fixer"
+      "test-engineer"
     ],
     "workflow": {
       "phases": [
@@ -282,7 +282,7 @@
       "content-marketer",
       "frontend-developer",
       "performance-benchmarker",
-      "test-writer-fixer"
+      "test-engineer"
     ],
     "workflow": {
       "phases": [
@@ -401,7 +401,7 @@
       "performance-benchmarker",
       "frontend-developer",
       "backend-architect",
-      "test-writer-fixer"
+      "test-engineer"
     ],
     "workflow": {
       "phases": [
@@ -453,7 +453,7 @@
     "agents": [
       "security-auditor",
       "backend-architect",
-      "test-writer-fixer",
+      "test-engineer",
       "documentation-engineer"
     ],
     "workflow": {
@@ -562,7 +562,7 @@
       "api-tester",
       "backend-architect",
       "security-auditor",
-      "test-writer-fixer"
+      "test-engineer"
     ],
     "workflow": {
       "phases": [
@@ -660,7 +660,7 @@
     "agents": [
       "devops-automator",
       "backend-architect",
-      "test-writer-fixer",
+      "test-engineer",
       "documentation-engineer"
     ],
     "workflow": {
@@ -809,7 +809,7 @@
       "ux-researcher",
       "brand-guardian",
       "performance-benchmarker",
-      "test-writer-fixer"
+      "test-engineer"
     ],
     "workflow": {
       "phases": [
@@ -861,7 +861,7 @@
       "ui-designer",
       "brand-guardian",
       "performance-benchmarker",
-      "test-writer-fixer",
+      "test-engineer",
       "documentation-engineer"
     ],
     "workflow": {
@@ -918,7 +918,7 @@
       "agent-organizer",
       "documentation-engineer",
       "error-coordinator",
-      "test-writer-fixer"
+      "test-engineer"
     ],
     "workflow": {
       "phases": [

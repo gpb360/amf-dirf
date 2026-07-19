@@ -48,7 +48,7 @@
         "backend-architect",
         "rapid-prototyper"
       ],
-      "summary": "quality gate against AI slop; clean reusable components; YAGNI/DRY/KISS",
+      "summary": "product-quality review using reusable components and YAGNI, DRY, and KISS",
       "capabilities": [
         "product quality"
       ]
@@ -92,7 +92,7 @@
       "name": "tdd",
       "category": "testing",
       "applies_to": [
-        "test-writer-fixer",
+        "test-engineer",
         "backend-architect"
       ],
       "summary": "test-driven development; red-green-refactor",

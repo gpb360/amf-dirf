@@ -17,7 +17,7 @@
     {"name": "rapid-prototyper", "file": "agents/rapid-prototyper.md", "tags": ["prototype", "mvp"], "skills": ["ponytail", "impeccable"]},
     {"name": "research-analyst", "file": "agents/research-analyst.md", "tags": ["research", "analysis"], "skills": ["ponytail", "scan-analyze", "compose-recommendations", "cost-savings"]},
     {"name": "security-auditor", "file": "agents/security-auditor.md", "tags": ["security", "audit"], "skills": ["ponytail", "security-review"]},
-    {"name": "test-writer-fixer", "file": "agents/test-writer-fixer.md", "tags": ["tests", "quality"], "skills": ["ponytail", "tdd"]},
+    {"name": "test-engineer", "file": "agents/test-engineer.md", "tags": ["tests", "quality"], "skills": ["ponytail", "tdd"]},
     {"name": "ui-designer", "file": "agents/ui-designer.md", "tags": ["design", "ui", "ux"], "skills": ["ponytail", "impeccable", "ui-ux-pro-max", "frontend-design", "accessibility", "web-quality-audit", "web-design-guidelines"]},
     {"name": "ux-researcher", "file": "agents/ux-researcher.md", "tags": ["ux", "research"], "skills": ["ponytail"]},
     {"name": "workflow-orchestrator", "file": "agents/workflow-orchestrator.md", "tags": ["workflow", "orchestration"], "skills": ["ponytail"]}
