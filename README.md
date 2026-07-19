@@ -1,50 +1,64 @@
-# amf-dirf — AI Workflow Kit (Do It Right First)
+# DIRF — Do It Right First
+
+![DIRF: a routed workflow ending in a verified check](docs/assets/dirf-hero.png)
+
+DIRF turns a task into a small, executable instruction set for AI coding agents.
+It inspects the target repository, maps the capabilities actually installed on
+the host, assigns bounded roles, and leaves behind a human-readable workflow.
 
 **AMF** = Agent Marketing Factory · **DIRF** = Do It Right First.
 
-**Build agnostic workflows for AI-assisted work.**
+> Requires Node.js ≥ 18.17. Zero dependencies. No `npm install`.
 
-A standalone, **zero-dependency Node.js** workflow kit. Drop it into any repo;
-DIRF maps that repo's **actual installed skills** to agents and playbooks, then
-creates a lean, resumable workflow — markdown for the AI, plus an HTML render
-for humans.
+## What DIRF helps with
 
-> Requires Node.js ≥ 18.17. No `npm install` — uses only Node built-ins.
+- **Wrong skills:** resolves capabilities from the current repo and host instead
+  of assuming every machine has the same tools.
+- **Prompt drift:** keeps the objective, role boundaries, policy, and done-when
+  checks inside the generated artifact.
+- **Bloated context:** loads one small router first, then only the detail needed
+  for the active stage.
+- **Weak handoffs:** produces durable markdown for agents and a matching HTML
+  view for people.
+- **Skipped verification:** makes evidence and completion checks part of the
+  workflow, not an afterthought.
 
-## Why
+## How DIRF is different
 
-AI agents drift. They lose track of which skills apply to their role, skip
-verification, bleed scope across agents, and forget the objective. DIRF makes
-the workflow explicit: task routing, ordered phases, capability selection,
-validation, and a model-neutral handoff. A specification is one workflow
-artifact — it is not a requirement to use spec-driven development.
+| Typical agent setup | DIRF |
+| --- | --- |
+| One large prompt | A small router with lazy-loaded detail |
+| Hardcoded skill names | Capability requests resolved against installed skills |
+| Missing tools fail silently | Gaps are explicit and approval-gated |
+| Instructions tied to one agent host | Portable, host-neutral workflow snapshots |
+| “Done” means the agent stopped | Done-when checks and evidence travel with the task |
 
-## Two governing principles
-
-1. **Agnostic capability mapping.** Playbooks request outcomes, then DIRF scans
-   repo and host folders and selects the best installed skill. Missing skills or
-   tools become approval-gated gaps; named components are never universal.
-2. **Ponytail-lean output.** Smallest correct artifact first. A small
-   always-loaded router + lazy-loaded detail one level deep. Unread files cost
-   zero tokens. No monoliths, no prose padding.
+DIRF is the preflight layer. It does not replace Codex, Claude, or another
+executor; it gives that executor a repo-aware route before work begins.
 
 ## Quick start
 
 ```bash
-# One-time target-repository setup (tracked config/docs, ignored attempts)
-node src/cli.js setup /path/to/project --reserve-percent 5
+git clone https://github.com/gpb360/amf-dirf.git
+cd amf-dirf
 
-# Full pipeline: task -> workflow JSON -> lean instruction set + HTML
-node src/cli.js build demo "build a landing page" --path /path/to/project
+# One-time setup for the repository you want DIRF to work on
+node src/cli.js setup ../my-project --reserve-percent 5
 
-# See what skills are installed on this host and which refs resolve
+# Task -> routed workflow -> lean markdown + human HTML
+node src/cli.js build first-run "fix the checkout timeout" --path ../my-project
+```
+
+Open the generated `.dirf/attempts/<timestamp>-first-run/README.md`. It contains
+the ordered workflow and the handoff your agent host should execute.
+
+Useful next commands:
+
+```bash
+node src/cli.js flow "review this pull request" --path ../my-project
 node src/cli.js skills scan
-
-# Validate all registries + workflows
+node src/cli.js list --path ../my-project
 node src/cli.js validate
-
-# List saved attempts
-node src/cli.js list
 ```
 
 ## The pipeline
