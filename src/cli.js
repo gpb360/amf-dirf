@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 // amf-dirf — Agent Spec Kit (Do It Right First). Unified CLI. Node built-ins only.
 //
-//   dirf setup [path]                                    configure a target repository
+//   dirf setup [path] [--reserve-percent N]              configure a target repository
 //   dirf build  <name> "<task>" [--path DIR] [--open]   full pipeline into a disposable attempt
 //   dirf create <name> "<task>" [--path DIR]             route -> attempt workflow JSON only
 //   dirf render <name-or-id> [--path DIR] [--open]       render the latest matching attempt
 //   dirf list [--path DIR]                               list target attempts
+//   dirf resume <name-or-id> [--path DIR]                load the workflow handoff
 //   dirf validate                                        validate registries + workflows
 //   dirf skills scan                                     scan host, print installed skills + resolved refs
 //   dirf validate|graph|run|render <folder>               operate an Eve-style folder DAG
@@ -42,7 +43,7 @@ function enrichAgents(agentNames) {
   });
 }
 
-function buildPlan(name, task, path) {
+function buildPlan(name, task, path, reservePercent = 5) {
   const { selection, skillFlow, discovered, facts } = assembleTaskRouting(task, path);
   const agents = enrichAgents(selection.agents).map((agent) => ({
     ...agent,
@@ -75,6 +76,7 @@ function buildPlan(name, task, path) {
       policy: fileHash(POLICY),
     },
     lifecycle: LIFECYCLE,
+    context_reserve_percent: reservePercent,
   };
 }
 
@@ -118,6 +120,13 @@ function savePlan(plan, attempt) {
   const path = join(attempt.folder, "workflow.json");
   plan.attempt = { id: attempt.id, path: attempt.relativePath };
   writeFileSync(path, JSON.stringify(portablePlan(plan), null, 2), "utf-8");
+  const handoff = join(attempt.folder, "HANDOFF.md");
+  if (!existsSync(handoff)) writeFileSync(handoff, [
+    "# DIRF Handoff", "", "## Objective", "", plan.task, "", "## Current phase", "", "_(not started)_", "",
+    "## Completed", "", "- _(none yet)_", "", "## Decisions and assumptions", "", "- _(none yet)_", "",
+    "## Changed files", "", "- _(none yet)_", "", "## Validation", "", "- _(not run)_", "",
+    "## Blockers", "", "- _(none)_", "", "## Exact next action", "", "_(start the first workflow phase)_", "",
+  ].join("\n"), "utf-8");
   return path;
 }
 
@@ -143,8 +152,8 @@ function openBrowserAt(filePath) {
 
 function cmdBuild(args) {
   const target = projectRoot(args.path);
-  loadProjectConfig(target);
-  const plan = buildPlan(args.name, args.task, target);
+  const config = loadProjectConfig(target);
+  const plan = buildPlan(args.name, args.task, target, config.context.reserve_percent);
   const attempt = createAttempt(target, args.name);
   const planPath = savePlan(plan, attempt);
   console.log(`Attempt saved: ${attempt.id}`);
@@ -153,8 +162,8 @@ function cmdBuild(args) {
 
 function cmdCreate(args) {
   const target = projectRoot(args.path);
-  loadProjectConfig(target);
-  const plan = buildPlan(args.name, args.task, target);
+  const config = loadProjectConfig(target);
+  const plan = buildPlan(args.name, args.task, target, config.context.reserve_percent);
   const attempt = createAttempt(target, args.name);
   savePlan(plan, attempt);
   console.log(`Attempt saved: ${attempt.id}`);
@@ -178,6 +187,18 @@ function cmdList(args) {
   for (const attempt of attempts) console.log(`  - ${attempt.id}  ${attempt.name}`);
 }
 
+function cmdResume(args) {
+  const attempt = findAttempt(projectRoot(args.path), args.name);
+  const readme = join(attempt.folder, "README.md");
+  const workflow = existsSync(readme) ? readme : join(attempt.folder, "workflow.json");
+  const handoff = join(attempt.folder, "HANDOFF.md");
+  if (!existsSync(handoff)) throw new Error(`Attempt ${attempt.id} has no HANDOFF.md; rebuild it before resuming.`);
+  console.log(`Resume attempt: ${attempt.id}`);
+  console.log(`Load workflow: ${workflow}`);
+  console.log(`Load handoff: ${handoff}\n`);
+  console.log(readFileSync(handoff, "utf-8"));
+}
+
 function cmdMigrate(name, target) {
   const root = projectRoot(target);
   const attempts = name ? [findAttempt(root, name)] : listAttempts(root);
@@ -198,7 +219,7 @@ function cmdMigrate(name, target) {
 
 function cmdSetup(args) {
   const target = args._[0] || args.path || ".";
-  const result = setupProject(target, { tracker: args.tracker, context: args.context });
+  const result = setupProject(target, { tracker: args.tracker, context: args.context, reservePercent: args.reservePercent });
   console.log(`DIRF configured: ${result.root}`);
   console.log(result.created.length ? `Created: ${result.created.join(", ")}` : "Already configured; no files changed.");
   const discovered = enrichDiscovered(discover(result.root));
@@ -268,6 +289,7 @@ function parse(argv) {
     if (a === "--path") { out.path = rest[++i]; continue; }
     if (a === "--tracker") { out.tracker = rest[++i]; continue; }
     if (a === "--context") { out.context = rest[++i]; continue; }
+    if (a === "--reserve-percent") { out.reservePercent = Number(rest[++i]); continue; }
     if (a === "--open") { out.open = true; continue; }
     if (a === "--help" || a === "-h") { out.help = true; continue; }
     out._.push(a);
@@ -278,7 +300,7 @@ function parse(argv) {
 const HELP = `amf-dirf — Agent Spec Kit (Do It Right First)
 
 Usage:
-  dirf setup [path] [--tracker local] [--context single|multi]
+  dirf setup [path] [--tracker local] [--context single|multi] [--reserve-percent 5]
   dirf build  <name> "<task>" [--path DIR] [--open]   full pipeline
   dirf create <name> "<task>" [--path DIR]             JSON only
   dirf render <name-or-id> [--path DIR] [--open]       re-render an attempt
@@ -286,6 +308,7 @@ Usage:
   dirf graph <folder>                                 print ordered folder DAG
   dirf run <folder>                                   print deterministic execution handoff
   dirf list [--path DIR]                               list saved attempts
+  dirf resume <name-or-id> [--path DIR]                load the workflow handoff
   dirf migrate [<name>]                                remove runtime paths from saved snapshots
   dirf validate                                        validate registries
   dirf skills scan                                     show installed skills
@@ -352,6 +375,7 @@ function main() {
     else { args.name = target; cmdRender(args); }
   }
   else if (cmd === "list") cmdList(args);
+  else if (cmd === "resume") { args.name = args._[0]; cmdResume(args); }
   else if (cmd === "migrate") cmdMigrate(args._[0], args.path);
   else if (cmd === "validate") args._[0] ? cmdFolderValidate(args._[0]) : cmdValidate();
   else if (cmd === "graph") cmdGraph(args._[0]);

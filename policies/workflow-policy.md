@@ -51,6 +51,12 @@ Use this policy in every generated workflow prompt.
 - Do not spawn agents only to look busy.
 - Define verification gates before merge or release.
 
+## Context Reserve
+- Keep the configured context reserve available for a final handoff; five percent is the default.
+- When the host exposes remaining context and reaches the reserve, update `HANDOFF.md`, then stop.
+- If usage telemetry is unavailable, checkpoint after every completed workflow phase.
+- Record the objective, current phase, completed work, decisions, changed files, validation, blockers, and exact next action.
+
 ## Idea to Ship
 - Clarify the intent with the best installed interview capability before implementation.
 - Prototype only when a question needs a runnable answer.

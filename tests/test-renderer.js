@@ -52,7 +52,7 @@ test("buildInstructions writes router + per-agent detail", () => {
     agents: [{ name: "frontend-developer", file: "agents/frontend-developer.md", tags: ["frontend"], skills: [{ name: "ponytail", status: "recommended" }] }],
     baseline_skills: [{ name: "ponytail", status: "recommended" }],
     skill_flow: { label: "persisted", branches: [], steps: [{ stage: "build", skill: "persisted-only", reason: "Use the snapshot", status: "recommended" }] },
-    policy: "policies/workflow-policy.md", schema_version: 2,
+    policy: "policies/workflow-policy.md", schema_version: 2, context_reserve_percent: 5,
   };
   const written = buildInstructions(workflow, outDir);
   const names = written.map((p) => p.split(/[\\/]/).pop());
@@ -67,6 +67,7 @@ test("buildInstructions writes router + per-agent detail", () => {
   assert.ok(!readme.includes("C:\\Users"));
   assert.ok(readme.includes("Definition of Done"));
   assert.ok(readme.includes("agents/frontend-developer.md"));
+  assert.match(readme, /Keep 5% of the model context available for handoff/);
   assert.match(readme, /uses: \["playbook"\]/);
   assert.deepEqual(resolveGraph(outDir, { allowedRoots: [outDir] }).map((unit) => unit.meta.kind), ["skill", "playbook", "workflow"]);
   const detail = readFileSync(join(outDir, "agents", "frontend-developer.md"), "utf-8");

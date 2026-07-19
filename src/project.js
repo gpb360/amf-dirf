@@ -51,6 +51,11 @@ export function loadProjectConfig(root = process.cwd()) {
   if (!existsSync(path)) throw new Error(`DIRF is not configured here. Run: dirf setup "${projectRoot(root)}"`);
   const config = JSON.parse(readFileSync(path, "utf8"));
   if (config.schema_version !== 1) throw new Error(`Unsupported DIRF config schema ${config.schema_version}`);
+  const reservePercent = config.context?.reserve_percent ?? 5;
+  if (!Number.isInteger(reservePercent) || reservePercent < 1 || reservePercent > 50) {
+    throw new Error("DIRF context reserve_percent must be an integer from 1 to 50");
+  }
+  config.context.reserve_percent = reservePercent;
   containedPath(projectRoot(root), config.attempt_root, "DIRF attempt_root");
   containedPath(projectRoot(root), config.context?.path, "DIRF context path");
   containedPath(projectRoot(root), config.adr_path, "DIRF ADR path");
@@ -63,8 +68,10 @@ export function setupProject(root = process.cwd(), options = {}) {
   root = projectRoot(root);
   const tracker = options.tracker || "local";
   const contextMode = options.context || "single";
+  const reservePercent = options.reservePercent ?? 5;
   if (tracker !== "local") throw new Error(`Unsupported tracker ${tracker}; installed tracker adapters are not configured yet`);
   if (!new Set(["single", "multi"]).has(contextMode)) throw new Error("context must be single or multi");
+  if (!Number.isInteger(reservePercent) || reservePercent < 1 || reservePercent > 50) throw new Error("reserve-percent must be an integer from 1 to 50");
 
   const created = [];
   const existingConfig = existsSync(join(root, CONFIG_PATH)) ? loadProjectConfig(root) : null;
@@ -77,7 +84,7 @@ export function setupProject(root = process.cwd(), options = {}) {
       specs_path: "docs/agents/issues/specs",
       tickets_path: "docs/agents/issues/tickets.md",
     },
-    context: { mode: contextMode, path: contextPath },
+    context: { mode: contextMode, path: contextPath, reserve_percent: reservePercent },
     adr_path: adrPath,
     attempt_root: ATTEMPT_IGNORE.slice(0, -1),
   };

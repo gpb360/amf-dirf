@@ -28,6 +28,7 @@ test("setup creates the minimum tracked contract and is idempotent", () => {
   const config = loadProjectConfig(root);
   assert.equal(config.tracker.provider, "local");
   assert.equal(config.context.mode, "single");
+  assert.equal(config.context.reserve_percent, 5);
   assert.equal(config.attempt_root, ".dirf/attempts");
 });
 
@@ -43,6 +44,13 @@ test("setup reuses existing context and ADR locations without overwriting", () =
   assert.equal(config.context.mode, "multi");
   assert.equal(config.adr_path, "docs/adr");
   assert.equal(readFileSync(join(root, "docs", "CONTEXT.md"), "utf8"), "existing context\n");
+});
+
+test("setup validates and stores a custom context reserve", () => {
+  const root = project();
+  setupProject(root, { reservePercent: 10 });
+  assert.equal(loadProjectConfig(root).context.reserve_percent, 10);
+  assert.throws(() => setupProject(project(), { reservePercent: 0 }), /reserve-percent/);
 });
 
 test("attempts are timestamped, portable, and resolved by id or latest name", () => {

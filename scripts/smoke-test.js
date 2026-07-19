@@ -37,7 +37,7 @@ try {
   assertContains(unconfigured, "dirf setup");
   if (/fatal:|\n\s+at /.test(unconfigured)) throw new Error(`unconfigured build did not fail cleanly:\n${unconfigured}`);
 
-  const setup = run(["setup", TARGET]);
+  const setup = run(["setup", TARGET, "--reserve-percent", "5"]);
   assertContains(setup, "DIRF configured:");
   assertContains(setup, "Capability gaps:");
   assertContains(run(["setup", TARGET]), "Already configured; no files changed.");
@@ -57,7 +57,8 @@ try {
   const readme = join(attempt, "README.md");
   const html = join(attempt, "instructions.html");
   const detail = join(attempt, "agents", "frontend-developer.md");
-  for (const path of [wfJson, readme, html, detail]) if (!existsSync(path)) throw new Error(`missing expected output: ${path}`);
+  const handoff = join(attempt, "HANDOFF.md");
+  for (const path of [wfJson, readme, html, detail, handoff]) if (!existsSync(path)) throw new Error(`missing expected output: ${path}`);
 
   const readmeText = readFileSync(readme, "utf8");
   for (const text of ["Definition of Done", "Agent roster", "Capabilities", "Idea to ship"]) assertContains(readmeText, text);
@@ -66,6 +67,7 @@ try {
   const snapshotText = readFileSync(wfJson, "utf8");
   const snapshot = JSON.parse(snapshotText);
   if (snapshot.schema_version !== 5) throw new Error("attempt did not use schema version 5");
+  if (snapshot.context_reserve_percent !== 5) throw new Error("attempt did not persist the context reserve");
   if ("path" in snapshot || snapshotText.includes(TARGET)) throw new Error("target path leaked into portable snapshot");
   assertContains(run(["migrate", "smoke", "--path", TARGET]), "portable schema version 5");
   assertContains(run(["validate", attempt]), "Folder validation passed");
@@ -74,6 +76,7 @@ try {
   if (!readFileSync(html, "utf8").startsWith("<!doctype html>")) throw new Error("HTML missing doctype");
   assertContains(run(["render", "smoke", "--path", TARGET]), "Spec kit rendered:");
   assertContains(run(["list", "--path", TARGET]), attemptId);
+  assertContains(run(["resume", attemptId, "--path", TARGET]), "## Exact next action");
   run(["render", "does-not-exist-xyz", "--path", TARGET], true);
   const invalidAttemptId = smokeAttempts.find((name) => name !== attemptId);
   writeFileSync(join(attemptsRoot, invalidAttemptId, "workflow.json"), "{");

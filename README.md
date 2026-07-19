@@ -29,7 +29,7 @@ with a token-overlap heuristic that guesses wrong.
 
 ```bash
 # One-time target-repository setup (tracked config/docs, ignored attempts)
-node src/cli.js setup /path/to/project
+node src/cli.js setup /path/to/project --reserve-percent 5
 
 # Full pipeline: task -> workflow JSON -> lean instruction set + HTML
 node src/cli.js build demo "build a landing page" --path /path/to/project
@@ -83,6 +83,11 @@ The AI loads `README.md` first, follows its ordered folder references, then
 loads only the detail file required by the active stage.
 Unread files cost zero tokens.
 
+DIRF reserves 5% of model context for a structured `HANDOFF.md` by default.
+Hosts that expose remaining context trigger the handoff at that threshold;
+otherwise the workflow checkpoints after each completed phase. A different
+model can continue with `dirf resume <name-or-id> --path <project>`.
+
 Each per-agent detail file is self-contained: role, **USE THESE SKILLS**
 (resolved live from the host index, with installed/recommended status),
 **YOUR JOB** (from the agent markdown), **NOT YOUR JOB** (boundary), and a
@@ -93,9 +98,10 @@ done-when checklist.
 ```
 dirf build  <name> "<task>" [--path DIR] [--open]   full pipeline: route -> JSON -> md + html
 dirf create <name> "<task>" [--path DIR]             route -> workflow JSON only
-dirf setup [path] [--tracker local] [--context single|multi]
+dirf setup [path] [--tracker local] [--context single|multi] [--reserve-percent 5]
 dirf render <name-or-id> [--path DIR] [--open]       render the latest matching attempt
 dirf list [--path DIR]                               list target attempts
+dirf resume <name-or-id> [--path DIR]                load workflow + HANDOFF.md
 dirf migrate [<name-or-id>] [--path DIR]             refresh schema 2–5 attempt snapshots
 dirf validate                                        validate registries + workflows
 dirf validate <folder>                               validate one folder DAG
