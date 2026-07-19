@@ -11,8 +11,8 @@
 //   dirf skills scan [--path DIR]                        scan host, print installed skills + resolved refs
 //   dirf validate|graph|run|render <folder>               operate an Eve-style folder DAG
 import { writeFileSync, readFileSync, existsSync } from "node:fs";
-import { dirname, join, isAbsolute, resolve } from "node:path";
-import { spawn } from "node:child_process";
+import { basename, dirname, join, isAbsolute, resolve } from "node:path";
+import { execFileSync, spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { ROOT, REGISTRY, SKILLS, PLAYBOOKS, PLAYBOOK_DIR, POLICY, fileHash, folderHash, loadJson } from "./paths.js";
@@ -43,6 +43,19 @@ function enrichAgents(agentNames) {
   });
 }
 
+function repositoryIdentity(targetRoot) {
+  // Portable identity of the target repository for the kickoff prompt: folder
+  // name plus the git remote if one exists. Never a local path, and any
+  // credentials embedded in the remote URL are stripped before persisting.
+  if (!targetRoot) return null;
+  const identity = { name: basename(targetRoot) };
+  try {
+    const remote = execFileSync("git", ["-C", targetRoot, "remote", "get-url", "origin"], { encoding: "utf-8", windowsHide: true }).trim();
+    if (remote) identity.remote = remote.replace(/^(\w+:\/\/)[^@\/]+@/, "$1");
+  } catch { /* not a git repo or no remote — the name still anchors the prompt */ }
+  return identity;
+}
+
 function buildPlan(name, task, path, reservePercent = 5) {
   const { selection, skillFlow, discovered, facts } = assembleTaskRouting(task, path);
   const agents = enrichAgents(selection.agents).map((agent) => ({
@@ -59,6 +72,7 @@ function buildPlan(name, task, path, reservePercent = 5) {
     score: selection.score,
     matched_keywords: selection.matched_keywords,
     alternates: selection.alternates,
+    repository: repositoryIdentity(path),
     workflow: selection.workflow,
     routing_facts: facts,
     skill_flow: skillFlow,
