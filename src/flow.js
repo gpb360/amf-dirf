@@ -66,8 +66,16 @@ function branchesFor(task, playbookAgents) {
 
 const STOP_WORDS = new Set(["and", "the", "for", "with", "from", "into", "before", "after", "when", "this", "that", "task", "skill", "use", "apply"]);
 
+function stem(word) {
+  // Light suffix stripping so morphological variants of the same capability
+  // word match whatever the local install calls it (copywriting/copywriter,
+  // testing/tests). Only strip when a solid stem remains.
+  const stripped = word.replace(/(?:ing|ers|ies|es|ed|er|s)$/, "");
+  return stripped.length >= 3 ? stripped : word;
+}
+
 function words(value) {
-  return new Set(String(value || "").toLowerCase().replaceAll("-", " ").match(/[a-z0-9]{3,}/g)?.filter((word) => !STOP_WORDS.has(word)) || []);
+  return new Set(String(value || "").toLowerCase().replaceAll("-", " ").match(/[a-z0-9]{3,}/g)?.filter((word) => !STOP_WORDS.has(word)).map(stem) || []);
 }
 
 function selectCapability(requirement, selection, context, skillIndex) {
@@ -79,7 +87,14 @@ function selectCapability(requirement, selection, context, skillIndex) {
     const normalizedCapability = requirement.capability.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
     const directMatch = declared.includes(requirement.capability) || normalizedName === normalizedCapability;
     const overlap = [...capabilityWords].filter((word) => candidate.has(word)).length;
-    if (!directMatch && overlap < Math.max(2, Math.ceil(capabilityWords.size / 2))) return { name, item, score: 0 };
+    // Multi-word capabilities still refuse incidental one-word overlap. A
+    // single-word capability can match too — otherwise it could never resolve
+    // against a local install — but must anchor in the skill's own identity
+    // (name, category, tags), not a passing mention in its description.
+    const identity = words([name, item.category, ...(item.tags || [])].join(" "));
+    const required = Math.max(Math.min(2, capabilityWords.size), Math.ceil(capabilityWords.size / 2));
+    const anchored = capabilityWords.size > 1 || [...capabilityWords].some((word) => identity.has(word));
+    if (!directMatch && (overlap < required || !anchored)) return { name, item, score: 0 };
     const score = (declared.includes(requirement.capability) ? 100 : normalizedName === normalizedCapability ? 50 : 0) + overlap * 5;
     return { name, item, score };
   }).filter(({ score }) => score > 0)

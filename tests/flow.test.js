@@ -102,6 +102,35 @@ test("buildFlow assembles an existing Selection without classifying again", () =
   });
 });
 
+test("single-word capabilities resolve against local install descriptions", () => {
+  const selection = {
+    playbook: "demo", agents: [],
+    skill_flow: { label: "demo", steps: [{ stage: "write", capability: "copywriting", reason: "Write the copy" }] },
+  };
+  // No declared capabilities, no name match — only the local skill's own
+  // description, including a morphological variant of the capability word.
+  const flow = buildFlow(selection, {}, {
+    "copywriter-coach": { path: "/s", description: "Professional copywriting coach with frameworks and feedback", provider: "project" },
+  });
+  assert.equal(flow.steps.length, 1);
+  assert.equal(flow.steps[0].skill, "copywriter-coach");
+  assert.deepEqual(flow.gaps, []);
+});
+
+test("single-word capabilities do not match a passing description mention", () => {
+  const selection = {
+    playbook: "demo", agents: [],
+    skill_flow: { label: "demo", steps: [{ stage: "verify", capability: "testing", reason: "Verify" }] },
+  };
+  // "test" appears only in the description — not in the skill's identity —
+  // so this must stay a gap rather than a misleading match.
+  const flow = buildFlow(selection, {}, {
+    "skill-creator": { path: "/s", description: "create skills and run evals to test them", provider: "project" },
+  });
+  assert.deepEqual(flow.steps, []);
+  assert.equal(flow.gaps[0].capability, "testing");
+});
+
 test("buildFlow rejects incidental one-word overlap", () => {
   const selection = {
     playbook: "triage", agents: [],
