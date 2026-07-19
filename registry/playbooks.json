@@ -802,7 +802,9 @@
       "frontend design",
       "frontend refactor",
       "design refactor",
-      "design-system"
+      "design-system",
+      "frontend",
+      "redesign"
     ],
     "agents": [
       "ui-designer",
@@ -855,7 +857,8 @@
       "fit and finish",
       "make it better",
       "professional",
-      "quality pass"
+      "quality pass",
+      "refactor"
     ],
     "agents": [
       "ui-designer",

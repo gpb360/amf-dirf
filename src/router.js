@@ -1,8 +1,12 @@
-// Task -> playbook matching by keyword score. Node built-ins only.
+// Task -> playbook matching. Node built-ins only.
 //
-// Reuses the proven keyword-substring approach from the parent agents repo
-// (the ponytail 'reuse existing' rung): score = matched keywords * 3, ties
-// broken by keyword count then insertion order. Score 0 falls back to triage.
+// Two signals, both data-driven from the registry — nothing routes by name:
+//   1. keyword phrases (curated per playbook): matched * 3 — the strong signal
+//   2. content overlap with what the playbook DOES (description, workflow
+//      phases/output, agent roster): capped at +2 so it can discriminate ties
+//      and catch keyword-less tasks, but never outvote a keyword match
+// Ties break by keyword count, then raw content overlap, then insertion order.
+// A task that matches neither signal falls back to triage — match or move on.
 import { loadJson, PLAYBOOKS, PLAYBOOK_DIR } from "./paths.js";
 import { loadPlaybookFolders } from "./folders.js";
 import { execFileSync } from "node:child_process";
@@ -11,6 +15,28 @@ import { join } from "node:path";
 
 export const FALLBACK_PLAYBOOK = "triage";
 export const KEYWORD_WEIGHT = 3;
+export const CONTEXT_CAP = 2;
+const STOPWORDS = new Set([
+  "the", "and", "for", "with", "that", "this", "from", "into", "over", "your",
+  "our", "are", "was", "has", "have", "had", "will", "can", "not", "its",
+  "all", "any", "out", "get", "use", "using", "when", "where", "how", "why",
+  "what", "which", "who", "them", "they", "their", "then", "than", "also",
+  "but", "you", "per", "via", "each", "one", "two", "new", "own", "off",
+  "should", "would", "could", "does", "before", "after", "make",
+]);
+
+function wordTokens(text) {
+  return String(text || "").toLowerCase().split(/[^a-z0-9]+/)
+    .filter((w) => w.length >= 3 && !STOPWORDS.has(w));
+}
+
+function contentTokens(pb) {
+  // Everything the registry says the playbook DOES: description, workflow
+  // phases and output, and who does the work (agent names, hyphen-split).
+  const wf = pb.workflow || {};
+  const parts = [pb.description, ...(wf.phases || []), wf.output, ...(pb.agents || [])];
+  return new Set(wordTokens(parts.filter(Boolean).join(" ")));
+}
 const IMPLEMENTATION_INTENT = /\b(add|build|create|fix|implement)\b/;
 const EXPLICIT_SECURITY_AUDIT = /\bsecurity audit\b/;
 
@@ -39,9 +65,23 @@ export function collectRoutingFacts(projectRoot) {
   return facts;
 }
 
-function scorePlaybook(haystack, playbook) {
-  const matched = (playbook.keywords || []).filter((kw) => haystack.includes(kw.toLowerCase()));
-  return [matched.length * KEYWORD_WEIGHT, matched.length];
+function matchedKeywords(haystack, playbook) {
+  // Long keywords and phrases match as substrings. Short ones ("pr", "api",
+  // "bug") must appear as whole words — else "pr" hits inside "reproduce" and
+  // the playbook wins by name, not by what the task asks for. A trailing "s"
+  // is tolerated so plurals ("bugs", "prs") still count.
+  return (playbook.keywords || []).filter((kw) => {
+    const k = kw.toLowerCase();
+    if (k.length > 3) return haystack.includes(k);
+    return new RegExp(`\\b${k.replace(/[^a-z0-9]/g, "\\$&")}(?:s\\b|\\b)`).test(haystack);
+  });
+}
+
+function scorePlaybook(haystack, taskTokens, playbook) {
+  const matched = matchedKeywords(haystack, playbook);
+  const context = [...taskTokens].filter((t) => contentTokens(playbook).has(t)).sort();
+  const score = matched.length * KEYWORD_WEIGHT + Math.min(context.length, CONTEXT_CAP);
+  return { score, count: matched.length, context };
 }
 
 export function loadPlaybooks() {
@@ -54,7 +94,7 @@ export function recommend(task, facts, playbooks = loadPlaybooks()) {
   const taskText = (task || "").toLowerCase();
   let haystack = taskText;
   const taskHasRoutingCue = Object.entries(playbooks).some(([name, playbook]) =>
-    name !== FALLBACK_PLAYBOOK && (playbook.keywords || []).some((keyword) => taskText.includes(keyword.toLowerCase())),
+    name !== FALLBACK_PLAYBOOK && matchedKeywords(taskText, playbook).length > 0,
   );
   if (!taskHasRoutingCue && facts && facts.length) haystack += " " + facts.join(" ").toLowerCase();
   const affirmativeTaskText = taskText.replace(/\b(?:do not|don't|without)\s+(?:add|build|create|fix|implement)\b/g, "");
@@ -62,6 +102,7 @@ export function recommend(task, facts, playbooks = loadPlaybooks()) {
   const isExplicitSecurityAudit = EXPLICIT_SECURITY_AUDIT.test(taskText);
   if (isImplementation) haystack += " feature";
 
+  const taskTokens = new Set(wordTokens(haystack));
   const ranked = [];
   let index = 0;
   for (const [name, pb] of Object.entries(playbooks)) {
@@ -69,28 +110,29 @@ export function recommend(task, facts, playbooks = loadPlaybooks()) {
     const reviewConflictsWithImplementation = isImplementation && (
       name === "pr-review" || (name === "security-review" && !isExplicitSecurityAudit)
     );
-    const [score, count] = reviewConflictsWithImplementation
-      ? [0, 0]
-      : scorePlaybook(haystack, pb);
-    ranked.push({ score, count, index: -index, name, pb });
+    const { score, count, context } = reviewConflictsWithImplementation
+      ? { score: 0, count: 0, context: [] }
+      : scorePlaybook(haystack, taskTokens, pb);
+    ranked.push({ score, count, context, index: -index, name, pb });
     index += 1;
   }
 
-  // stable: highest score, then most matched keywords, then earliest playbook
-  ranked.sort((a, b) => b.score - a.score || b.count - a.count || b.index - a.index);
+  // stable: highest score, then most matched keywords, then deepest content
+  // overlap (what the playbook does), then earliest playbook
+  ranked.sort((a, b) =>
+    b.score - a.score || b.count - a.count || b.context.length - a.context.length || b.index - a.index);
 
-  let name, pb, score;
+  let name, pb, score, context;
   if (!ranked.length || ranked[0].score === 0) {
     name = FALLBACK_PLAYBOOK;
     pb = playbooks[FALLBACK_PLAYBOOK];
     score = 0;
+    context = [];
   } else {
-    name = ranked[0].name;
-    pb = ranked[0].pb;
-    score = ranked[0].score;
+    ({ name, pb, score, context } = ranked[0]);
   }
 
-  const matched = score === 0 ? [] : (pb.keywords || []).filter((kw) => haystack.includes(kw.toLowerCase()));
+  const matched = score === 0 ? [] : matchedKeywords(haystack, pb);
   const alternates = ranked.slice(1, 3)
     .filter((r) => r.score > 0)
     .map((r) => ({ playbook: r.name, score: r.score, description: (r.pb.description || "") }));
@@ -100,6 +142,7 @@ export function recommend(task, facts, playbooks = loadPlaybooks()) {
     playbook_description: pb.description || "",
     score,
     matched_keywords: matched,
+    matched_context: context,
     alternates,
     workflow: pb.workflow || {},
     skill_flow: pb.skill_flow,

@@ -8,7 +8,7 @@
 //   dirf list [--path DIR]                               list saved attempts
 //   dirf resume <name-or-id> [--path DIR]                load the workflow handoff
 //   dirf validate                                        validate registries + workflows
-//   dirf skills scan                                     scan host, print installed skills + resolved refs
+//   dirf skills scan [--path DIR]                        scan host, print installed skills + resolved refs
 //   dirf validate|graph|run|render <folder>               operate an Eve-style folder DAG
 import { writeFileSync, readFileSync, existsSync } from "node:fs";
 import { dirname, join, isAbsolute, resolve } from "node:path";
@@ -263,8 +263,9 @@ function cmdFolderRender(target) {
   console.log(`Folder rendered: ${output}`);
 }
 
-function cmdSkillsScan() {
-  const idx = discover();
+function cmdSkillsScan(args) {
+  const projectRoot = args.path ? (isAbsolute(args.path) ? args.path : resolve(ROOT, args.path)) : null;
+  const idx = discover(projectRoot);
   console.log(`Discovered ${Object.keys(idx).length} installed skills across scanned roots.`);
   console.log("\nRegistry references resolved:");
   for (const ref of loadRegistry().skills || []) {
@@ -310,7 +311,7 @@ Usage:
   dirf resume <name-or-id> [--path DIR]                load the workflow handoff
   dirf migrate [<name>]                                remove runtime paths from saved snapshots
   dirf validate                                        validate registries
-  dirf skills scan                                     show installed skills
+  dirf skills scan [--path DIR]                        show installed skills
   dirf export playbooks                                regenerate legacy playbooks JSON
   dirf inspect [<path>]                                detect a project's optimization stack + suggest gaps
   dirf flow "<task>" [--path DIR]                      show the ordered skill flow for a task (ask-matt style)
@@ -381,8 +382,8 @@ function main() {
   else if (cmd === "run") cmdRun(args._[0]);
   else if (cmd === "skills") {
     const sub = args._[0];
-    if (sub === "scan") cmdSkillsScan();
-    else { console.log("usage: dirf skills scan"); process.exit(2); }
+    if (sub === "scan") cmdSkillsScan(args);
+    else { console.log("usage: dirf skills scan [--path DIR]"); process.exit(2); }
   }
   else if (cmd === "export" && args._[0] === "playbooks") cmdExportPlaybooks();
   else if (cmd === "inspect") { args._ = args._.length ? args._ : [args.path]; cmdInspect(args); }

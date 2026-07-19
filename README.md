@@ -66,7 +66,7 @@ node src/cli.js validate
 ```
 task description or folder README
   │
-  ▼  router (keyword -> playbook match)
+  ▼  router (keywords + what-the-playbook-does content match)
 workflow folder
   │   agents[]         each: {name, file, tags, skills[]}
   │   baseline_skills[]   cross-cutting skills for the whole workflow
@@ -125,7 +125,7 @@ dirf validate <folder>                               validate one folder DAG
 dirf graph <folder>                                  show deterministic execution order
 dirf run <folder>                                    emit the execution handoff
 dirf render <folder>                                 generate its human HTML view
-dirf skills scan                                     scan host, show installed skills + resolved refs
+dirf skills scan [--path DIR]                        scan host, show installed skills + resolved refs
 ```
 
 Run `node src/cli.js` with no arguments for help.
