@@ -168,13 +168,17 @@ export function buildInstructions(workflow, outDir) {
   const agents = workflow.agents || [];
   const flow = workflow.skill_flow;
   const written = [];
+  const skillUnits = (flow?.steps || []).map((step, index) => ({
+    ...step,
+    folder: `${String(index + 1).padStart(2, "0")}-${String(step.skill).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "capability"}`,
+  }));
 
   const lines = [
     "---",
     `name: ${workflow.name || playbook}`,
     "kind: workflow",
     `description: ${JSON.stringify(task)}`,
-    "uses: []",
+    'uses: ["playbook"]',
     `details: ${JSON.stringify(agents.map((agent) => `agents/${agent.name}.md`))}`,
     `inputs: ${JSON.stringify(["task", "target repository"])}`,
     `outputs: ${JSON.stringify([wf.output || "verified result"])}`,
@@ -248,6 +252,32 @@ export function buildInstructions(workflow, outDir) {
   const readme = join(outDir, "README.md");
   writeFileSync(readme, lines.join("\n"), "utf-8");
   written.push(readme);
+
+  const playbookDir = join(outDir, "playbook");
+  mkdirSync(playbookDir, { recursive: true });
+  const playbookReadme = join(playbookDir, "README.md");
+  writeFileSync(playbookReadme, [
+    "---", `name: ${playbook || "generated-playbook"}`, "kind: playbook",
+    `description: ${JSON.stringify(workflow.playbook_description || task)}`,
+    `uses: ${JSON.stringify(skillUnits.map((step) => `../skills/${step.folder}`))}`,
+    "details: []", 'inputs: ["task"]', `outputs: ${JSON.stringify([wf.output || "verified result"])}`,
+    `capabilities: ${JSON.stringify(skillUnits.map((step) => step.capability).filter(Boolean))}`,
+    "---", "", `# ${playbook || "Generated playbook"}`, "", "Execute the ordered capability units, then verify the declared output.",
+  ].join("\n"), "utf-8");
+  written.push(playbookReadme);
+
+  for (const step of skillUnits) {
+    const skillDir = join(outDir, "skills", step.folder);
+    mkdirSync(skillDir, { recursive: true });
+    const skillReadme = join(skillDir, "README.md");
+    writeFileSync(skillReadme, [
+      "---", `name: ${JSON.stringify(step.skill)}`, "kind: skill", `description: ${JSON.stringify(step.reason)}`,
+      "uses: []", "details: []", `inputs: ${JSON.stringify([step.stage])}`, 'outputs: ["stage result"]',
+      `capabilities: ${JSON.stringify(step.capability ? [step.capability] : [])}`, "---", "",
+      `# ${step.skill}`, "", step.reason,
+    ].join("\n"), "utf-8");
+    written.push(skillReadme);
+  }
 
   const policySrc = resolve(ROOT, workflow.policy || "policies/workflow-policy.md");
   const policyDst = join(outDir, "policy.md");
@@ -430,7 +460,7 @@ export function buildHtml(workflow) {
   parts.push("<footer>");
   parts.push(`<p>schema_version ${workflow.schema_version || 1} · generated ${workflow.created_at || ""}</p>`);
   if (Object.keys(sh).length) {
-    parts.push("<p><strong>Drift guard.</strong> If these no longer match the registries, rebuild the workflow to refresh routing and skills:</p>");
+    parts.push("<p><strong>Drift guard.</strong> If these no longer match the authoritative sources, rebuild the workflow to refresh routing and skills:</p>");
     parts.push("<pre><code>" + escapeHtml(Object.entries(sh).map(([k, v]) => `${k}: ${v}`).join("\n")) + "</code></pre>");
     parts.push("<p>Rebuild locally to refresh routing and capabilities.</p>");
   }

@@ -6,6 +6,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { collectRoutingFacts, recommend } from "../src/router.js";
+import { folderHash } from "../src/paths.js";
 
 test("landing page match", () => {
   const r = recommend("build a landing page");
@@ -124,4 +125,13 @@ test("collectRoutingFacts reads branch, changed paths, and active plan", () => {
   assert.ok(facts.includes("branch: design-system-foundation"));
   assert.ok(facts.includes("changed: DesignPanel.tsx"));
   assert.ok(facts.includes("plan: Active Milestone: Frontend refactor"));
+});
+
+test("folderHash tracks authoritative README content", () => {
+  const root = mkdtempSync(join(tmpdir(), "dirf-hash-"));
+  mkdirSync(join(root, "demo"));
+  writeFileSync(join(root, "demo", "README.md"), "first\n");
+  const first = folderHash(root);
+  writeFileSync(join(root, "demo", "README.md"), "second\n");
+  assert.notEqual(folderHash(root), first);
 });

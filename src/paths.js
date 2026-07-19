@@ -2,7 +2,7 @@
 // All other modules import ROOT and the registry/policy paths from here so the
 // 'repo root' computation lives in exactly one place.
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -24,4 +24,13 @@ export function loadJson(path) {
 export function fileHash(path) {
   // First 16 hex chars of the SHA-256 of raw file bytes (drift guard).
   return createHash("sha256").update(readFileSync(path)).digest("hex").slice(0, 16);
+}
+
+export function folderHash(path) {
+  const hash = createHash("sha256");
+  for (const entry of readdirSync(path, { withFileTypes: true }).filter((entry) => entry.isDirectory()).sort((a, b) => a.name.localeCompare(b.name))) {
+    const relative = `${entry.name}/README.md`;
+    hash.update(relative).update("\0").update(readFileSync(join(path, relative))).update("\0");
+  }
+  return hash.digest("hex").slice(0, 16);
 }

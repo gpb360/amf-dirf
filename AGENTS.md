@@ -27,13 +27,12 @@ node src/cli.js validate        # validate registries + workflows
 
 ## Where things live
 
-- `registry/` — the source of truth: `agents.json` (agents + skill refs),
-  `skills.json` (named skill references — editable vocabulary), `playbooks.json`
-  (task templates + baseline skills).
+- `registry/` — agent and skill metadata plus the generated playbook compatibility export.
+- `playbooks/*/README.md` — the authoritative playbook source.
 - `agents/` — agent markdown definitions.
 - `policies/workflow-policy.md` — embedded in every generated instruction set.
 - `src/` — `cli.js` (entry), `router.js`, `skills.js`, `renderer.js`, `validate.js`, `paths.js`.
-- `workflows/user/` — generated workflow JSONs (committed).
+- `.dirf/attempts/` — disposable generated runs in each configured target (ignored).
 
 ## Conventions
 

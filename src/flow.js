@@ -70,14 +70,6 @@ function words(value) {
   return new Set(String(value || "").toLowerCase().replaceAll("-", " ").match(/[a-z0-9]{3,}/g)?.filter((word) => !STOP_WORDS.has(word)) || []);
 }
 
-function capabilityType(name, item) {
-  if (item.type) return item.type;
-  if (/\b(rtk|cli|tool)\b/i.test(name)) return "tool";
-  if (/\b(mem|memory|obsidian)\b/i.test(name)) return "memory";
-  if (/\b(beads?|tracker|linear)\b/i.test(name)) return "tracker";
-  return "skill";
-}
-
 function selectCapability(requirement, selection, context, skillIndex) {
   const capabilityWords = words(requirement.capability);
   const ranked = Object.entries(skillIndex).map(([name, item]) => {
@@ -98,7 +90,7 @@ function selectCapability(requirement, selection, context, skillIndex) {
     stage: requirement.stage,
     capability: requirement.capability || requirement.stage,
     skill: chosen.name,
-    type: capabilityType(chosen.name, chosen.item),
+    type: chosen.item.type || "skill",
     reason: requirement.reason,
     status: "installed",
     provider: chosen.item.provider || "project",

@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { mkdtempSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { resolveGraph } from "../src/folders.js";
 import { parseAgentMd, renderMarkdownLite, buildInstructions, buildHtml } from "../src/renderer.js";
 
 test("parseAgentMd splits frontmatter and governance block", () => {
@@ -66,6 +67,8 @@ test("buildInstructions writes router + per-agent detail", () => {
   assert.ok(!readme.includes("C:\\Users"));
   assert.ok(readme.includes("Definition of Done"));
   assert.ok(readme.includes("agents/frontend-developer.md"));
+  assert.match(readme, /uses: \["playbook"\]/);
+  assert.deepEqual(resolveGraph(outDir, { allowedRoots: [outDir] }).map((unit) => unit.meta.kind), ["skill", "playbook", "workflow"]);
   const detail = readFileSync(join(outDir, "agents", "frontend-developer.md"), "utf-8");
   assert.ok(detail.includes("# frontend-developer"));
   assert.ok(detail.includes("## Skills"));

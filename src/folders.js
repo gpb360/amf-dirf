@@ -1,6 +1,6 @@
 // Eve-style filesystem units: README source, ordered DAG composition, HTML view.
 import { existsSync, readFileSync, realpathSync, readdirSync } from "node:fs";
-import { dirname, isAbsolute, join, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 
 const KINDS = new Set(["skill", "tool", "playbook", "workflow"]);
 const ALLOWED_USES = {
@@ -45,8 +45,10 @@ export function loadUnit(folder) {
 }
 
 function inside(path, roots) {
-  const target = path.toLowerCase();
-  return roots.some((root) => target === root.toLowerCase() || target.startsWith(root.toLowerCase() + "\\") || target.startsWith(root.toLowerCase() + "/"));
+  return roots.some((root) => {
+    const rel = relative(root, path);
+    return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
+  });
 }
 
 export function resolveGraph(entryFolder, options = {}) {
@@ -67,11 +69,13 @@ export function resolveGraph(entryFolder, options = {}) {
     }
     for (const reference of unit.meta.uses) {
       const child = isAbsolute(reference) ? reference : resolve(canonical, reference);
-      const childUnit = loadUnit(child);
+      const canonicalChild = realpathSync(resolve(child));
+      if (!inside(canonicalChild, roots)) throw new Error(`reference escapes allowed roots: ${canonicalChild}`);
+      const childUnit = loadUnit(canonicalChild);
       if (!ALLOWED_USES[unit.meta.kind].has(childUnit.meta.kind)) {
         throw new Error(`${unit.meta.kind} ${unit.meta.name} cannot use ${childUnit.meta.kind} ${childUnit.meta.name}`);
       }
-      visit(child, [...chain, canonical]);
+      visit(canonicalChild, [...chain, canonical]);
     }
     visiting.delete(canonical);
     visited.add(canonical);

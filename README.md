@@ -96,7 +96,7 @@ dirf create <name> "<task>" [--path DIR]             route -> workflow JSON only
 dirf setup [path] [--tracker local] [--context single|multi]
 dirf render <name-or-id> [--path DIR] [--open]       render the latest matching attempt
 dirf list [--path DIR]                               list target attempts
-dirf migrate [<name-or-id>] [--path DIR]             refresh portable attempt snapshots
+dirf migrate [<name-or-id>] [--path DIR]             refresh schema 2–5 attempt snapshots
 dirf validate                                        validate registries + workflows
 dirf validate <folder>                               validate one folder DAG
 dirf graph <folder>                                  show deterministic execution order
@@ -107,7 +107,7 @@ dirf skills scan                                     scan host, show installed s
 
 Run `node src/cli.js` with no arguments for help.
 
-## Eve-style folder contract
+## Folder contract
 
 DIRF uses four separate filesystem units with one small README-frontmatter
 interface: `skills/`, `tools/`, `playbooks/`, and `workflows/`. Skills contain
@@ -115,10 +115,14 @@ bounded task directions; tools contain invocation and safety details; playbooks
 compose reusable work; workflows bind a concrete task. References form an
 ordered DAG, execute once, reject cycles, and lazy-load optional details.
 
-This keeps the portable advantages of Vercel Eve—filesystem-first definitions,
-bounded context, modular execution, approval before side effects, and traceable
-evidence—without importing a hosted runtime. Markdown is source, HTML is a
-generated human view, and the zero-dependency JavaScript CLI is the resolver.
+This provides filesystem-first definitions, bounded context, modular execution,
+approval before side effects, and traceable evidence. Markdown is source, HTML
+is a generated human view, and the zero-dependency JavaScript CLI is the resolver.
+
+The previous committed `workflows/user/*.json` files were generated snapshots,
+not authored workflows, and were removed. `dirf migrate` refreshes snapshots
+already stored under a configured target's `.dirf/attempts/`; it does not import
+the deleted legacy files.
 
 Generated attempts are host-neutral. Claude, Codex, another agent, or a person
 can execute the same README. Repository and installation paths are discovered

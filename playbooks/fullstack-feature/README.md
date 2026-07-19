@@ -3,7 +3,7 @@ name: fullstack-feature
 kind: playbook
 order: 3
 description: "Build a user-facing feature across UI, API, data, and tests."
-uses: []
+uses: ["../../skills/minimal-implementation"]
 details: []
 inputs: ["task"]
 outputs: ["workflow"]

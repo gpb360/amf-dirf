@@ -14,7 +14,7 @@ import { dirname, join, isAbsolute, resolve } from "node:path";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { ROOT, REGISTRY, SKILLS, PLAYBOOKS, POLICY, fileHash, loadJson } from "./paths.js";
+import { ROOT, REGISTRY, SKILLS, PLAYBOOKS, PLAYBOOK_DIR, POLICY, fileHash, folderHash, loadJson } from "./paths.js";
 import { collectRoutingFacts, loadPlaybooks, recommend } from "./router.js";
 import { discover, enrichDiscovered, loadRegistry, loadTrustedSources, providerForPath, resolveAgentSkills } from "./skills.js";
 import { buildInstructions, buildHtml } from "./renderer.js";
@@ -71,7 +71,7 @@ function buildPlan(name, task, path) {
     source_hashes: {
       agents_registry: fileHash(REGISTRY),
       skills: fileHash(SKILLS),
-      playbooks: fileHash(PLAYBOOKS),
+      playbooks: folderHash(PLAYBOOK_DIR),
       policy: fileHash(POLICY),
     },
     lifecycle: LIFECYCLE,

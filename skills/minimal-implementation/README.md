@@ -2,7 +2,7 @@
 name: minimal-implementation
 kind: skill
 description: "Choose the smallest correct implementation after understanding the task"
-uses: []
+uses: ["../../tools/rtk"]
 details: []
 inputs: ["task", "repository context"]
 outputs: ["small verified implementation"]

@@ -53,3 +53,11 @@ test("details are validated but remain outside the execution DAG", () => {
   writeFileSync(join(folder, "README-a.md"), "lazy detail");
   assert.equal(resolveGraph(folder, { allowedRoots: [root] }).length, 1);
 });
+
+test("uses cannot escape the allowed roots", () => {
+  const root = mkdtempSync(join(tmpdir(), "dirf-folders-"));
+  const outside = mkdtempSync(join(tmpdir(), "dirf-outside-"));
+  const external = unit(outside, "external", "skill");
+  const entry = unit(root, "entry", "workflow", [relative(join(root, "entry"), external)]);
+  assert.throws(() => resolveGraph(entry, { allowedRoots: [root] }), /reference escapes allowed roots/);
+});
