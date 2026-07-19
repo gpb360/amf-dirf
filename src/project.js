@@ -1,5 +1,6 @@
+import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync } from "node:fs";
-import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 
 const CONFIG_PATH = join(".dirf", "config.json");
 const ATTEMPT_IGNORE = ".dirf/attempts/";
@@ -155,4 +156,20 @@ export function findAttempt(root, nameOrId) {
   const matches = attempts.filter((attempt) => slug(attempt.name) === wanted);
   if (!matches.length) throw new Error(`No DIRF attempt named ${JSON.stringify(nameOrId)}`);
   return matches.at(-1);
+}
+
+export function repositoryIdentity(targetRoot) {
+  // Portable identity of the target repository for the kickoff prompt: folder
+  // name plus the git remote if one exists. Credentials embedded in the remote
+  // URL are stripped, and a remote that is itself a local filesystem path
+  // (file://, absolute, drive letter, or relative) is omitted entirely — the
+  // snapshot must never persist local paths.
+  if (!targetRoot) return null;
+  const identity = { name: basename(targetRoot) };
+  try {
+    const remote = execFileSync("git", ["-C", targetRoot, "remote", "get-url", "origin"], { encoding: "utf-8", windowsHide: true }).trim();
+    const isLocalPath = !remote || remote.startsWith("file://") || remote.startsWith(".") || isAbsolute(remote) || /^[A-Za-z]:[\\/]/.test(remote);
+    if (!isLocalPath) identity.remote = remote.replace(/^(\w+:\/\/)[^@\/]+@/, "$1");
+  } catch { /* not a git repo or no remote — the name still anchors the prompt */ }
+  return identity;
 }

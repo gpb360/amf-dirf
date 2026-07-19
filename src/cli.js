@@ -11,7 +11,7 @@
 //   dirf skills scan [--path DIR]                        scan host, print installed skills + resolved refs
 //   dirf validate|graph|run|render <folder>               operate an Eve-style folder DAG
 import { writeFileSync, readFileSync, existsSync } from "node:fs";
-import { basename, dirname, join, isAbsolute, resolve } from "node:path";
+import { dirname, join, isAbsolute, resolve } from "node:path";
 import { execFileSync, spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
@@ -23,7 +23,7 @@ import { main as validateMain } from "./validate.js";
 import { inspect } from "./inspect.js";
 import { buildFlow, findCapabilityGaps, reconcile } from "./flow.js";
 import { graphLines, renderFolderHtml, resolveGraph } from "./folders.js";
-import { createAttempt, findAttempt, listAttempts, loadProjectConfig, projectRoot, setupProject } from "./project.js";
+import { createAttempt, findAttempt, listAttempts, loadProjectConfig, projectRoot, repositoryIdentity, setupProject } from "./project.js";
 
 const LIFECYCLE = {
   clarify: "Use the best installed interview capability before implementation.",
@@ -41,19 +41,6 @@ function enrichAgents(agentNames) {
     const a = registry[name];
     return a || { name, file: `agents/${name}.md`, tags: [], skills: [], missing: true };
   });
-}
-
-function repositoryIdentity(targetRoot) {
-  // Portable identity of the target repository for the kickoff prompt: folder
-  // name plus the git remote if one exists. Never a local path, and any
-  // credentials embedded in the remote URL are stripped before persisting.
-  if (!targetRoot) return null;
-  const identity = { name: basename(targetRoot) };
-  try {
-    const remote = execFileSync("git", ["-C", targetRoot, "remote", "get-url", "origin"], { encoding: "utf-8", windowsHide: true }).trim();
-    if (remote) identity.remote = remote.replace(/^(\w+:\/\/)[^@\/]+@/, "$1");
-  } catch { /* not a git repo or no remote — the name still anchors the prompt */ }
-  return identity;
 }
 
 function buildPlan(name, task, path, reservePercent = 5) {
