@@ -1,20 +1,21 @@
-# amf-dirf — Agent Spec Kit (Do It Right First)
+# amf-dirf — AI Workflow Kit (Do It Right First)
 
 **AMF** = Agent Marketing Factory · **DIRF** = Do It Right First.
 
-A standalone, **zero-dependency Node.js** spec kit. Drop it into any repo; it maps
-that repo's **actual installed skills** to agents/playbooks and emits a lean,
-token-cheap instruction set — markdown for the AI, plus an HTML render for humans.
+A standalone, **zero-dependency Node.js** workflow kit. Drop it into any repo;
+DIRF maps that repo's **actual installed skills** to agents and playbooks, then
+creates a lean, resumable workflow — markdown for the AI, plus an HTML render
+for humans.
 
 > Requires Node.js ≥ 18.17. No `npm install` — uses only Node built-ins.
 
 ## Why
 
 AI agents drift. They lose track of which skills apply to their role, skip
-verification, bleed scope across agents, and forget the objective. This kit
-produces a structured instruction artifact engineered against those failure
-modes — and it does the skill→agent mapping **correctly** (curated data), not
-with a token-overlap heuristic that guesses wrong.
+verification, bleed scope across agents, and forget the objective. DIRF makes
+the workflow explicit: task routing, ordered phases, capability selection,
+validation, and a model-neutral handoff. A specification is one workflow
+artifact — it is not a requirement to use spec-driven development.
 
 ## Two governing principles
 
