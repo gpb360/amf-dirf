@@ -5,7 +5,7 @@ import { mkdtempSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { resolveGraph } from "../src/folders.js";
-import { parseAgentMd, renderMarkdownLite, buildInstructions, buildHtml } from "../src/renderer.js";
+import { parseAgentMd, renderMarkdownLite, buildInstructions, buildHtml, kickoffPrompt } from "../src/renderer.js";
 
 test("parseAgentMd splits frontmatter and governance block", () => {
   const dir = mkdtempSync(join(tmpdir(), "dirf-rend-"));
@@ -44,7 +44,36 @@ test("renderMarkdownLite strips html comments", () => {
   assert.ok(html.includes("visible"));
 });
 
+test("kickoff prompt is embedded in both renders and stays host-agnostic", () => {
+  const workflow = {
+    name: "demo", task: "review a pull request", playbook: "landing-page",
+    workflow: { phases: ["a", "b"], output: "a page", validation: "v", recovery: "r" },
+    agents: [{ name: "frontend-developer", file: "agents/frontend-developer.md", tags: [], skills: [] }],
+    baseline_skills: [],
+    skill_flow: { label: "persisted", branches: [], steps: [{ stage: "build", skill: "s", reason: "r", status: "recommended" }] },
+    policy: "policies/workflow-policy.md", schema_version: 2,
+  };
+  const prompt = kickoffPrompt(workflow);
+  assert.ok(prompt.includes('"demo" DIRF workflow'));
+  assert.ok(prompt.includes("review a pull request"));
+  assert.ok(prompt.includes("frontend-developer"));
+  assert.ok(prompt.includes("Begin with phase 1: a"));
+  assert.ok(!/codex|claude/i.test(prompt));
+  assert.ok(!prompt.includes("```"), "prompt must be safe inside a fenced block");
+
+  const outDir = mkdtempSync(join(tmpdir(), "dirf-kickoff-"));
+  const readme = (buildInstructions(workflow, outDir), readFileSync(join(outDir, "README.md"), "utf-8"));
+  assert.ok(readme.includes("## Kickoff prompt (copy into your model of choice)"));
+  assert.ok(readme.includes('"demo" DIRF workflow'));
+
+  const html = buildHtml(workflow);
+  assert.ok(html.includes("Kickoff prompt"));
+  assert.ok(html.includes("Copy prompt"));
+  assert.ok(html.includes('"demo" DIRF workflow'));
+});
+
 test("buildInstructions writes router + per-agent detail", () => {
+
   const outDir = mkdtempSync(join(tmpdir(), "dirf-instr-"));
   const workflow = {
     name: "demo", task: "review a pull request", playbook: "landing-page",

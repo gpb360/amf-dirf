@@ -15,6 +15,28 @@ function executionHandoff() {
   return "Open the target repository in your current host. Load this README.md as the operating workflow and execute the task.";
 }
 
+export function kickoffPrompt(workflow) {
+  // A self-contained prompt anyone can paste into the model of their choice to
+  // execute this instruction set — including chat models with no file access.
+  const wf = workflow.workflow || {};
+  const agents = (workflow.agents || []).map((a) => a.name).filter(Boolean);
+  const phases = wf.phases || [];
+  return [
+    `You are executing the "${workflow.name || workflow.playbook || "workflow"}" DIRF workflow.`,
+    "",
+    `Task: ${workflow.task || "(ask for the task before starting)"}`,
+    "",
+    "Operating rules:",
+    "1. The instruction set's README.md is the authoritative router; each agent role has a detail file under agents/. If you can read files, load ONLY the file for the role you are acting as. If you cannot, ask for it to be pasted before acting as that role.",
+    `2. Act as one agent at a time${agents.length ? ` (roster: ${agents.join(", ")})` : ""}. Respect each agent's NOT YOUR JOB boundary — hand off instead of expanding scope.`,
+    `3. Work the phases in order${phases.length ? `: ${phases.join(" -> ")}` : ""}. Do not start the next phase until the current one is verifiably done. Validation: ${wf.validation || "state your evidence"}.`,
+    `4. Done means: ${wf.output || "the task's outcome is verified"}. Report evidence, not claims.`,
+    "5. When your context is nearly exhausted, write a handoff note (completed work, decisions, changed files, validation, blockers, exact next action) and stop.",
+    "",
+    `Begin with phase 1${phases[0] ? `: ${phases[0]}` : ""}.`,
+  ].join("\n");
+}
+
 // --------------------------------------------------------------------------- //
 // Agent markdown parsing
 // --------------------------------------------------------------------------- //
@@ -184,6 +206,12 @@ export function buildInstructions(workflow, outDir) {
     "",
     "## Next step",
     executionHandoff(),
+    "",
+    "## Kickoff prompt (copy into your model of choice)",
+    "",
+    "```text",
+    kickoffPrompt(workflow),
+    "```",
     "",
     "## Context reserve",
     `Keep ${workflow.context_reserve_percent ?? 5}% of the model context available for handoff. When the host reports that reserve or less, update HANDOFF.md with completed work, decisions, changed files, validation, blockers, and the exact next action, then stop. If the host does not expose context usage, update HANDOFF.md after every completed phase.`,
@@ -385,6 +413,9 @@ export function buildHtml(workflow) {
 
   parts.push("<h2>Next step</h2>");
   parts.push(`<p>${escapeHtml(handoff)}</p>`);
+  parts.push("<h2>Kickoff prompt</h2>");
+  parts.push("<p class='mute'>Copy this into your model of choice to run the workflow. <button class='chip' onclick=\"navigator.clipboard.writeText(document.getElementById('kickoff').textContent).then(()=>{this.textContent='Copied ✓';})\">Copy prompt</button></p>");
+  parts.push(`<pre id='kickoff'>${escapeHtml(kickoffPrompt(workflow))}</pre>`);
   parts.push("<p class='mute'>Runtime paths stay local to the current execution. Keep worktrees beside the target repository or in the configured worktree root, and select scratch space inside that workspace.</p>");
 
   parts.push("<h2>Objective &amp; Definition of Done</h2>");
