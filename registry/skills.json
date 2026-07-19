@@ -21,7 +21,7 @@
     {
       "name": "code-review",
       "category": "quality",
-      "applies_to": ["test-writer-fixer", "security-auditor", "workflow-orchestrator"],
+      "applies_to": ["test-engineer", "security-auditor", "workflow-orchestrator"],
       "summary": "Independent review against repository standards and the requested specification",
       "capabilities": ["code review"]
     },
@@ -35,7 +35,7 @@
     {
       "name": "api-tester",
       "category": "testing",
-      "applies_to": ["api-tester", "backend-architect", "test-writer-fixer"],
+      "applies_to": ["api-tester", "backend-architect", "test-engineer"],
       "summary": "API contract, integration, failure-path, and regression testing",
       "capabilities": ["api testing"]
     },
