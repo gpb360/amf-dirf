@@ -32,8 +32,8 @@ export function validateSnapshot(data, label = "workflow") {
       errors.push(`${label}: ${where} must be a resolved skill object`);
       return;
     }
-    if (!new Set(["installed", "recommended"]).has(skill.status)) {
-      errors.push(`${label}: ${where} status must be installed or recommended`);
+    if (!new Set(["installed", "recommended", "fallback"]).has(skill.status)) {
+      errors.push(`${label}: ${where} status must be installed, recommended, or fallback`);
     } else if (data.schema_version < 4 && skill.status === "installed" && typeof skill.path !== "string") {
       errors.push(`${label}: ${where} installed skill must include path`);
     } else if (data.schema_version >= 4 && skill.status === "installed" && typeof skill.provider !== "string") {

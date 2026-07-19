@@ -97,7 +97,7 @@ export function recommend(task, facts, playbooks = loadPlaybooks()) {
     name !== FALLBACK_PLAYBOOK && matchedKeywords(taskText, playbook).length > 0,
   );
   if (!taskHasRoutingCue && facts && facts.length) haystack += " " + facts.join(" ").toLowerCase();
-  const affirmativeTaskText = taskText.replace(/\b(?:do not|don't|without)\s+(?:add|build|create|fix|implement)\b/g, "");
+  const affirmativeTaskText = taskText.replace(/\b(?:do not|don't|dont|without)\s+(?:add|build|create|fix|implement)\b/g, "");
   const isImplementation = IMPLEMENTATION_INTENT.test(affirmativeTaskText);
   const isExplicitSecurityAudit = EXPLICIT_SECURITY_AUDIT.test(taskText);
   if (isImplementation) haystack += " feature";

@@ -232,7 +232,7 @@ test("schema v2 requires resolved skill snapshots", () => {
   assert.deepEqual(validateSnapshot(snapshot, "demo.json"), [
     "demo.json: baseline skill 1 must be a resolved skill object",
     "demo.json: agent 1 skill 1 must be a resolved skill object",
-    "demo.json: skill_flow step 1 status must be installed or recommended",
+    "demo.json: skill_flow step 1 status must be installed, recommended, or fallback",
   ]);
 });
 

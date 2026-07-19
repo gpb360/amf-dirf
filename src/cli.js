@@ -108,7 +108,7 @@ function assembleTaskRouting(task, path) {
   const playbooks = loadPlaybooks();
   const errors = reconcile(playbooks);
   if (errors.length) throw new Error(`Task Routing reconciliation failed:\n${errors.map((error) => `  - ${error}`).join("\n")}`);
-  const targetRoot = path ? (isAbsolute(path) ? path : resolve(ROOT, path)) : null;
+  const targetRoot = path ? (isAbsolute(path) ? path : resolve(process.cwd(), path)) : null;
   const facts = collectRoutingFacts(targetRoot);
   const selection = recommend(task, facts, playbooks);
   const discovered = enrichDiscovered(discover(targetRoot));
@@ -206,7 +206,10 @@ function cmdMigrate(name, target) {
   let migrated = 0;
   for (const { attempt, path } of snapshots) {
     try {
-      const plan = portablePlan(JSON.parse(readFileSync(path, "utf-8")));
+      const parsed = JSON.parse(readFileSync(path, "utf-8"));
+      parsed.attempt ??= { id: attempt.id, path: attempt.relativePath };
+      parsed.lifecycle ??= LIFECYCLE;
+      const plan = portablePlan(parsed);
       writeFileSync(path, JSON.stringify(plan, null, 2), "utf-8");
       if (existsSync(join(dirname(path), "README.md"))) renderPlan(path);
       migrated += 1;
@@ -264,8 +267,8 @@ function cmdFolderRender(target) {
 }
 
 function cmdSkillsScan(args) {
-  const projectRoot = args.path ? (isAbsolute(args.path) ? args.path : resolve(ROOT, args.path)) : null;
-  const idx = discover(projectRoot);
+  const scanRoot = args.path ? (isAbsolute(args.path) ? args.path : resolve(process.cwd(), args.path)) : null;
+  const idx = discover(scanRoot);
   console.log(`Discovered ${Object.keys(idx).length} installed skills across scanned roots.`);
   console.log("\nRegistry references resolved:");
   for (const ref of loadRegistry().skills || []) {

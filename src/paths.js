@@ -26,7 +26,14 @@ export function folderHash(path) {
   const hash = createHash("sha256");
   for (const entry of readdirSync(path, { withFileTypes: true }).filter((entry) => entry.isDirectory()).sort((a, b) => a.name.localeCompare(b.name))) {
     const relative = `${entry.name}/README.md`;
-    hash.update(relative).update("\0").update(readFileSync(join(path, relative))).update("\0");
+    let content;
+    try {
+      content = readFileSync(join(path, relative));
+    } catch (error) {
+      if (error.code === "ENOENT") continue;
+      throw error;
+    }
+    hash.update(relative).update("\0").update(content).update("\0");
   }
   return hash.digest("hex").slice(0, 16);
 }
