@@ -2,6 +2,8 @@
 
 **AMF** = Agent Marketing Factory · **DIRF** = Do It Right First.
 
+**Build agnostic workflows for AI-assisted work.**
+
 A standalone, **zero-dependency Node.js** workflow kit. Drop it into any repo;
 DIRF maps that repo's **actual installed skills** to agents and playbooks, then
 creates a lean, resumable workflow — markdown for the AI, plus an HTML render
