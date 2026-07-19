@@ -159,10 +159,10 @@ export function buildFlow(selection, context = {}, skillIndex = {}) {
   };
 }
 
-export function findCapabilityGaps(playbooks, skillIndex) {
+export function findCapabilityGaps(playbooks, skillIndex, context = {}) {
   const gaps = new Map();
   for (const [name, playbook] of Object.entries(playbooks || {})) {
-    const flow = buildFlow({ playbook: name, agents: playbook.agents, skill_flow: playbook.skill_flow }, { task: playbook.description }, skillIndex);
+    const flow = buildFlow({ playbook: name, agents: playbook.agents, skill_flow: playbook.skill_flow }, { ...context, task: playbook.description }, skillIndex);
     for (const gap of flow.gaps) gaps.set(gap.capability, gap);
   }
   return [...gaps.values()].sort((a, b) => a.capability.localeCompare(b.capability));

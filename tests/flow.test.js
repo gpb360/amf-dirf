@@ -124,7 +124,7 @@ test("single-word capabilities do not match a passing description mention", () =
   };
   // "test" appears only in the description — not in the skill's identity —
   // so this must stay a gap rather than a misleading match.
-  const flow = buildFlow(selection, {}, {
+  const flow = buildFlow(selection, { bundledIndex: {} }, {
     "skill-creator": { path: "/s", description: "create skills and run evals to test them", provider: "project" },
   });
   assert.deepEqual(flow.steps, []);
@@ -158,7 +158,7 @@ test("buildFlow rejects incidental one-word overlap", () => {
     playbook: "triage", agents: [],
     skill_flow: { label: "review", steps: [{ stage: "review", capability: "code review", reason: "Review independently" }] },
   };
-  const flow = buildFlow(selection, {}, { formatter: { description: "formats code", provider: "project" } });
+  const flow = buildFlow(selection, { bundledIndex: {} }, { formatter: { description: "formats code", provider: "project" } });
   assert.deepEqual(flow.steps, []);
   assert.equal(flow.gaps[0].capability, "code review");
 });
@@ -212,7 +212,7 @@ test("findCapabilityGaps reports unresolved configured requirements once", () =>
     two: { description: "two", agents: [], skill_flow: { label: "two", steps: [{ stage: "verify", capability: "testing", reason: "verify" }, { stage: "review", capability: "code review", reason: "review" }] } },
   };
 
-  assert.deepEqual(findCapabilityGaps(playbooks, { tdd: { description: "testing", capabilities: ["testing"] } }).map((gap) => gap.capability), ["code review"]);
+  assert.deepEqual(findCapabilityGaps(playbooks, { tdd: { description: "testing", capabilities: ["testing"] } }, { bundledIndex: {} }).map((gap) => gap.capability), ["code review"]);
 });
 
 test("schema v2 requires resolved skill snapshots", () => {
