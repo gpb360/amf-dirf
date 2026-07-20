@@ -10,6 +10,33 @@ the host, assigns bounded roles, and leaves behind a human-readable workflow.
 
 > Requires Node.js ≥ 18.17. Zero dependencies. No `npm install`.
 
+## Zero to running — paste this into your AI
+
+No manual install needed. Copy this prompt into your model of choice and it
+will clone DIRF, set it up against your project, build your first workflow,
+and execute it:
+
+```text
+Set up and run DIRF (Do It Right First), an agent workflow kit, against my project.
+
+1. Clone https://github.com/gpb360/amf-dirf.git into a sibling folder of my
+   project. It needs Node.js >= 18.17 and nothing else — zero dependencies,
+   do not run npm install.
+2. Ask me two things before touching anything: the path to my project, and my
+   task in one sentence.
+3. Run: node <dirf>/src/cli.js setup <my project>
+4. Run: node <dirf>/src/cli.js build <short-name> "<my task>" --path <my project>
+5. The build prints an attempt folder (<my project>/.dirf/attempts/<id>/).
+   Open its README.md and follow it as your operating workflow: act as one
+   agent role at a time, work the phases in order, and do not advance a phase
+   until it is verifiably done.
+6. If any command fails, stop and show me the exact command and its output
+   instead of improvising around it.
+```
+
+Every generated workflow also embeds its own kickoff prompt, so you can hand
+individual workflows to any model later without repeating these steps.
+
 ## What DIRF helps with
 
 - **Wrong skills:** resolves capabilities from the current repo and host instead

@@ -4,7 +4,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createAttempt, findAttempt, listAttempts, loadProjectConfig, setupProject } from "../src/project.js";
+import { createAttempt, findAttempt, listAttempts, loadProjectConfig, repositoryIdentity, setupProject } from "../src/project.js";
 
 function project() {
   return mkdtempSync(join(tmpdir(), "dirf-project-"));
@@ -117,4 +117,26 @@ test("Git sees setup docs but ignores attempts and renders", () => {
 
 test("attempt creation fails before setup", () => {
   assert.throws(() => createAttempt(project(), "demo"), /dirf setup/);
+});
+
+test("repositoryIdentity strips credentials and never persists local paths", () => {
+  const root = project();
+  // no git repo: folder name only, still an anchor
+  assert.deepEqual(repositoryIdentity(root), { name: root.split(/[\\/]/).pop() });
+  assert.equal(repositoryIdentity(null), null);
+
+  execFileSync("git", ["init", "-q"], { cwd: root, timeout: TIMEOUT_MS });
+  execFileSync("git", ["remote", "add", "origin", "https://user:token@example.test/org/repo.git"], { cwd: root, timeout: TIMEOUT_MS });
+  assert.equal(repositoryIdentity(root).remote, "https://example.test/org/repo.git", "credentials must be stripped");
+
+  for (const local of ["/somewhere/private/repo", "file:///somewhere/private/repo", "../sibling/repo", "sibling/repo.git", "C:\\repos\\private", "..\\sibling\\repo"]) {
+    execFileSync("git", ["remote", "set-url", "origin", local], { cwd: root, timeout: TIMEOUT_MS });
+    assert.equal(repositoryIdentity(root).remote, undefined, `local remote ${local} must not persist`);
+  }
+
+  // genuinely remote shapes survive: scheme URLs (userinfo stripped) and scp-like host paths
+  execFileSync("git", ["remote", "set-url", "origin", "ssh://git@example.test/org/repo.git"], { cwd: root, timeout: TIMEOUT_MS });
+  assert.equal(repositoryIdentity(root).remote, "ssh://example.test/org/repo.git", "ssh URL must persist with userinfo stripped");
+  execFileSync("git", ["remote", "set-url", "origin", "git@example.test:org/repo.git"], { cwd: root, timeout: TIMEOUT_MS });
+  assert.equal(repositoryIdentity(root).remote, "git@example.test:org/repo.git", "scp-like remote must persist");
 });

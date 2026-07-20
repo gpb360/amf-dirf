@@ -12,7 +12,7 @@
 //   dirf validate|graph|run|render <folder>               operate an Eve-style folder DAG
 import { writeFileSync, readFileSync, existsSync } from "node:fs";
 import { dirname, join, isAbsolute, resolve } from "node:path";
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { ROOT, REGISTRY, SKILLS, PLAYBOOKS, PLAYBOOK_DIR, POLICY, fileHash, folderHash, loadJson } from "./paths.js";
@@ -23,7 +23,7 @@ import { main as validateMain } from "./validate.js";
 import { inspect } from "./inspect.js";
 import { buildFlow, findCapabilityGaps, reconcile } from "./flow.js";
 import { graphLines, renderFolderHtml, resolveGraph } from "./folders.js";
-import { createAttempt, findAttempt, listAttempts, loadProjectConfig, projectRoot, setupProject } from "./project.js";
+import { createAttempt, findAttempt, listAttempts, loadProjectConfig, projectRoot, repositoryIdentity, setupProject } from "./project.js";
 
 const LIFECYCLE = {
   clarify: "Use the best installed interview capability before implementation.",
@@ -59,6 +59,7 @@ function buildPlan(name, task, path, reservePercent = 5) {
     score: selection.score,
     matched_keywords: selection.matched_keywords,
     alternates: selection.alternates,
+    repository: repositoryIdentity(path),
     workflow: selection.workflow,
     routing_facts: facts,
     skill_flow: skillFlow,
