@@ -129,8 +129,14 @@ test("repositoryIdentity strips credentials and never persists local paths", () 
   execFileSync("git", ["remote", "add", "origin", "https://user:token@example.test/org/repo.git"], { cwd: root, timeout: TIMEOUT_MS });
   assert.equal(repositoryIdentity(root).remote, "https://example.test/org/repo.git", "credentials must be stripped");
 
-  for (const local of ["/somewhere/private/repo", "file:///somewhere/private/repo", "../sibling/repo"]) {
+  for (const local of ["/somewhere/private/repo", "file:///somewhere/private/repo", "../sibling/repo", "sibling/repo.git", "C:\\repos\\private", "..\\sibling\\repo"]) {
     execFileSync("git", ["remote", "set-url", "origin", local], { cwd: root, timeout: TIMEOUT_MS });
     assert.equal(repositoryIdentity(root).remote, undefined, `local remote ${local} must not persist`);
   }
+
+  // genuinely remote shapes survive: scheme URLs (userinfo stripped) and scp-like host paths
+  execFileSync("git", ["remote", "set-url", "origin", "ssh://git@example.test/org/repo.git"], { cwd: root, timeout: TIMEOUT_MS });
+  assert.equal(repositoryIdentity(root).remote, "ssh://example.test/org/repo.git", "ssh URL must persist with userinfo stripped");
+  execFileSync("git", ["remote", "set-url", "origin", "git@example.test:org/repo.git"], { cwd: root, timeout: TIMEOUT_MS });
+  assert.equal(repositoryIdentity(root).remote, "git@example.test:org/repo.git", "scp-like remote must persist");
 });

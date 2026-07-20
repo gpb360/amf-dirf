@@ -161,15 +161,16 @@ export function findAttempt(root, nameOrId) {
 export function repositoryIdentity(targetRoot) {
   // Portable identity of the target repository for the kickoff prompt: folder
   // name plus the git remote if one exists. Credentials embedded in the remote
-  // URL are stripped, and a remote that is itself a local filesystem path
-  // (file://, absolute, drive letter, or relative) is omitted entirely — the
-  // snapshot must never persist local paths.
+  // URL are stripped. Only remotes with a genuinely remote shape are kept — a
+  // non-file:// URL scheme or an scp-like user@host:path — because anything
+  // else (absolute, relative like "sibling/repo.git", drive letter, file://)
+  // is a local path and the snapshot must never persist local paths.
   if (!targetRoot) return null;
   const identity = { name: basename(targetRoot) };
   try {
     const remote = execFileSync("git", ["-C", targetRoot, "remote", "get-url", "origin"], { encoding: "utf-8", windowsHide: true }).trim();
-    const isLocalPath = !remote || remote.startsWith("file://") || remote.startsWith(".") || isAbsolute(remote) || /^[A-Za-z]:[\\/]/.test(remote);
-    if (!isLocalPath) identity.remote = remote.replace(/^(\w+:\/\/)[^@\/]+@/, "$1");
+    const isRemoteUrl = /^(?!file:)[a-z][\w+.-]*:\/\//i.test(remote) || /^[\w.-]+@[\w.-]+:/.test(remote);
+    if (isRemoteUrl) identity.remote = remote.replace(/^(\w+:\/\/)[^@/]+@/, "$1");
   } catch { /* not a git repo or no remote — the name still anchors the prompt */ }
   return identity;
 }
