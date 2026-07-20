@@ -9,10 +9,14 @@ import { fileURLToPath } from "node:url";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const CLI = join(ROOT, "src", "cli.js");
 const TARGET = mkdtempSync(join(tmpdir(), "dirf-smoke-"));
+// Point home at an empty temp dir so whatever agents/skills happen to be
+// installed on the dev machine can't leak into the assertions.
+const FAKE_HOME = mkdtempSync(join(tmpdir(), "dirf-smoke-home-"));
+const ENV = { ...process.env, HOME: FAKE_HOME, USERPROFILE: FAKE_HOME };
 const TIMEOUT_MS = 30_000;
 
 function run(args, expectFail = false) {
-  const res = spawnSync(process.execPath, [CLI, ...args], { cwd: ROOT, encoding: "utf-8", timeout: TIMEOUT_MS });
+  const res = spawnSync(process.execPath, [CLI, ...args], { cwd: ROOT, encoding: "utf-8", timeout: TIMEOUT_MS, env: ENV });
   const failed = res.status !== 0;
   if (expectFail && !failed) throw new Error(`expected failure but succeeded: ${args.join(" ")}\n${res.stdout}`);
   if (!expectFail && failed) throw new Error(`expected success but failed: ${args.join(" ")}\n${res.error?.message || res.stderr || res.stdout}`);
@@ -60,6 +64,8 @@ try {
   const readmeText = readFileSync(readme, "utf8");
   for (const text of ["Definition of Done", "Agent roster", "Capabilities", "Idea to ship"]) assertContains(readmeText, text);
   if (/codex|claude/i.test(readmeText)) throw new Error("host-specific agent leaked into operating instructions");
+  assertContains(readmeText, "bundled default");
+  assertContains(readmeText, "No installed agents were found on this host");
 
   const snapshotText = readFileSync(wfJson, "utf8");
   const snapshot = JSON.parse(snapshotText);

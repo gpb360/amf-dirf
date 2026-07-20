@@ -34,7 +34,10 @@ export function kickoffPrompt(workflow) {
     "",
     "Operating rules:",
     "1. The instruction set's README.md is the authoritative router; each agent role has a detail file under agents/. If you can read files, load ONLY the file for the role you are acting as. If you cannot, ask for it to be pasted before acting as that role.",
-    `2. Act as one agent at a time${agents.length ? ` (roster: ${agents.join(", ")})` : ""}. Respect each agent's NOT YOUR JOB boundary — hand off instead of expanding scope.`,
+    `2. Act as one agent at a time${agents.length ? ` (roster: ${agents.join(", ")})` : ""}. Respect each agent's NOT YOUR JOB boundary — hand off instead of expanding scope.${
+      (workflow.agents || []).some((a) => a.status === "fallback")
+        ? " Roles marked as bundled defaults in the roster had no installed agent on this host — confirm with the user before acting as them."
+        : ""}`,
     `3. Work the phases in order${phases.length ? `: ${phases.join(" -> ")}` : ""}. Do not start the next phase until the current one is verifiably done. Validation: ${wf.validation || "state your evidence"}.`,
     `4. Done means: ${wf.output || "the task's outcome is verified"}. Report evidence, not claims.`,
     "5. When your context is nearly exhausted, write a handoff note (completed work, decisions, changed files, validation, blockers, exact next action) and stop.",
@@ -239,6 +242,10 @@ export function buildInstructions(workflow, outDir) {
     lines.push("", "## Idea to ship", "");
     for (const [stage, guidance] of Object.entries(workflow.lifecycle)) lines.push(`- **${stage}:** ${guidance}`);
   }
+  if (workflow.questions?.length) {
+    lines.push("", "## Open questions (settle with the user before starting)", "");
+    for (const q of workflow.questions) lines.push(`- ${q}`);
+  }
   lines.push(
     "",
     `> Do not start the next phase until the current one is verifiably done. Validation: ${wf.validation || "_(none declared)_"}`,
@@ -246,9 +253,21 @@ export function buildInstructions(workflow, outDir) {
     "## Agent roster (load a detail file only when you act as that agent)",
     "",
   );
+  const fallbackRoles = agents.filter((a) => a.status === "fallback");
+  if (fallbackRoles.length) {
+    lines.push(
+      fallbackRoles.length === agents.length
+        ? "> ⚠️ No installed agents were found on this host, so every role below uses a DIRF bundled default. Confirm with the user before acting as them, or swap in the user's own agents."
+        : "> ⚠️ Roles marked *bundled default* had no matching installed agent on this host. Confirm with the user before acting as them, or swap in the user's own agents.",
+      "",
+    );
+  }
   for (const a of agents) {
     const slug = a.name || "agent";
-    lines.push(`- [${slug}](agents/${slug}.md) — ${(a.tags || []).join(", ")}`);
+    const origin = a.status === "installed"
+      ? ` — installed agent \`${a.matched || slug}\``
+      : a.status === "fallback" ? " — *bundled default*" : "";
+    lines.push(`- [${slug}](agents/${slug}.md) — ${(a.tags || []).join(", ")}${origin}`);
   }
   lines.push(
     "",
@@ -337,7 +356,9 @@ function writeAgentDetail(agentRef, agentsSub) {
 
   const lines = [`# ${name}`, ""];
   if (tags.length) lines.push(`**Tags:** ${tags.join(", ")}`, "");
-  if (fm.tools) lines.push(`**Tools:** ${fm.tools}`, "");
+  // The bundled definition's tool list belongs to the fallback agent only —
+  // for installed roles the host agent's own definition governs.
+  if (fm.tools && agentRef.status !== "installed") lines.push(`**Tools:** ${fm.tools}`, "");
 
   lines.push("## Skills", "");
   lines.push("You can discover and invoke any installed skill (the host provides global skill lookup). These are relevance hints for your role — a starting point, not a limit:");
@@ -352,7 +373,21 @@ function writeAgentDetail(agentRef, agentsSub) {
   } else {
     lines.push("_(no role-specific hints — use global skill discovery as needed)_");
   }
-  lines.push("", "## Your job", "", parsed.body.trim() || "_(empty)_", "");
+  if (agentRef.status === "installed") {
+    // The host has its own agent for this role — point at it instead of
+    // shipping the kit's bundled definition as if it were the user's.
+    lines.push(
+      "", "## Your job", "",
+      `This role is filled by the installed agent \`${agentRef.matched || name}\`. Load its definition from the host's agent setup and act as it.`,
+      ...(agentRef.matched_description ? ["", `> ${agentRef.matched_description}`] : []),
+      "",
+    );
+  } else {
+    if (agentRef.status === "fallback") {
+      lines.push("", "> ⚠️ DIRF bundled default — no matching agent was installed on this host. Confirm with the user before acting as this agent, or swap in their own.");
+    }
+    lines.push("", "## Your job", "", parsed.body.trim() || "_(empty)_", "");
+  }
 
   lines.push(
     "## Not your job",
@@ -440,6 +475,12 @@ export function buildHtml(workflow) {
     parts.push("</ul>");
   }
 
+  if (workflow.questions?.length) {
+    parts.push("<h2>Open questions</h2><p class='mute'>Settle these with the user before starting.</p><ul>");
+    for (const q of workflow.questions) parts.push(`<li>${escapeHtml(q)}</li>`);
+    parts.push("</ul>");
+  }
+
   if (workflow.skill_flow.gaps?.length) {
     parts.push("<h2>Capability gaps</h2><ul>");
     for (const gap of workflow.skill_flow.gaps) parts.push(`<li><strong>${escapeHtml(gap.stage)}:</strong> ${escapeHtml(gap.question)}</li>`);
@@ -462,6 +503,9 @@ export function buildHtml(workflow) {
 
   parts.push("<h2>Agent roster</h2>");
   parts.push("<p class='mute'>Click an agent to expand its detail, skills, and boundary.</p>");
+  if (agents.some((a) => a.status === "fallback")) {
+    parts.push("<p>⚠️ Roles marked <em>bundled default</em> had no matching installed agent on this host. DIRF uses its bundled definitions only as a backup — confirm before running them, or swap in your own agents.</p>");
+  }
   for (const a of agents) {
     const name = a.name || "agent";
     let parsed;
@@ -472,15 +516,23 @@ export function buildHtml(workflow) {
     }
     const resolved = a.skills || [];
     const tags = (a.tags || []).join(", ");
+    const origin = a.status === "installed"
+      ? ` <span class='chip installed'>installed: ${escapeHtml(a.matched || name)}</span>`
+      : a.status === "fallback" ? " <span class='chip recommended'>bundled default</span>" : "";
     parts.push("<details><summary>");
-    parts.push(`${escapeHtml(name)} <span class='mute'>— ${escapeHtml(tags)}</span>`);
+    parts.push(`${escapeHtml(name)} <span class='mute'>— ${escapeHtml(tags)}</span>${origin}`);
     parts.push("</summary>");
     parts.push("<h3>Skills</h3>");
     parts.push("<p class='mute'>Global skill discovery is available — these are relevance hints for this role, not a limit.</p><p>");
     parts.push(resolved.length ? resolved.map(chip).join("") : "<span class='mute'>no role-specific hints — use global discovery</span>");
     parts.push("</p>");
     parts.push("<h3>Your job</h3>");
-    parts.push(renderMarkdownLite(parsed.body));
+    if (a.status === "installed") {
+      parts.push(`<p>This role is filled by the installed agent <code>${escapeHtml(a.matched || name)}</code>. Load its definition from the host's agent setup.</p>`);
+      if (a.matched_description) parts.push(`<p class='mute'>${escapeHtml(a.matched_description)}</p>`);
+    } else {
+      parts.push(renderMarkdownLite(parsed.body));
+    }
     parts.push("<h3>Not your job</h3><p>Hand off to the matching agent rather than expanding scope.</p>");
     parts.push("</details>");
   }

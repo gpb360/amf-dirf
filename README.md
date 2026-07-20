@@ -210,6 +210,17 @@ plugin cache) are still found.
 local skill folders in addition to the global roots, so the instruction set
 reflects the target project's skills (e.g. a repo's own `.agents/skills/`).
 
+### Agents follow the same contract
+
+DIRF also discovers the **agents** installed on the host (`~/.agents/agents/`,
+`~/.codex/agents/`, `~/.claude/agents/`, plus project-local equivalents and a
+project `agents/` folder). Playbook roles are cast against that index — exact
+name match first, then name/tag overlap. The 21 agent definitions bundled in
+this repo's `agents/` folder are **defaults of last resort**: they fill a role
+only when no installed agent matches, the role is labeled `bundled default` in
+the roster, and when a host has no agents at all the workflow opens with an
+explicit question asking whether to use them. Your own agents always win.
+
 ## Making it yours
 
 - **Add an agent**: drop a markdown file in `agents/` (frontmatter: `name`,
@@ -233,7 +244,7 @@ playbooks/       authoritative reusable playbook folders
 skills/          bounded task-oriented skill folders
 tools/           isolated tool invocation folders
 registry/        agents, skill metadata, and legacy compatibility JSON
-agents/          agent markdown definitions (21 curated)
+agents/          bundled default agents (fallback-only — installed host agents always win)
 policies/        workflow-policy.md (embedded in every instruction set)
 tests/           <domain>.test.js files using node:test
 scripts/         smoke.js integration check

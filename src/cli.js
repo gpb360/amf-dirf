@@ -17,7 +17,7 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { ROOT, REGISTRY, SKILLS, PLAYBOOKS, PLAYBOOK_DIR, POLICY, fileHash, folderHash, loadJson } from "./paths.js";
 import { collectRoutingFacts, loadPlaybooks, recommend } from "./router.js";
-import { discover, enrichDiscovered, loadRegistry, loadTrustedSources, providerForPath, resolveAgentSkills } from "./skills.js";
+import { discover, discoverAgents, enrichDiscovered, loadRegistry, loadTrustedSources, providerForPath, resolveAgentSkills } from "./skills.js";
 import { buildInstructions, buildHtml } from "./renderer.js";
 import { main as validateMain } from "./validate.js";
 import { inspect } from "./inspect.js";
@@ -43,12 +43,68 @@ function enrichAgents(agentNames) {
   });
 }
 
+// Two-letter words are kept because this domain leans on them (ui, ux, ai, qa,
+// db) — only genuine English filler is dropped.
+const SHORT_FILLER = new Set(["a", "an", "as", "at", "by", "do", "go", "if", "in", "is", "it", "my", "no", "of", "on", "or", "so", "to", "up", "we"]);
+
+function identityTokens(text) {
+  return String(text || "").toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length >= 2 && !SHORT_FILLER.has(w));
+}
+
+function castAgents(agents, hostAgents) {
+  // Cast each playbook role against agents actually installed on the host —
+  // same agnostic contract as skills. Exact name match wins; otherwise a host
+  // agent qualifies only when EVERY token of the role's name appears in its
+  // name + description (precision over recall: a wrong cast silently misroutes
+  // work, while a fallback is labeled and user-confirmable). Among qualifying
+  // hosts, the widest overlap with the role's tags wins; ties break by name.
+  // No match -> the kit's bundled default fills the role, labeled "fallback"
+  // so it is never passed off as the user's own agent.
+  const hosts = Object.values(hostAgents);
+  return agents.map((agent) => {
+    const exact = hostAgents[agent.name];
+    let matched = exact || null;
+    let score = 0;
+    if (!matched) {
+      const nameTokens = identityTokens(agent.name);
+      const tagTokens = new Set((agent.tags || []).flatMap((tag) => identityTokens(tag)));
+      for (const host of hosts) {
+        const hostText = new Set(identityTokens(`${host.name} ${host.description}`));
+        if (!nameTokens.length || !nameTokens.every((w) => hostText.has(w))) continue;
+        const overlap = nameTokens.length + [...tagTokens].filter((w) => hostText.has(w)).length;
+        if (overlap > score || (overlap === score && matched && host.name < matched.name)) {
+          matched = host;
+          score = overlap;
+        }
+      }
+    }
+    if (matched) return {
+      ...agent,
+      status: "installed",
+      matched: matched.name,
+      matched_description: matched.description || "",
+      provider: matched.provider,
+      source_path: matched.path,
+      selection_reason: exact ? "installed agent with the same name" : `installed agent "${matched.name}" overlaps this role (${score})`,
+    };
+    return {
+      ...agent,
+      status: "fallback",
+      selection_reason: "DIRF bundled default — no matching agent installed on this host",
+    };
+  });
+}
+
 function buildPlan(name, task, path, reservePercent = 5) {
-  const { selection, skillFlow, discovered, facts } = assembleTaskRouting(task, path);
-  const agents = enrichAgents(selection.agents).map((agent) => ({
+  const { selection, skillFlow, discovered, hostAgents, facts } = assembleTaskRouting(task, path);
+  const agents = castAgents(enrichAgents(selection.agents), hostAgents).map((agent) => ({
     ...agent,
     skills: resolveAgentSkills(agent.name, agent.skills, [], discovered).filter((skill) => skill.status === "installed"),
   }));
+  const questions = [...(selection.questions || [])];
+  if (agents.length && !Object.keys(hostAgents).length) {
+    questions.unshift("No installed agents were found on this host. Use DIRF's bundled default agents for this workflow, or point DIRF at your own agents folder and re-run?");
+  }
   const now = new Date().toISOString();
   return {
     schema_version: 5,
@@ -66,7 +122,7 @@ function buildPlan(name, task, path, reservePercent = 5) {
     capability_gaps: skillFlow.gaps,
     agents,
     baseline_skills: [],
-    questions: selection.questions,
+    questions,
     policy: "policies/workflow-policy.md",
     state: { status: "created", starts: 0 },
     created_at: now,
@@ -95,7 +151,11 @@ function portablePlan(plan) {
   out.schema_version = 5;
   delete out.path;
   out.baseline_skills = (out.baseline_skills || []).map(portableReference);
-  out.agents = (out.agents || []).map((agent) => ({ ...agent, skills: (agent.skills || []).map(portableReference) }));
+  out.agents = (out.agents || []).map((agent) => {
+    const portable = { ...agent, skills: (agent.skills || []).map(portableReference) };
+    delete portable.source_path;
+    return portable;
+  });
   out.skill_flow.steps = (out.skill_flow.steps || []).map(portableReference);
   out.skill_flow.gaps = (out.skill_flow.gaps || []).map((gap) => ({
     ...gap,
@@ -113,8 +173,9 @@ function assembleTaskRouting(task, path) {
   const facts = collectRoutingFacts(targetRoot);
   const selection = recommend(task, facts, playbooks);
   const discovered = enrichDiscovered(discover(targetRoot));
+  const hostAgents = discoverAgents(targetRoot);
   const trustedSources = loadTrustedSources(targetRoot);
-  return { selection, discovered, facts, skillFlow: buildFlow(selection, { task, trustedSources }, discovered) };
+  return { selection, discovered, hostAgents, facts, skillFlow: buildFlow(selection, { task, trustedSources }, discovered) };
 }
 
 function savePlan(plan, attempt) {
@@ -169,6 +230,15 @@ function cmdCreate(args) {
   savePlan(plan, attempt);
   console.log(`Attempt saved: ${attempt.id}`);
   console.log(`Routed to playbook: ${plan.playbook} (score ${plan.score})`);
+  const installed = (plan.agents || []).filter((agent) => agent.status === "installed");
+  const fallback = (plan.agents || []).filter((agent) => agent.status === "fallback");
+  if (installed.length) console.log(`Agents (installed): ${installed.map((agent) => agent.matched || agent.name).join(", ")}`);
+  if (fallback.length) {
+    console.log(`Agents (bundled defaults — no installed match for these roles): ${fallback.map((agent) => agent.name).join(", ")}`);
+    if ((plan.questions || []).some((q) => q.startsWith("No installed agents were found"))) {
+      console.log("No agents found on this host. DIRF will offer its bundled defaults as a backup — see the questions in the rendered workflow.");
+    }
+  }
 }
 
 function cmdRender(args) {
@@ -271,6 +341,9 @@ function cmdSkillsScan(args) {
   const scanRoot = args.path ? (isAbsolute(args.path) ? args.path : resolve(process.cwd(), args.path)) : null;
   const idx = discover(scanRoot);
   console.log(`Discovered ${Object.keys(idx).length} installed skills across scanned roots.`);
+  const agentIdx = discoverAgents(scanRoot);
+  const agentNames = Object.keys(agentIdx);
+  console.log(`Discovered ${agentNames.length} installed agents${agentNames.length ? `: ${agentNames.slice(0, 12).join(", ")}${agentNames.length > 12 ? ", …" : ""}` : " — DIRF will offer its bundled defaults as a backup."}`);
   console.log("\nRegistry references resolved:");
   for (const ref of loadRegistry().skills || []) {
     const hit = idx[ref.name];
