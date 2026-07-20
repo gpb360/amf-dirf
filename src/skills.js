@@ -34,6 +34,11 @@ const FM_RE = /^([A-Za-z0-9_-]+):\s*(.*)$/;
 // folder is a bundled fallback — never part of the host's installed index.
 const BUNDLED_DIR = join(ROOT, "skills");
 
+// Same contract for agents: the kit's agents/ folder is a bundled fallback
+// roster, never part of the host's installed index.
+const BUNDLED_AGENTS_DIR = join(ROOT, "agents");
+const AGENT_ROOT_NAMES = [".agents/agents", ".codex/agents", ".claude/agents"];
+
 function skillRoots(projectRoot) {
   // Return all skill scan roots that exist on disk.
   // projectRoot null/undefined defaults to ROOT (the kit's own roots).
@@ -46,7 +51,7 @@ function skillRoots(projectRoot) {
   }
   for (const name of PROJECT_ROOT_NAMES) {
     const candidate = join(projectRoot, name);
-    if (candidate === BUNDLED_DIR) continue;
+    if (samePath(candidate, BUNDLED_DIR)) continue;
     if (isDir(candidate)) roots.push(candidate);
   }
   return roots;
@@ -60,6 +65,17 @@ function isDir(p) {
   }
 }
 
+function samePath(a, b) {
+  // Path identity that survives Windows drive-letter case and separator
+  // differences — a raw string compare would let the kit's own bundled
+  // folders slip into the installed index when --path is spelled differently.
+  const norm = (p) => {
+    const n = String(p).replace(/\\/g, "/");
+    return process.platform === "win32" ? n.toLowerCase() : n;
+  };
+  return norm(a) === norm(b);
+}
+
 function parseFrontmatter(text) {
   // Tolerant YAML-ish frontmatter parser (no dependency).
   const fields = {};
@@ -68,7 +84,12 @@ function parseFrontmatter(text) {
   if (end === -1) return fields;
   for (const line of text.slice(4, end).split(/\r?\n/)) {
     const m = FM_RE.exec(line);
-    if (m) fields[m[1]] = m[2].trim().replace(/^(["'])(.*)\1$/, "$2");
+    if (!m) continue;
+    const value = m[2].trim().replace(/^(["'])(.*)\1$/, "$2");
+    // A bare YAML block-scalar marker ("|", ">-", ...) carries no text on this
+    // line and its indented continuation lines are dropped by this parser —
+    // treat as empty rather than storing the literal marker.
+    fields[m[1]] = /^[|>][+-]?$/.test(value) ? "" : value;
   }
   return fields;
 }
@@ -137,12 +158,12 @@ function findSkillFolders(projectRoot) {
   }
   // <root>/skills
   const rootSkills = join(projectRoot, "skills");
-  if (rootSkills !== BUNDLED_DIR && isDir(rootSkills)) out.push(rootSkills);
+  if (!samePath(rootSkills, BUNDLED_DIR) && isDir(rootSkills)) out.push(rootSkills);
   // <root>/<dir>/skills
   for (const entry of top) {
     if (!entry.isDirectory() || skip.has(entry.name)) continue;
     const skillsDir = join(projectRoot, entry.name, "skills");
-    if (skillsDir !== BUNDLED_DIR && isDir(skillsDir)) out.push(skillsDir);
+    if (!samePath(skillsDir, BUNDLED_DIR) && isDir(skillsDir)) out.push(skillsDir);
   }
   return out;
 }
@@ -208,6 +229,42 @@ function indexOne(path, index) {
   const normalized = path.replace(/\\/g, "/");
   const provider = providerForPath(normalized);
   index[name] = { name, path: normalized.replace(/\/[^/]+$/, ""), file: normalized.split("/").pop(), description: desc, provider };
+}
+
+export function discoverAgents(projectRoot) {
+  // Scan the host for installed agent definitions, same contract as skill
+  // discovery: home + project roots, first found wins, the kit's own bundled
+  // agents/ folder is never part of the index.
+  // Agent convention (Claude subagents et al.): flat *.md files with
+  // name/description frontmatter directly under an agents root.
+  if (!projectRoot) projectRoot = ROOT;
+  const index = {};
+  const home = homedir();
+  const roots = [];
+  for (const name of AGENT_ROOT_NAMES) roots.push(join(home, name));
+  for (const name of AGENT_ROOT_NAMES) roots.push(join(projectRoot, name));
+  const projectAgents = join(projectRoot, "agents");
+  if (!samePath(projectAgents, BUNDLED_AGENTS_DIR)) roots.push(projectAgents);
+  for (const root of roots) {
+    if (!isDir(root)) continue;
+    let entries;
+    try { entries = readdirSync(root); } catch { continue; }
+    for (const child of entries.sort()) {
+      if (!child.endsWith(".md")) continue;
+      // Documentation files inside an agents folder are not agents; without
+      // this a doc-only agents/ dir yields phantom installed agents and
+      // silently suppresses the "no agents on this host" question.
+      if (/^(readme|index|agents|contributing|changelog)\.md$/i.test(child)) continue;
+      const path = join(root, child).replace(/\\/g, "/");
+      let fm;
+      try { fm = parseFrontmatter(readFileSync(join(root, child), "utf-8")); } catch { continue; }
+      if (!fm.name && !fm.description) continue;
+      const name = fm.name || child.replace(/\.md$/, "");
+      if (index[name]) continue;
+      index[name] = { name, path, description: fm.description || "", tools: fm.tools || "", provider: providerForPath(path) };
+    }
+  }
+  return index;
 }
 
 export function providerForPath(path) {

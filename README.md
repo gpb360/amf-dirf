@@ -210,6 +210,17 @@ plugin cache) are still found.
 local skill folders in addition to the global roots, so the instruction set
 reflects the target project's skills (e.g. a repo's own `.agents/skills/`).
 
+### Agents follow the same contract
+
+DIRF also discovers the **agents** installed on the host (`~/.agents/agents/`,
+`~/.codex/agents/`, `~/.claude/agents/`, plus project-local equivalents and a
+project `agents/` folder). Playbook roles are cast against that index — exact
+name match first, then name/tag overlap. The 21 agent definitions bundled in
+this repo's `agents/` folder are **defaults of last resort**: they fill a role
+only when no installed agent matches, the role is labeled `bundled default` in
+the roster, and when a host has no agents at all the workflow opens with an
+explicit question asking whether to use them. Your own agents always win.
+
 ## Making it yours
 
 - **Add an agent**: drop a markdown file in `agents/` (frontmatter: `name`,
@@ -233,7 +244,7 @@ playbooks/       authoritative reusable playbook folders
 skills/          bounded task-oriented skill folders
 tools/           isolated tool invocation folders
 registry/        agents, skill metadata, and legacy compatibility JSON
-agents/          agent markdown definitions (21 curated)
+agents/          bundled default agents (fallback-only — installed host agents always win)
 policies/        workflow-policy.md (embedded in every instruction set)
 tests/           <domain>.test.js files using node:test
 scripts/         smoke.js integration check
@@ -243,7 +254,7 @@ workflows/       authored reusable workflow folders
 
 ## Conventions
 
-- **Zero dependencies.** Pure Node.js built-ins (no `node_modules`).
+- **Zero dependencies.** Pure Node.js built-ins (no `node_modules`, no `npm install`, no CI). `npm run …` works as a script shortcut; nothing gets installed.
 - **One entry point:** `src/cli.js`.
 - **Names:** kebab-case folders, domain-named source files, and `<domain>.test.js` tests.
 - **Generated output:** `.dirf/attempts/`, `graphify-out/`, and HTML renders stay untracked.
@@ -258,10 +269,13 @@ npm run test:router                        # router matching
 npm run test:skills                        # discovery + resolver
 npm run test:renderer                      # markdown + HTML rendering
 npm run smoke                              # full pipeline integration
+npm run validate                           # registry consistency
 ```
 
-No test runner to install — Node's built-in `node:test` is used. CI runs the
-suite on every push (`.github/workflows/ci.yml`).
+These are just script shortcuts — `npm run` executes them, no `npm install`,
+no dependencies, no test runner to add. Prefer raw Node? `node --test`,
+`node scripts/smoke.js`, and `node src/cli.js validate` do the same thing.
+No CI — everything runs locally.
 
 ## License
 

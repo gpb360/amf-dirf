@@ -105,3 +105,16 @@ test("bundledSkills exposes kit units with declared capabilities", () => {
   assert.deepEqual(bundled["minimal-implementation"].capabilities, ["minimalism"]);
   assert.equal(bundled["minimal-implementation"].provider, "dirf");
 });
+
+test("discoverAgents indexes project agent files but never the kit's bundled agents/", () => {
+  const root = mkdtempSync(join(tmpdir(), "dirf-agents-"));
+  mkdirSync(join(root, ".claude", "agents"), { recursive: true });
+  writeFileSync(join(root, ".claude", "agents", "my-dev.md"), "---\nname: my-dev\ndescription: builds things\n---\nbody\n", "utf-8");
+  const idx = skills.discoverAgents(root);
+  assert.equal(idx["my-dev"].description, "builds things");
+  assert.equal(idx["my-dev"].provider, "claude");
+  // kit root: bundled agents/ must not appear as installed
+  const bundledRoot = join(ROOT, "agents").replace(/\\/g, "/");
+  const kitIdx = skills.discoverAgents();
+  assert.equal(Object.values(kitIdx).some((a) => String(a.path).startsWith(bundledRoot + "/")), false);
+});

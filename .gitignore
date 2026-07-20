@@ -6,6 +6,9 @@ workflows/user/
 *.html
 /graphify-out/
 
+# rtk runtime state (machine-generated command history; never tracked)
+/rtk/
+
 # OS / editor
 .DS_Store
 Thumbs.db

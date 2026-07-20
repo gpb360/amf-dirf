@@ -47,6 +47,12 @@ export function validateSnapshot(data, label = "workflow") {
     resolvedSkillError(skill, `baseline skill ${index + 1}`);
   }
   for (const [agentIndex, agent] of (Array.isArray(data.agents) ? data.agents : []).entries()) {
+    if ("status" in (agent || {}) && !["installed", "fallback"].includes(agent.status)) {
+      errors.push(`${label}: agent ${agentIndex + 1} status must be installed or fallback`);
+    }
+    for (const key of ["source_path", "path"]) {
+      if (agent && key in agent) errors.push(`${label}: agent ${agentIndex + 1} must not persist a runtime ${key}`);
+    }
     if (!Array.isArray(agent?.skills)) {
       errors.push(`${label}: agent ${agentIndex + 1} skills must be an array`);
       continue;

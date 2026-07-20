@@ -144,3 +144,38 @@ test("buildHtml is self-contained and collapsible", () => {
   assert.ok(html.includes("Definition of Done"));
   assert.ok(!html.includes("src=") && !html.includes('href="')); // no external assets
 });
+
+test("agent casting statuses surface in README, details, and kickoff prompt", () => {
+  const outDir = mkdtempSync(join(tmpdir(), "dirf-cast-"));
+  const workflow = {
+    name: "cast", task: "t", playbook: "landing-page",
+    workflow: { phases: ["a"], output: "o", validation: "v", recovery: "r" },
+    agents: [
+      { name: "frontend-developer", file: "agents/frontend-developer.md", tags: ["frontend"], skills: [], status: "installed", matched: "my-own-dev", matched_description: "their agent" },
+      { name: "ui-designer", file: "agents/ui-designer.md", tags: ["design"], skills: [], status: "fallback" },
+    ],
+    baseline_skills: [],
+    questions: ["No installed agents were found on this host. Use DIRF's bundled default agents for this workflow, or point DIRF at your own agents folder and re-run?"],
+    skill_flow: { label: "l", branches: [], steps: [{ stage: "build", skill: "s", reason: "r", status: "recommended" }] },
+    policy: "policies/workflow-policy.md", schema_version: 5,
+  };
+  buildInstructions(workflow, outDir);
+  const readme = readFileSync(join(outDir, "README.md"), "utf-8");
+  assert.ok(readme.includes("installed agent `my-own-dev`"));
+  assert.ok(readme.includes("*bundled default*"));
+  assert.ok(readme.includes("## Open questions (settle with the user before starting)"));
+  assert.ok(readme.includes("bundled default agents for this workflow"));
+
+  const installedDetail = readFileSync(join(outDir, "agents", "frontend-developer.md"), "utf-8");
+  assert.ok(installedDetail.includes("filled by the installed agent `my-own-dev`"));
+  const fallbackDetail = readFileSync(join(outDir, "agents", "ui-designer.md"), "utf-8");
+  assert.ok(fallbackDetail.includes("DIRF bundled default"));
+
+  const prompt = kickoffPrompt(workflow);
+  assert.ok(prompt.includes("bundled defaults"));
+
+  const html = buildHtml(workflow);
+  assert.ok(html.includes("bundled default"));
+  assert.ok(html.includes("my-own-dev"));
+  assert.ok(html.includes("Open questions"));
+});

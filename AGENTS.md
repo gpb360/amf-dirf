@@ -29,7 +29,7 @@ node src/cli.js validate        # validate registries + workflows
 
 - `registry/` — agent and skill metadata plus the generated playbook compatibility export.
 - `playbooks/*/README.md` — the authoritative playbook source.
-- `agents/` — agent markdown definitions.
+- `agents/` — bundled default agent definitions, used only as fallbacks when the host has no matching installed agent (`discoverAgents` in `src/skills.js` casts roles installed-first).
 - `policies/workflow-policy.md` — embedded in every generated instruction set.
 - `src/` — `cli.js` (entry), `router.js`, `skills.js`, `renderer.js`, `validate.js`, `paths.js`.
 - `.dirf/attempts/` — disposable generated runs in each configured target (ignored).
