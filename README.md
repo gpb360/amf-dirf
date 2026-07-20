@@ -254,7 +254,7 @@ workflows/       authored reusable workflow folders
 
 ## Conventions
 
-- **Zero dependencies.** Pure Node.js built-ins (no `node_modules`, no npm, no CI).
+- **Zero dependencies.** Pure Node.js built-ins (no `node_modules`, no `npm install`, no CI). `npm run …` works as a script shortcut; nothing gets installed.
 - **One entry point:** `src/cli.js`.
 - **Names:** kebab-case folders, domain-named source files, and `<domain>.test.js` tests.
 - **Generated output:** `.dirf/attempts/`, `graphify-out/`, and HTML renders stay untracked.
@@ -264,17 +264,18 @@ workflows/       authored reusable workflow folders
 ## Running the tests
 
 ```bash
-node --test                                # all unit tests (node:test)
-node --test tests/router.test.js           # router matching
-node --test tests/skills.test.js           # discovery + resolver
-node --test tests/renderer.test.js         # markdown + HTML rendering
-node scripts/smoke.js                      # full pipeline integration
-node src/cli.js validate                   # registry consistency
+npm test                                   # all unit tests (node:test)
+npm run test:router                        # router matching
+npm run test:skills                        # discovery + resolver
+npm run test:renderer                      # markdown + HTML rendering
+npm run smoke                              # full pipeline integration
+npm run validate                           # registry consistency
 ```
 
-Just Node — no `npm install`, no test runner, no CI. Node's built-in
-`node:test` runs everything locally. (The `npm run …` aliases in `package.json`
-still work if you prefer them, but nothing here needs npm.)
+These are just script shortcuts — `npm run` executes them, no `npm install`,
+no dependencies, no test runner to add. Prefer raw Node? `node --test`,
+`node scripts/smoke.js`, and `node src/cli.js validate` do the same thing.
+No CI — everything runs locally.
 
 ## License
 
