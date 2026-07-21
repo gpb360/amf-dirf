@@ -27,6 +27,7 @@ Use this policy in every generated workflow prompt.
 - Keep output terse and technical.
 - Lead with changed, verified, blocked, or risk.
 - Use concrete files, commands, diffs, tests, and errors as proof.
+- For review and audit findings, cite the source span (file:line-range) that supports each claim. Findings without a citation are rejected, not reported.
 - Do not add AI attribution footers or generated-by boilerplate.
 
 ## Workflow Audit
