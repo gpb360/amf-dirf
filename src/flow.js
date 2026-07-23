@@ -2,7 +2,7 @@
 // Selection happens in router.js; this module never classifies a task.
 import { bundledSkills } from "./skills.js";
 
-export const KNOWN_BRANCHES = new Set(["ui", "react"]);
+export const KNOWN_BRANCHES = new Set(["ui", "react", "security"]);
 
 export function reconcile(playbooks, knownBranches = KNOWN_BRANCHES) {
   const errors = [];
@@ -59,6 +59,9 @@ function branchesFor(task, playbookAgents) {
   const text = (task || "").toLowerCase();
   if (/\b(ui|page|component|landing|frontend|interface|button|form|screen)\b/.test(text)) branches.add("ui");
   if (/\b(react|hook|jsx|component)\b/.test(text)) branches.add("react");
+  if (/\b(security|auth(?:enticated|entication|orization)?|privacy|permission|secret|credential|no[- ]spend|token spend|billing|kie|generation)\b/.test(text)) {
+    branches.add("security");
+  }
   if (playbookAgents?.some((agent) => ["frontend-developer", "ui-designer", "ux-researcher"].includes(agent))) {
     branches.add("ui");
   }

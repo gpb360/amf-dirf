@@ -184,6 +184,33 @@ test("buildFlow does not infer UI from the word build", () => {
   assert.deepEqual(buildFlow(selection, { task: "build a UI component" }, installed).steps.map((step) => step.skill), ["tdd", "frontend-design"]);
 });
 
+test("security-sensitive UI acceptance retains a security verification branch", () => {
+  const selection = {
+    playbook: "ui-ux-review",
+    agents: [],
+    skill_flow: {
+      label: "UI/UX review",
+      steps: [
+        { stage: "review", capability: "user experience design", reason: "Review the UI" },
+        { stage: "verify", capability: "security review", reason: "Verify auth and no-spend boundaries", branch: "security" },
+      ],
+    },
+  };
+  const installed = {
+    design: { description: "user experience design", capabilities: ["user experience design"] },
+    security: { description: "security review", capabilities: ["security review"] },
+  };
+
+  assert.deepEqual(
+    buildFlow(selection, { task: "authenticated visual acceptance without token spend" }, installed).steps.map((step) => step.skill),
+    ["design", "security"],
+  );
+  assert.deepEqual(
+    buildFlow(selection, { task: "review responsive typography" }, installed).steps.map((step) => step.skill),
+    ["design"],
+  );
+});
+
 test("buildFlow selects one deterministic installed match and reports gaps", () => {
   const selection = {
     playbook: "demo", agents: [],
