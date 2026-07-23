@@ -148,6 +148,15 @@ test("work-in-progress facts cannot override explicit UI intent", () => {
   assert.equal(r.playbook, "ui-ux-review");
 });
 
+test("explicit visual acceptance outranks incidental auth and Audit stage terms", () => {
+  const r = recommend(
+    "UI UX visual acceptance test for the authenticated Story workspace across Script, Scenes, Cast, Prompts, Audit, and Storyboard on desktop and 390px mobile; verify persistence, reload, behavior, and approved component parity without generation or spend.",
+  );
+
+  assert.equal(r.playbook, "ui-ux-review");
+  assert.ok(r.alternates.some((alternate) => alternate.playbook === "security-review"));
+});
+
 test("collectRoutingFacts reads branch, changed paths, and active plan", () => {
   const root = mkdtempSync(join(tmpdir(), "dirf-facts-"));
   execFileSync("git", ["init", "-b", "design-system-foundation", root]);

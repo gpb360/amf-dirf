@@ -39,6 +39,7 @@ function contentTokens(pb) {
 }
 const IMPLEMENTATION_INTENT = /\b(add|build|create|fix|implement)\b/;
 const EXPLICIT_SECURITY_AUDIT = /\bsecurity audit\b/;
+const EXPLICIT_UI_REVIEW = /\b(ui\s*(?:\/|\s)\s*ux|visual acceptance|visual regression|frontend design|design(?: |-)?system review)\b/;
 
 export function collectRoutingFacts(projectRoot) {
   if (!projectRoot) return [];
@@ -100,6 +101,7 @@ export function recommend(task, facts, playbooks = loadPlaybooks()) {
   const affirmativeTaskText = taskText.replace(/\b(?:do not|don't|dont|without)\s+(?:add|build|create|fix|implement)\b/g, "");
   const isImplementation = IMPLEMENTATION_INTENT.test(affirmativeTaskText);
   const isExplicitSecurityAudit = EXPLICIT_SECURITY_AUDIT.test(taskText);
+  const isExplicitUiReview = EXPLICIT_UI_REVIEW.test(taskText);
   if (isImplementation) haystack += " feature";
 
   const taskTokens = new Set(wordTokens(haystack));
@@ -121,6 +123,10 @@ export function recommend(task, facts, playbooks = loadPlaybooks()) {
   // overlap (what the playbook does), then earliest playbook
   ranked.sort((a, b) =>
     b.score - a.score || b.count - a.count || b.context.length - a.context.length || b.index - a.index);
+  if (isExplicitUiReview && !isExplicitSecurityAudit) {
+    const uiIndex = ranked.findIndex(({ name }) => name === "ui-ux-review");
+    if (uiIndex > 0) ranked.unshift(ranked.splice(uiIndex, 1)[0]);
+  }
 
   let name, pb, score, context;
   if (!ranked.length || ranked[0].score === 0) {
