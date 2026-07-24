@@ -40,7 +40,8 @@ export function kickoffPrompt(workflow) {
         : ""}`,
     `3. Work the phases in order${phases.length ? `: ${phases.join(" -> ")}` : ""}. Do not start the next phase until the current one is verifiably done. Validation: ${wf.validation || "state your evidence"}.`,
     `4. Done means: ${wf.output || "the task's outcome is verified"}. Report evidence, not claims.`,
-    "5. When your context is nearly exhausted, write a handoff note (completed work, decisions, changed files, validation, blockers, exact next action) and stop.",
+    ...(wf.requirements?.length ? [`5. Required acceptance contract: ${wf.requirements.join(" | ")}`] : []),
+    `${wf.requirements?.length ? "6" : "5"}. When your context is nearly exhausted, write a handoff note (completed work, decisions, changed files, validation, blockers, exact next action) and stop.`,
     "",
     `Begin with phase 1${phases[0] ? `: ${phases[0]}` : ""}.`,
   ].join("\n");
@@ -230,9 +231,13 @@ export function buildInstructions(workflow, outDir) {
     "## Definition of Done",
     wf.output || "_(no output contract declared)_",
     "",
-    "## Phases",
-    "",
   ];
+  if (wf.requirements?.length) {
+    lines.push("## Required acceptance contract", "");
+    for (const requirement of wf.requirements) lines.push(`- ${requirement}`);
+    lines.push("");
+  }
+  lines.push("## Phases", "");
   let i = 0;
   for (const phase of wf.phases || []) {
     i += 1;
@@ -462,6 +467,12 @@ export function buildHtml(workflow) {
   parts.push("<h2>Objective &amp; Definition of Done</h2>");
   parts.push(`<p>${escapeHtml(workflow.task || "")}</p>`);
   parts.push(`<p><strong>Done looks like:</strong> ${escapeHtml(wf.output || "—")}</p>`);
+
+  if (wf.requirements?.length) {
+    parts.push("<h2>Required acceptance contract</h2><ul>");
+    for (const requirement of wf.requirements) parts.push(`<li>${escapeHtml(requirement)}</li>`);
+    parts.push("</ul>");
+  }
 
   parts.push("<h2>Phases</h2><ol>");
   for (const phase of wf.phases || []) parts.push(`<li>${escapeHtml(phase)}</li>`);
