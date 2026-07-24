@@ -47,7 +47,7 @@ test("renderMarkdownLite strips html comments", () => {
 test("kickoff prompt is embedded in both renders and stays host-agnostic", () => {
   const workflow = {
     name: "demo", task: "review a pull request", playbook: "landing-page",
-    workflow: { phases: ["a", "b"], output: "a page", validation: "v", recovery: "r" },
+    workflow: { phases: ["a", "b"], output: "a page", validation: "v", recovery: "r", requirements: ["derive every screen x state x viewport row"] },
     agents: [{ name: "frontend-developer", file: "agents/frontend-developer.md", tags: [], skills: [] }],
     baseline_skills: [],
     skill_flow: { label: "persisted", branches: [], steps: [{ stage: "build", skill: "s", reason: "r", status: "recommended" }] },
@@ -62,6 +62,8 @@ test("kickoff prompt is embedded in both renders and stays host-agnostic", () =>
   assert.ok(withRepo.includes("Clone or open it before starting"));
   assert.ok(prompt.includes("frontend-developer"));
   assert.ok(prompt.includes("Begin with phase 1: a"));
+  assert.ok(prompt.includes("Required acceptance contract"));
+  assert.ok(prompt.includes("derive every screen x state x viewport row"));
   assert.ok(!/codex|claude/i.test(prompt));
   assert.ok(!prompt.includes("```"), "prompt must be safe inside a fenced block");
 
@@ -69,11 +71,13 @@ test("kickoff prompt is embedded in both renders and stays host-agnostic", () =>
   const readme = (buildInstructions(workflow, outDir), readFileSync(join(outDir, "README.md"), "utf-8"));
   assert.ok(readme.includes("## Kickoff prompt (copy into your model of choice)"));
   assert.ok(readme.includes('"demo" DIRF workflow'));
+  assert.ok(readme.includes("## Required acceptance contract"));
 
   const html = buildHtml(workflow);
   assert.ok(html.includes("Kickoff prompt"));
   assert.ok(html.includes("Copy prompt"));
   assert.ok(html.includes('"demo" DIRF workflow'));
+  assert.ok(html.includes("Required acceptance contract"));
 });
 
 test("buildInstructions writes router + per-agent detail", () => {
